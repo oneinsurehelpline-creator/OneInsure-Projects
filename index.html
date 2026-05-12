@@ -467,28 +467,95 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .rejection-note{padding:6px 10px;background:var(--red-light);border-radius:var(--rad);border:1px solid #F7C1C1;font-size:11px;color:var(--red);margin-top:4px;}
 
 /* ── CHAT ── */
-.chat-panel{display:flex;flex-direction:column;height:calc(100vh - 60px);}
-.chat-rooms{display:flex;gap:6px;padding:0 0 12px;border-bottom:1px solid var(--border);margin-bottom:12px;flex-wrap:wrap;}
-.chat-room-btn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border2);background:var(--white);cursor:pointer;font-family:var(--ff-body);color:var(--ink3);transition:all 0.13s;}
-.chat-room-btn:hover{border-color:var(--navy);color:var(--navy);}
-.chat-room-btn.active{background:var(--navy);color:var(--white);border-color:var(--navy);}
-.chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-bottom:8px;}
-.chat-msg{display:flex;gap:8px;align-items:flex-start;}
+/* ── CHAT PANEL ── */
+.chat-panel{display:flex;height:calc(100vh - 60px);gap:0;background:var(--cream);border-radius:var(--radl);overflow:hidden;border:1px solid var(--border);}
+.chat-sidebar{width:200px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;padding:0;}
+.chat-sidebar-top{padding:16px 14px 10px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.chat-sidebar-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.4);margin-bottom:10px;}
+.chat-room-btn{width:100%;text-align:left;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;border:none;background:transparent;cursor:pointer;font-family:var(--ff-body);color:rgba(255,255,255,0.55);transition:all 0.13s;display:flex;align-items:center;gap:8px;}
+.chat-room-btn:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);}
+.chat-room-btn.active{background:rgba(255,255,255,0.14);color:var(--white);font-weight:600;}
+.chat-room-btn .room-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.25);flex-shrink:0;}
+.chat-room-btn.active .room-dot{background:#4ade80;}
+.chat-sidebar-members{padding:12px 14px;border-top:1px solid rgba(255,255,255,0.08);margin-top:auto;}
+.chat-sidebar-members-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.3);margin-bottom:8px;}
+.chat-online-member{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:12px;color:rgba(255,255,255,0.6);}
+.chat-online-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0;}
+.chat-main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--white);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.chat-header-title{font-size:14px;font-weight:700;color:var(--ink);flex:1;}
+.chat-header-meta{font-size:11px;color:var(--ink3);}
+.chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding:16px;background:var(--cream);}
+.chat-msg{display:flex;gap:9px;align-items:flex-end;margin-bottom:4px;}
 .chat-msg.mine{flex-direction:row-reverse;}
-.chat-bubble{max-width:65%;padding:9px 12px;border-radius:var(--radl);font-size:13px;line-height:1.5;position:relative;}
-.chat-msg:not(.mine) .chat-bubble{background:var(--white);border:1px solid var(--border);border-radius:4px var(--radl) var(--radl) var(--radl);}
-.chat-msg.mine .chat-bubble{background:var(--navy);color:white;border-radius:var(--radl) 4px var(--radl) var(--radl);}
-.chat-meta{font-size:10px;margin-top:3px;color:var(--ink3);}
+.chat-msg.consecutive{margin-bottom:1px;}
+.chat-msg.consecutive .chat-av-wrap{visibility:hidden;}
+.chat-av-wrap{width:30px;height:30px;flex-shrink:0;}
+.chat-bubble-wrap{display:flex;flex-direction:column;max-width:62%;gap:2px;}
+.chat-msg.mine .chat-bubble-wrap{align-items:flex-end;}
+.chat-bubble{padding:9px 13px;border-radius:18px;font-size:13px;line-height:1.55;word-break:break-word;}
+.chat-msg:not(.mine) .chat-bubble{background:var(--white);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--ink);}
+.chat-msg.mine .chat-bubble{background:var(--navy);color:white;border-bottom-right-radius:4px;}
+.chat-sender-name{font-size:10px;font-weight:700;color:var(--ink3);margin-bottom:2px;padding-left:2px;}
+.chat-msg.mine .chat-sender-name{display:none;}
+.chat-meta{font-size:10px;color:var(--ink3);padding:0 2px;}
 .chat-msg.mine .chat-meta{text-align:right;}
-.chat-tag{font-size:10px;padding:2px 8px;border-radius:4px;background:var(--blue-light);color:var(--blue-dark);font-weight:600;margin-bottom:4px;display:inline-block;}
+.chat-tag{font-size:10px;padding:2px 9px;border-radius:6px;background:var(--blue-light);color:var(--blue-dark);font-weight:600;margin-bottom:4px;display:inline-block;}
 .chat-msg.mine .chat-tag{background:rgba(255,255,255,0.2);color:rgba(255,255,255,0.85);}
-.chat-input-area{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border);align-items:flex-end;}
-.chat-input{flex:1;padding:10px 13px;border:1.5px solid var(--border2);border-radius:var(--radl);font-size:13px;font-family:var(--ff-body);resize:none;outline:none;min-height:42px;max-height:100px;line-height:1.4;}
-.chat-input:focus{border-color:var(--blue);}
-.chat-send-btn{padding:10px 16px;background:var(--navy);color:white;border:none;border-radius:var(--radl);cursor:pointer;font-size:14px;flex-shrink:0;}
+.chat-file-card{display:flex;align-items:center;gap:9px;padding:8px 12px;background:rgba(255,255,255,0.15);border-radius:10px;margin-bottom:4px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:background 0.13s;}
+.chat-msg:not(.mine) .chat-file-card{background:var(--cream2);border-color:var(--border);color:var(--ink);}
+.chat-msg:not(.mine) .chat-file-card:hover{background:var(--cream3);}
+.chat-msg.mine .chat-file-card:hover{background:rgba(255,255,255,0.25);}
+.chat-file-icon{font-size:22px;line-height:1;}
+.chat-file-info{flex:1;min-width:0;}
+.chat-file-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-file-size{font-size:10px;opacity:0.65;margin-top:1px;}
+.chat-file-open{font-size:10px;font-weight:700;opacity:0.7;flex-shrink:0;}
+.chat-date-sep{text-align:center;font-size:10px;color:var(--ink3);padding:8px 0;font-weight:600;display:flex;align-items:center;gap:8px;}
+.chat-date-sep::before,.chat-date-sep::after{content:'';flex:1;height:1px;background:var(--border);}
+.chat-input-wrapper{padding:12px 14px;background:var(--white);border-top:1px solid var(--border);flex-shrink:0;}
+.chat-attach-preview{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--blue-light);border-radius:8px;margin-bottom:8px;font-size:12px;color:var(--blue-dark);}
+.chat-attach-preview-name{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-attach-remove{background:none;border:none;cursor:pointer;color:var(--blue-dark);font-size:14px;padding:0 2px;}
+.chat-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+.chat-tag-select{font-size:11px;padding:4px 8px;border:1.5px solid var(--border2);border-radius:20px;background:var(--cream2);font-family:var(--ff-body);outline:none;color:var(--ink2);cursor:pointer;}
+.chat-tool-btn{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border2);background:var(--cream2);cursor:pointer;font-family:var(--ff-body);color:var(--ink2);transition:all 0.13s;}
+.chat-tool-btn:hover{border-color:var(--navy);color:var(--navy);background:var(--white);}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end;}
+.chat-input{flex:1;padding:10px 14px;border:1.5px solid var(--border2);border-radius:22px;font-size:13px;font-family:var(--ff-body);resize:none;outline:none;min-height:42px;max-height:120px;line-height:1.4;background:var(--cream);transition:border-color 0.13s;}
+.chat-input:focus{border-color:var(--navy);background:var(--white);}
+.chat-attach-btn{padding:9px 11px;background:var(--cream2);border:1.5px solid var(--border2);border-radius:50%;cursor:pointer;font-size:15px;line-height:1;flex-shrink:0;transition:all 0.13s;display:flex;align-items:center;justify-content:center;}
+.chat-attach-btn:hover{background:var(--cream3);border-color:var(--navy);}
+.chat-send-btn{padding:9px 18px;background:var(--navy);color:white;border:none;border-radius:22px;cursor:pointer;font-size:13px;font-weight:700;flex-shrink:0;transition:background 0.13s;font-family:var(--ff-body);}
 .chat-send-btn:hover{background:#001828;}
-.chat-tag-select{font-size:12px;padding:5px 9px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);outline:none;max-width:160px;}
-.chat-date-sep{text-align:center;font-size:10px;color:var(--ink3);padding:4px 0;font-weight:600;}
+.chat-send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.chat-uploading{font-size:11px;color:var(--ink3);padding:4px 8px;display:flex;align-items:center;gap:6px;}
+/* Channel room buttons (new icon+name style) */
+.room-icon{font-size:14px;flex-shrink:0;width:18px;text-align:center;}
+.room-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.room-count{font-size:10px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:1px 6px;border-radius:10px;flex-shrink:0;}
+.chat-manage-btn{opacity:0.6;font-size:12px!important;}
+.chat-manage-btn:hover{opacity:1;}
+/* Channel Manager Modal */
+.cm-modal{width:560px;max-width:95vw;}
+.cm-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;}
+.cm-tab{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border2);background:var(--cream2);cursor:pointer;font-family:var(--ff-body);color:var(--ink2);transition:all 0.13s;}
+.cm-tab:hover{border-color:var(--navy);color:var(--navy);}
+.cm-tab.active{background:var(--navy);color:var(--white);border-color:var(--navy);}
+.cm-channel-hdr{margin-bottom:12px;}
+.cm-channel-name{font-size:15px;font-weight:700;color:var(--ink);}
+.cm-channel-desc{font-size:12px;color:var(--ink3);margin-top:2px;}
+.cm-member-list{display:flex;flex-direction:column;gap:4px;max-height:340px;overflow-y:auto;margin-bottom:10px;}
+.cm-member-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--rad);border:1.5px solid var(--border);background:var(--white);transition:all 0.12s;user-select:none;}
+.cm-member-row:hover{border-color:var(--navy);background:var(--blue-light);}
+.cm-member-row.selected{background:#EEF2FF;border-color:#818cf8;}
+.cm-member-info{flex:1;}
+.cm-member-name{font-size:13px;font-weight:600;color:var(--ink);}
+.cm-member-role{font-size:11px;color:var(--ink3);}
+.cm-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all 0.12s;}
+.cm-member-row.selected .cm-check{background:var(--navy);border-color:var(--navy);color:white;}
+.cm-footer-row{display:flex;align-items:center;gap:10px;}
+.cm-count{font-size:12px;color:var(--ink3);flex:1;}
 .unread-badge{background:var(--coral-mid);color:white;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;margin-left:4px;}
 .tat-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:3px;}
 .tat-ok{background:var(--green-light);color:var(--green);}
@@ -820,7 +887,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
   .kanban { grid-template-columns:repeat(2,1fr); }
   .mv-overlay .mv-topbar { flex-wrap:wrap; gap:6px; }
   .mv-actions { flex-wrap:wrap; gap:4px; }
-  .chat-panel { height:calc(100vh - 110px); }
+  .chat-panel { height:calc(100vh - 110px); } .chat-sidebar { width:160px; }
   .perf-table { font-size:11px; }
   #pwa-banner { flex-wrap:wrap; }
   .side-panel { width:100%; position:fixed; bottom:0; left:0; right:0; max-height:70vh; border-radius:var(--radxl) var(--radxl) 0 0; z-index:150; }
@@ -840,6 +907,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 </head>
 <body>
@@ -1251,38 +1319,61 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         </div>
 
         <!-- CHAT -->
-        <div class="panel" id="panel-chat">
+        <div class="panel" id="panel-chat" style="padding:0;overflow:hidden;">
           <div class="chat-panel">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;flex-wrap:wrap;gap:6px;">
-              <div class="chat-rooms" id="chat-rooms"></div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <select id="chat-tag-ref" class="chat-tag-select">
-                  <option value="">📌 Tag flow/task…</option>
-                </select>
-                <button class="btn btn-sm btn-ghost" onclick="openPollModal()" title="Create a poll">📊 Poll</button>
+            <!-- Sidebar: channels + online members -->
+            <div class="chat-sidebar">
+              <div class="chat-sidebar-top">
+                <div class="chat-sidebar-title">Channels</div>
+                <div id="chat-rooms" style="display:flex;flex-direction:column;gap:2px;"></div>
+              </div>
+              <div class="chat-sidebar-members">
+                <div class="chat-sidebar-members-title">Online</div>
+                <div id="chat-online-list"></div>
               </div>
             </div>
-            <div class="chat-messages" id="chat-messages">
-              <div class="empty" style="margin:auto;">
-                <div class="empty-icon">💬</div>
-                <div class="empty-title">No messages yet</div>
-                <div class="empty-sub">Be the first to say something!</div>
+            <!-- Main chat area -->
+            <div class="chat-main">
+              <div class="chat-header">
+                <div>
+                  <div class="chat-header-title" id="chat-header-title">General</div>
+                  <div class="chat-header-meta" id="chat-header-meta">Team-wide conversation</div>
+                </div>
               </div>
-            </div>
-            <div class="chat-input-area" style="position:relative;">
-              <!-- @mention dropdown -->
-              <div id="mention-dropdown" class="mention-dropdown" style="display:none;left:0;right:60px;"></div>
-              <div style="flex:1;position:relative;">
-                <textarea class="chat-input" id="chat-input"
-                  placeholder="Type a message… use @name to mention someone (Enter sends, Shift+Enter new line)" rows="1"
-                  oninput="chatInputHandler(event)"
-                  onkeydown="chatKeyHandler(event)"></textarea>
+              <div class="chat-messages" id="chat-messages">
+                <div class="empty" style="margin:auto;">
+                  <div class="empty-icon">💬</div>
+                  <div class="empty-title">No messages yet</div>
+                  <div class="empty-sub">Be the first to say something!</div>
+                </div>
               </div>
-              <label class="chat-attach-btn" title="Attach file">
-                📎
-                <input type="file" style="display:none;" onchange="chatAttachFile(event)"/>
-              </label>
-              <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+              <!-- Input area -->
+              <div class="chat-input-wrapper">
+                <div id="chat-attach-preview" style="display:none;" class="chat-attach-preview">
+                  <span>📎</span>
+                  <span class="chat-attach-preview-name" id="chat-attach-name">file.jpg</span>
+                  <button class="chat-attach-remove" onclick="clearChatAttach()" title="Remove">✕</button>
+                </div>
+                <div class="chat-toolbar">
+                  <select id="chat-tag-ref" class="chat-tag-select">
+                    <option value="">📌 Tag flow/task…</option>
+                  </select>
+                  <button class="chat-tool-btn" onclick="openPollModal()">📊 Poll</button>
+                </div>
+                <div class="chat-input-row" style="position:relative;">
+                  <div id="mention-dropdown" class="mention-dropdown" style="display:none;left:0;right:110px;bottom:calc(100% + 4px);"></div>
+                  <textarea class="chat-input" id="chat-input"
+                    placeholder="Message… @name to mention" rows="1"
+                    oninput="chatInputHandler(event)"
+                    onkeydown="chatKeyHandler(event)"></textarea>
+                  <label class="chat-attach-btn" title="Attach file">
+                    📎
+                    <input type="file" style="display:none;" onchange="chatAttachFile(event)"/>
+                  </label>
+                  <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">Send</button>
+                </div>
+                <div id="chat-uploading" class="chat-uploading" style="display:none;">⏳ Uploading file…</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1692,6 +1783,30 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
     <button class="mv-btn mv-btn-ghost" onclick="mvAddComment()" style="flex-shrink:0;">Send</button>
   </div>
 
+</div>
+
+<!-- CHANNEL MANAGER MODAL -->
+<div class="overlay" id="channel-manager-modal" style="display:none;" onclick="if(event.target===this)closeChannelManager()">
+  <div class="modal cm-modal">
+    <div class="modal-hdr">
+      <span class="modal-title">⚙️ Manage Channel Members</span>
+      <button class="close-x" onclick="closeChannelManager()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:12px;">Select which team members can see and post in each channel. Head is always included. General is open to everyone.</div>
+      <div class="cm-tabs" id="cm-tabs"></div>
+      <div class="cm-channel-hdr">
+        <div class="cm-channel-name" id="cm-channel-title"></div>
+        <div class="cm-channel-desc" id="cm-channel-desc"></div>
+      </div>
+      <div class="cm-member-list" id="cm-member-list"></div>
+      <div class="cm-footer-row">
+        <span class="cm-count" id="cm-count"></span>
+        <button class="btn" onclick="closeChannelManager()">Cancel</button>
+        <button class="btn btn-coral" id="cm-save-btn" onclick="saveCmChanges()">Save Changes</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast-area" id="toast-area"></div>
@@ -2501,6 +2616,7 @@ function initApp() {
   loadGoogleApis(); // preload Drive APIs
   loadEmailConfig(); // load email notification config
   initPWA();         // PWA service worker + install prompt
+  loadChannelMembers(); // load channel membership from Firestore
   // Chat initialises lazily when user opens chat panel
   if (isFriday()) {
     const pending = MEMBERS.filter(m => !getPlanForMemberWeek(m.name, getWeekKey(1))).length;
@@ -2672,12 +2788,38 @@ function renderToday(){
       </div>`;
     return;
   }
-  document.getElementById('flow-board').innerHTML = TODAY_FLOWS.map(f => {
+  // Filter flows based on role:
+  // Head → sees all flows
+  // Manager → sees flows where any step belongs to themselves or their direct reports
+  // Member → sees only flows where they personally own a step
+  // Approver → sees only flows currently at an approval step routed to them
+  const visibleFlows = TODAY_FLOWS.filter(f => {
+    if (!loggedInMember) return false;
+    const r = loggedInMember.role;
+    if (r === 'head') return true;
+    const tmplSteps = getTemplateSteps(f.templateId);
+    if (r === 'manager') {
+      const teamNames = [loggedInMember.name, ...MEMBERS.filter(m => m.reportsTo === loggedInMember.name).map(m => m.name)];
+      return tmplSteps.some(s => teamNames.includes(s.owner));
+    }
+    if (r === 'approver') {
+      const curStep = tmplSteps[f.currentStep] || {};
+      const isApprovalStep = curStep.isApproval === true ||
+        curStep.name?.toLowerCase().includes('approval') ||
+        curStep.name?.toLowerCase().includes('approve');
+      return isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
+    }
+    // Member — sees flows where they own any step (so they know what's coming)
+    return tmplSteps.some(s => s.owner === loggedInMember.name ||
+      (f.subAssignees && Object.values(f.subAssignees).includes(loggedInMember.name)));
+  });
+
+  document.getElementById('flow-board').innerHTML = visibleFlows.length ? visibleFlows.map(f => {
     try { return flowCardHTML(f); }
     catch(e) { console.error('flowCardHTML error for flow', f.id, e);
       return `<div class="flow-card"><div class="flow-header"><div class="flow-num">#${TODAY_FLOWS.indexOf(f)+1}</div><div class="flow-info"><div class="flow-title">${f.title||'Untitled flow'}</div><div style="font-size:11px;color:var(--red);">⚠ Error rendering this flow — try refreshing.</div></div></div></div>`;
     }
-  }).join('');
+  }).join('') : `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No flows assigned to you today</div><div class="empty-sub">You'll see flows here when a step is assigned to you.</div></div>`;
 }
 
 function getTemplateSteps(templateId) {
@@ -2765,15 +2907,21 @@ function flowCardHTML(f) {
   const curStep = tmplSteps[curStepIdx] || {};
   const canInteract = role !== 'viewer';
   const isManager = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
-  const isStepOwner = loggedInMember && curStep.owner && curStep.owner === loggedInMember.name;
-  const canMarkDone = isManager || isStepOwner;
-  // Approvers can approve/reject approval steps they were routed to
+  // Step owner = assigned person OR someone it was sub-delegated to
+  const subAssigneeForCur = (f.subAssignees || {})[curStepIdx] || null;
+  const isStepOwner = loggedInMember && (
+    (curStep.owner && curStep.owner === loggedInMember.name) ||
+    (subAssigneeForCur && subAssigneeForCur === loggedInMember.name)
+  );
+  // Only the actual task owner can mark a step done — managers cannot bypass this
+  const canMarkDone = isStepOwner;
   const isApprovalStep = curStep.isApproval === true ||
     curStep.name?.toLowerCase().includes('approval') ||
     curStep.name?.toLowerCase().includes('approve');
+  // Approval: only the routed approver (or step owner if they are the designated approver) can approve/reject
   const isRoutedApprover = loggedInMember && loggedInMember.role === 'approver' &&
     isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
-  const canApprove = canMarkDone || isRoutedApprover;
+  const canApprove = isRoutedApprover || (isApprovalStep && isStepOwner);
   const subtasksDone = areSubtasksDone(f, curStepIdx);
   const curSubtasks = curStep.subtasks || [];
   const curChecks = (f.subtaskChecks || [])[curStepIdx] || [];
@@ -2933,7 +3081,7 @@ function flowCardHTML(f) {
     ${subtaskSection}
     ${subAssignSection}
     ${driveSection}
-    ${isApprovalStep && canApprove && status !== 'done' ? `
+    ${isApprovalStep && status !== 'done' && (isManager || canApprove) ? `
     <div class="approval-actions">
       <div class="approval-title">⚖️ Approval Step — ${curStep.name}</div>
       ${(f.approvalRoutees && f.approvalRoutees.length) ? `
@@ -2944,9 +3092,10 @@ function flowCardHTML(f) {
           </span>`).join('')}
         </div>` : ''}
       <div class="approval-btns">
-        <button class="btn btn-sm" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);" onclick="openApprovalRoutingModal('${f.id}')">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}</button>
+        ${isManager ? `<button class="btn btn-sm" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);" onclick="openApprovalRoutingModal('${f.id}')">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}</button>` : ''}
+        ${canApprove ? `
         <button class="btn-approve" onclick="approveStep('${f.id}')">✓ Approve</button>
-        <button class="btn-reject" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>
+        <button class="btn-reject" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>` : `<span style="font-size:11px;color:var(--ink3);">Awaiting decision from approver</span>`}
       </div>
     </div>` : ''}
     <div class="flow-footer">
@@ -2975,10 +3124,13 @@ async function markStepDone(flowId) {
   if (!f || role === 'viewer') return;
   const tmplSteps = getTemplateSteps(f.templateId);
   const curStep = tmplSteps[f.currentStep] || {};
-  const isManager = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
-  const isStepOwner = loggedInMember && curStep.owner === loggedInMember.name;
-  if (!isManager && !isStepOwner && curStep.owner) {
-    toast(`Only ${curStep.owner} or a manager can mark this step done.`, 'warn'); return;
+  const subAssigneeCheck = (f.subAssignees || {})[f.currentStep] || null;
+  const isStepOwner = loggedInMember && (
+    curStep.owner === loggedInMember.name ||
+    (subAssigneeCheck && subAssigneeCheck === loggedInMember.name)
+  );
+  if (!isStepOwner && curStep.owner) {
+    toast(`Only ${subAssigneeCheck || curStep.owner} can mark this step done.`, 'warn'); return;
   }
   if (!areSubtasksDone(f, f.currentStep)) {
     toast('Complete all subtasks before marking this step done.', 'warn'); return;
@@ -5848,10 +6000,33 @@ async function subAssignStep(flowId, stepIdx, assignee) {
 // ═══════════════════════════════════════════
 async function approveStep(flowId) {
   const f = TODAY_FLOWS.find(x => x.id === flowId);
-  const tmplSteps = f ? getTemplateSteps(f.templateId) : [];
-  const stepName = tmplSteps[f?.currentStep]?.name || 'step';
-  await markStepDone(flowId);
-  auditLog('approved', `Approved "${stepName}" on "${f?.title}"`, { flow: f?.title, step: stepName });
+  if (!f) return;
+  const tmplSteps = getTemplateSteps(f.templateId);
+  const curStep = tmplSteps[f.currentStep] || {};
+  const stepName = curStep.name || 'step';
+  // Guard: only the routed approver (or the step's own assigned owner) can approve
+  const isRoutedApprover = loggedInMember && loggedInMember.role === 'approver' &&
+    (f.approvalRoutees || []).includes(loggedInMember.name);
+  const isStepOwner = loggedInMember && curStep.owner === loggedInMember.name;
+  if (!isRoutedApprover && !isStepOwner) {
+    toast('Only the assigned approver can approve this step.', 'warn'); return;
+  }
+  // Directly advance the flow (bypass markStepDone owner check for approval steps)
+  if (!f.stepTimings) f.stepTimings = tmplSteps.map(() => ({ startedAt: null, completedAt: null }));
+  f.stepTimings[f.currentStep].completedAt = Date.now();
+  f.stepStatuses[f.currentStep] = 'done';
+  if (f.currentStep < tmplSteps.length - 1) {
+    f.currentStep++;
+    f.stepStatuses[f.currentStep] = 'active';
+    f.stepTimings[f.currentStep] = { startedAt: Date.now(), completedAt: null };
+  } else {
+    f.completedAt = Date.now();
+  }
+  // Clear routees for this step after approval
+  delete f.approvalRoutees;
+  await fbSaveFlows();
+  renderToday();
+  auditLog('approved', `Approved "${stepName}" on "${f.title}"`, { flow: f.title, step: stepName });
   toast('Step approved and pushed forward!', 'ok');
 }
 
@@ -6024,12 +6199,48 @@ async function confirmApprovalRouting() {
 let CHAT_MESSAGES = [];
 let currentRoom = 'general';
 let chatUnsubscribe = null;
+let CHANNEL_MEMBERS = {}; // roomId → [name, name, …]  (loaded from Firestore)
+let chatChannelUnsub = null;
+
 const CHAT_ROOMS = [
-  { id: 'general',   label: '# General' },
-  { id: 'content',   label: '# Content' },
-  { id: 'approvals', label: '# Approvals' },
-  { id: 'ideas',     label: '# Ideas' },
+  { id: 'general',    label: 'General',    icon: '🌐', desc: 'Team-wide conversation' },
+  { id: 'editing',    label: 'Editing',    icon: '✂️', desc: 'Editing team & post production' },
+  { id: 'ideas',      label: 'Ideas',      icon: '💡', desc: 'Creative brainstorming & concepts' },
+  { id: 'compliance', label: 'Compliance', icon: '⚖️', desc: 'Compliance & approvals' },
+  { id: 'tasks',      label: 'Tasks',      icon: '✅', desc: 'Task coordination & updates' },
 ];
+
+// Load channel membership from Firestore (or use defaults)
+async function loadChannelMembers() {
+  if (!fbReady || !db) return;
+  try {
+    const snap = await db.collection('channelMembers').get();
+    snap.forEach(doc => { CHANNEL_MEMBERS[doc.id] = doc.data().members || []; });
+  } catch(e) { console.warn('loadChannelMembers:', e); }
+}
+
+async function saveChannelMembers(roomId, members) {
+  if (!fbReady || !db) return;
+  try {
+    await db.collection('channelMembers').doc(roomId).set({ members });
+    CHANNEL_MEMBERS[roomId] = members;
+  } catch(e) { console.warn('saveChannelMembers:', e); }
+}
+
+function getChannelMembers(roomId) {
+  // If no membership set, 'general' is open to all; others need explicit membership
+  if (roomId === 'general') return MEMBERS.map(m => m.name);
+  return CHANNEL_MEMBERS[roomId] || [];
+}
+
+function canAccessChannel(roomId) {
+  if (!loggedInMember) return false;
+  if (loggedInMember.role === 'head') return true; // Head sees all
+  const members = getChannelMembers(roomId);
+  if (roomId === 'general') return true; // General is always open
+  if (!members.length) return loggedInMember.role === 'manager' || loggedInMember.role === 'head';
+  return members.includes(loggedInMember.name);
+}
 // ═══════════════════════════════════════════
 // ENHANCED CHAT — @mentions, polls, reactions
 // ═══════════════════════════════════════════
@@ -6130,12 +6341,22 @@ function renderMessageText(text) {
     });
 }
 
+function clearChatAttach() {
+  _chatAttachPending = null;
+  const preview = document.getElementById('chat-attach-preview');
+  if (preview) preview.style.display = 'none';
+}
+
 function chatAttachFile(event) {
   const file = event.target.files[0];
   if (!file) return;
   event.target.value = '';
   _chatAttachPending = file;
-  toast(`"${file.name}" ready — hit Send to post it in chat.`, '');
+  // Show preview bar
+  const preview = document.getElementById('chat-attach-preview');
+  const nameEl = document.getElementById('chat-attach-name');
+  if (preview) preview.style.display = 'flex';
+  if (nameEl) nameEl.textContent = file.name;
 }
 
 function initChat() {
@@ -6164,18 +6385,161 @@ function initChat() {
 }
 
 function renderChat() {
-  document.getElementById('chat-rooms').innerHTML = CHAT_ROOMS.map(r =>
-    `<button class="chat-room-btn${r.id===currentRoom?' active':''}" onclick="switchRoom('${r.id}')">${r.label}</button>`
-  ).join('');
+  const isHead = loggedInMember && loggedInMember.role === 'head';
+  const isManager = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
+
+  // Sidebar channel list — show accessible channels only
+  const accessibleRooms = CHAT_ROOMS.filter(r => canAccessChannel(r.id));
+  // Ensure currentRoom is accessible; fallback to general
+  if (!accessibleRooms.find(r => r.id === currentRoom)) {
+    currentRoom = accessibleRooms[0]?.id || 'general';
+  }
+
+  document.getElementById('chat-rooms').innerHTML = accessibleRooms.map(r => {
+    const memberCount = r.id === 'general' ? MEMBERS.length : (getChannelMembers(r.id).length || 0);
+    return `<button class="chat-room-btn${r.id===currentRoom?' active':''}" onclick="switchRoom('${r.id}')">
+      <span class="room-icon">${r.icon}</span>
+      <span class="room-name">${r.label}</span>
+      ${memberCount && r.id !== 'general' ? `<span class="room-count">${memberCount}</span>` : ''}
+    </button>`;
+  }).join('');
+
+  // Head/manager gets a "+ Manage Channels" button at the bottom of the list
+  if (isManager) {
+    document.getElementById('chat-rooms').innerHTML +=
+      `<button class="chat-room-btn chat-manage-btn" onclick="openChannelManager()" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;">
+        <span class="room-icon">⚙️</span><span class="room-name">Manage Channels</span>
+      </button>`;
+  }
+
+  // Update header
+  const rm = CHAT_ROOMS.find(r => r.id === currentRoom) || CHAT_ROOMS[0];
+  document.getElementById('chat-header-title').textContent = `${rm?.icon || '#'} ${rm?.label || 'Chat'}`;
+  const chMembers = getChannelMembers(currentRoom);
+  const memberStr = currentRoom === 'general'
+    ? `All ${MEMBERS.length} members`
+    : chMembers.length ? `${chMembers.length} member${chMembers.length !== 1 ? 's' : ''}: ${chMembers.slice(0,4).join(', ')}${chMembers.length > 4 ? ` +${chMembers.length - 4} more` : ''}`
+    : 'No members yet — click Manage Channels';
+  document.getElementById('chat-header-meta').textContent = rm?.desc ? `${rm.desc} · ${memberStr}` : memberStr;
+
+  // Online members list in sidebar (filtered to channel)
+  const onlineList = document.getElementById('chat-online-list');
+  if (onlineList) {
+    const channelNames = currentRoom === 'general' ? MEMBERS.map(m=>m.name) : getChannelMembers(currentRoom);
+    const online = MEMBERS.filter(m => channelNames.includes(m.name) && m.status === 'online').slice(0, 10);
+    onlineList.innerHTML = online.length ? online.map(m =>
+      `<div class="chat-online-member">
+        <div class="av av-sm ${AV[m.name]||'av-a'}" style="width:20px;height:20px;font-size:8px;">${ini(m.name)}</div>
+        <span>${m.name.split(' ')[0]}</span>
+        <div class="chat-online-dot" style="margin-left:auto;"></div>
+      </div>`
+    ).join('') : `<div style="font-size:11px;color:rgba(255,255,255,0.25);padding:2px 0;">No members</div>`;
+  }
+
   const tagSel = document.getElementById('chat-tag-ref');
   tagSel.innerHTML = `<option value="">📌 Tag flow/task…</option>` +
     TODAY_FLOWS.map(f => `<option value="flow:${f.id}">Flow: ${f.title}</option>`).join('') +
     TASKS.map(t => `<option value="task:${t.id}">Task: ${t.title}</option>`).join('');
   document.getElementById('badge-chat').style.display = 'none';
+
+  // Show/hide message input for channels user is in
+  const inputWrapper = document.querySelector('.chat-input-wrapper');
+  const canPost = canAccessChannel(currentRoom);
+  if (inputWrapper) inputWrapper.style.display = canPost ? '' : 'none';
+
   initChat();
 }
 
-function switchRoom(roomId) { currentRoom = roomId; renderChat(); }
+function switchRoom(roomId) {
+  if (!canAccessChannel(roomId)) { toast("You're not a member of this channel.", 'warn'); return; }
+  currentRoom = roomId;
+  renderChat();
+}
+
+// ── CHANNEL MANAGER MODAL ──
+let _cmEditing = null; // roomId currently being edited
+
+function openChannelManager(roomId) {
+  _cmEditing = roomId || CHAT_ROOMS.find(r => r.id !== 'general')?.id || CHAT_ROOMS[0].id;
+  renderChannelManager();
+  document.getElementById('channel-manager-modal').style.display = 'flex';
+}
+
+function closeChannelManager() {
+  document.getElementById('channel-manager-modal').style.display = 'none';
+}
+
+function renderChannelManager() {
+  // Tab buttons
+  document.getElementById('cm-tabs').innerHTML = CHAT_ROOMS.filter(r => r.id !== 'general').map(r =>
+    `<button class="cm-tab${_cmEditing === r.id ? ' active' : ''}" onclick="selectCmChannel('${r.id}')">
+      ${r.icon} ${r.label}
+    </button>`
+  ).join('');
+
+  const room = CHAT_ROOMS.find(r => r.id === _cmEditing);
+  document.getElementById('cm-channel-title').textContent = `${room?.icon || ''} ${room?.label || ''} — Members`;
+  document.getElementById('cm-channel-desc').textContent = room?.desc || '';
+
+  const currentMembers = getChannelMembers(_cmEditing);
+  // Exclude approvers from channel membership (they get notified separately)
+  const eligible = MEMBERS.filter(m => m.role !== 'Approver');
+
+  document.getElementById('cm-member-list').innerHTML = eligible.map(m => {
+    const isMember = currentMembers.includes(m.name);
+    const isHead = m.role === 'Head';
+    return `<div class="cm-member-row${isMember ? ' selected' : ''}" onclick="${isHead ? '' : `toggleCmMember('${m.name}')`}" style="${isHead ? 'opacity:0.6;cursor:default;' : 'cursor:pointer;'}">
+      <div class="av av-sm ${AV[m.name]||'av-a'}" style="width:30px;height:30px;font-size:11px;">${ini(m.name)}</div>
+      <div class="cm-member-info">
+        <div class="cm-member-name">${m.name}</div>
+        <div class="cm-member-role">${m.role}${isHead ? ' · always included' : ''}</div>
+      </div>
+      <div class="cm-check${isMember ? ' checked' : ''}">${isMember ? '✓' : ''}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('cm-count').textContent = `${currentMembers.length} member${currentMembers.length !== 1 ? 's' : ''} selected`;
+}
+
+function selectCmChannel(roomId) {
+  _cmEditing = roomId;
+  renderChannelManager();
+}
+
+function toggleCmMember(name) {
+  const members = [...getChannelMembers(_cmEditing)];
+  const idx = members.indexOf(name);
+  if (idx >= 0) members.splice(idx, 1);
+  else members.push(name);
+  CHANNEL_MEMBERS[_cmEditing] = members;
+  renderChannelManager();
+}
+
+async function saveCmChanges() {
+  const btn = document.getElementById('cm-save-btn');
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+  // Save all non-general channels
+  for (const r of CHAT_ROOMS.filter(x => x.id !== 'general')) {
+    await saveChannelMembers(r.id, CHANNEL_MEMBERS[r.id] || []);
+  }
+  if (btn) { btn.textContent = 'Saved ✓'; setTimeout(() => { btn.textContent = 'Save Changes'; btn.disabled = false; }, 1500); }
+  closeChannelManager();
+  renderChat();
+  toast('Channel members updated!', 'ok');
+}
+
+function getFileIcon(name) {
+  if (!name) return '📎';
+  const ext = name.split('.').pop().toLowerCase();
+  if (['jpg','jpeg','png','gif','webp','svg'].includes(ext)) return '🖼️';
+  if (['mp4','mov','avi','webm'].includes(ext)) return '🎬';
+  if (['pdf'].includes(ext)) return '📄';
+  if (['doc','docx'].includes(ext)) return '📝';
+  if (['xls','xlsx','csv'].includes(ext)) return '📊';
+  if (['ppt','pptx'].includes(ext)) return '📊';
+  if (['zip','rar','7z'].includes(ext)) return '🗜️';
+  return '📎';
+}
 
 function renderChatMessages() {
   const el = document.getElementById('chat-messages');
@@ -6185,26 +6549,42 @@ function renderChatMessages() {
     return;
   }
   let lastDate = '';
-  el.innerHTML = CHAT_MESSAGES.map(msg => {
+  let lastSender = '';
+  el.innerHTML = CHAT_MESSAGES.map((msg, idx) => {
     const isMine = msg.sender === loggedInMember?.name;
     const msgDate = msg.sentAt?.toDate ? msg.sentAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : 'Today';
     let dateSep = '';
-    if (msgDate !== lastDate) { dateSep = `<div class="chat-date-sep">${msgDate}</div>`; lastDate = msgDate; }
+    if (msgDate !== lastDate) { dateSep = `<div class="chat-date-sep">${msgDate}</div>`; lastDate = msgDate; lastSender = ''; }
     const timeStr = msg.sentAt?.toDate
       ? msg.sentAt.toDate().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
       : msg.time || '';
+    const isConsecutive = msg.sender === lastSender && !dateSep;
+    lastSender = msg.sender;
 
     // Poll rendering
     if (msg.type === 'poll') return `${dateSep}<div class="chat-msg${isMine?' mine':''}">
-      ${!isMine?`<div class="av av-sm ${AV[msg.sender]||'av-a'}">${ini(msg.sender)}</div>`:''}
-      <div>
+      <div class="chat-av-wrap"><div class="av av-sm ${AV[msg.sender]||'av-a'}">${isMine?'':ini(msg.sender)}</div></div>
+      <div class="chat-bubble-wrap">
+        ${!isMine&&!isConsecutive?`<div class="chat-sender-name">${msg.sender}</div>`:''}
         <div class="poll-card">${renderPollCard(msg)}</div>
-        <div class="chat-meta">${!isMine?`<strong>${msg.sender}</strong> · `:''}${timeStr}</div>
+        <div class="chat-meta">${timeStr}</div>
       </div>
     </div>`;
 
-    // File attachment
-    const fileHtml = msg.fileUrl ? `<div class="chat-file-preview">📎 <a href="${msg.fileUrl}" target="_blank" style="color:var(--blue-dark);font-weight:600;">${msg.fileName||'Attached file'}</a></div>` : '';
+    // File attachment card
+    let fileHtml = '';
+    if (msg.fileUrl) {
+      const icon = getFileIcon(msg.fileName);
+      const ext = (msg.fileName||'').split('.').pop().toUpperCase() || 'FILE';
+      fileHtml = `<div class="chat-file-card" onclick="window.open('${msg.fileUrl}','_blank')">
+        <span class="chat-file-icon">${icon}</span>
+        <div class="chat-file-info">
+          <div class="chat-file-name">${msg.fileName||'Attached file'}</div>
+          <div class="chat-file-size">${ext} · tap to open</div>
+        </div>
+        <span class="chat-file-open">↗</span>
+      </div>`;
+    }
 
     // Reactions
     const reactions = msg.reactions || {};
@@ -6215,13 +6595,14 @@ function renderChatMessages() {
         </span>`).join('')}
     </div>` : '';
 
-    return `${dateSep}<div class="chat-msg${isMine?' mine':''}">
-      ${!isMine?`<div class="av av-sm ${AV[msg.sender]||'av-a'}">${ini(msg.sender)}</div>`:''}
-      <div>
+    return `${dateSep}<div class="chat-msg${isMine?' mine':''}${isConsecutive?' consecutive':''}">
+      <div class="chat-av-wrap"><div class="av av-sm ${AV[msg.sender]||'av-a'}">${ini(msg.sender)}</div></div>
+      <div class="chat-bubble-wrap">
+        ${!isMine&&!isConsecutive?`<div class="chat-sender-name">${msg.sender}</div>`:''}
         ${msg.tagLabel?`<div class="chat-tag">📌 ${msg.tagLabel}</div>`:''}
         ${fileHtml}
-        <div class="chat-bubble">${renderMessageText(msg.text||'')}</div>
-        <div class="chat-meta">${!isMine?`<strong>${msg.sender}</strong> · `:''}${timeStr}</div>
+        ${msg.text?`<div class="chat-bubble">${renderMessageText(msg.text)}</div>`:''}
+        <div class="chat-meta">${timeStr}</div>
         ${reactionHtml}
         <div class="chat-action-row">
           ${['👍','❤️','😂','🔥'].map(e=>`<button class="chat-react-btn" onclick="toggleReaction('${msg.id}','${e}')">${e}</button>`).join('')}
@@ -6255,19 +6636,29 @@ async function sendChatMessage() {
   if (tagRef.startsWith('flow:')) { const f = TODAY_FLOWS.find(x=>x.id===tagRef.replace('flow:','')); tagLabel = f?`Flow: ${f.title}`:''; }
   else if (tagRef.startsWith('task:')) { const t = TASKS.find(x=>String(x.id)===tagRef.replace('task:','')); tagLabel = t?`Task: ${t.title}`:''; }
 
-  // Handle file attachment — encode as base64 data URL for storage
+  // Handle file attachment — upload to Firebase Storage for shared access
   let fileUrl = '', fileName = '';
   if (_chatAttachPending) {
+    const uploadIndicator = document.getElementById('chat-uploading');
+    const sendBtn = document.getElementById('chat-send-btn');
     try {
-      fileUrl = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result);
-        r.onerror = rej;
-        r.readAsDataURL(_chatAttachPending);
-      });
+      if (uploadIndicator) uploadIndicator.style.display = 'flex';
+      if (sendBtn) sendBtn.disabled = true;
       fileName = _chatAttachPending.name;
-    } catch(e) { console.warn('File read error', e); }
+      const storage = firebase.storage();
+      const timestamp = Date.now();
+      const storageRef = storage.ref(`chat-files/${currentRoom}/${timestamp}_${fileName}`);
+      const snapshot = await storageRef.put(_chatAttachPending);
+      fileUrl = await snapshot.ref.getDownloadURL();
+    } catch(e) {
+      console.warn('File upload error', e);
+      toast('File upload failed — check storage permissions.', 'warn');
+    } finally {
+      if (uploadIndicator) uploadIndicator.style.display = 'none';
+      if (sendBtn) sendBtn.disabled = false;
+    }
     _chatAttachPending = null;
+    clearChatAttach();
   }
 
   const msg = {
@@ -6284,6 +6675,7 @@ async function sendChatMessage() {
   };
   if (input) input.value = '';
   if (document.getElementById('chat-tag-ref')) document.getElementById('chat-tag-ref').value = '';
+  clearChatAttach();
 
   // Notify @mentioned members
   msg.mentions.forEach(name => {
