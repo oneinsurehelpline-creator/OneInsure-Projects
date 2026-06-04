@@ -61,13 +61,18 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .side-panel.open{display:block;}
 
 /* ── SIDEBAR ── */
-.logo{padding:18px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.1);}
-.logo-name{font-family:var(--ff-head);font-size:18px;font-weight:800;color:var(--white);letter-spacing:-0.02em;}
-.logo-tag{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
-.nav-section{padding:14px 12px 4px;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.35);}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;margin:1px 6px;border-radius:var(--rad);cursor:pointer;font-size:13px;color:rgba(255,255,255,0.55);transition:all 0.15s;font-family:var(--ff-body);font-weight:500;}
-.nav-item:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);}
-.nav-item.active{background:var(--blue);color:var(--navy);font-weight:700;}
+.logo{padding:20px 16px 18px;border-bottom:1px solid rgba(255,255,255,0.1);position:relative;}
+.logo-icon{font-size:26px;line-height:1;margin-bottom:6px;}
+.logo-name{font-family:var(--ff-head);font-size:20px;font-weight:900;letter-spacing:-0.03em;background:linear-gradient(135deg,#00B0FF 0%,#40E0D0 50%,#FFB347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo-tag{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-top:3px;}
+.nav-section{padding:14px 14px 5px;font-size:9px;text-transform:uppercase;letter-spacing:0.12em;font-weight:700;color:rgba(255,255,255,0.28);display:flex;align-items:center;gap:5px;}
+.nav-section::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08);}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 12px;margin:1px 6px;border-radius:8px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,0.52);transition:all 0.15s;font-family:var(--ff-body);font-weight:500;}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.92);}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,176,255,0.25),rgba(64,224,208,0.15));color:#fff;font-weight:700;border-left:3px solid #00B0FF;padding-left:9px;}
+.nav-icon{color:rgba(255,255,255,0.38);transition:color 0.15s;flex-shrink:0;}
+.nav-item:hover .nav-icon{color:rgba(255,255,255,0.75);}
+.nav-item.active .nav-icon{color:#00B0FF;}
 .nav-icon{width:15px;height:15px;flex-shrink:0;opacity:0.8;}
 .nav-badge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,0.15);color:var(--white);}
 .nav-badge.hot{background:var(--amber);color:var(--navy);}
@@ -145,6 +150,9 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .flow-board{display:flex;flex-direction:column;gap:10px;}
 .flow-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radxl);overflow:hidden;transition:box-shadow 0.15s;}
 .flow-card:hover{box-shadow:var(--shadow);}
+.my-turn-card{border-color:var(--amber);border-width:2px;box-shadow:0 0 0 3px rgba(245,158,11,0.12);}
+.done-card{background:linear-gradient(135deg,#f0fdf4,#ffffff);border-color:#86efac;opacity:0.8;}
+.done-card:hover{opacity:1;}
 .flow-header{padding:14px 16px 10px;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid var(--border);}
 .flow-num{font-family:var(--ff-head);font-size:11px;font-weight:700;color:var(--ink4);min-width:20px;}
 .flow-info{flex:1;}
@@ -205,6 +213,32 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .mc-val{font-family:var(--ff-head);font-size:24px;font-weight:700;letter-spacing:-0.03em;line-height:1;}
 .mc-sub{font-size:10px;color:var(--ink3);margin-top:3px;}
 
+/* ── FLOW SUMMARY TABLE ── */
+.flow-view-toggle{display:flex;gap:4px;background:var(--cream2);padding:3px;border-radius:8px;border:1px solid var(--border);}
+.fvt-btn{padding:4px 12px;border-radius:6px;border:none;background:transparent;font-size:12px;font-weight:600;color:var(--ink3);cursor:pointer;font-family:var(--ff-body);transition:all 0.13s;}
+.fvt-btn.active{background:var(--white);color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+.flow-summary-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:var(--radl);overflow:hidden;border:1px solid var(--border);}
+.flow-summary-table thead tr{background:var(--cream2);}
+.flow-summary-table th{padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink3);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+.flow-summary-table td{padding:10px 12px;font-size:12px;color:var(--ink);border-bottom:1px solid var(--border);vertical-align:middle;}
+.flow-summary-table tbody tr:last-child td{border-bottom:none;}
+.flow-summary-table tbody tr{cursor:pointer;transition:background 0.1s;}
+.flow-summary-table tbody tr:hover{background:var(--cream2);}
+.fst-title{font-weight:600;font-size:13px;color:var(--navy);}
+.fst-step{font-size:11px;color:var(--ink2);}
+.fst-owner{display:flex;align-items:center;gap:5px;font-size:12px;}
+.fst-prog{height:5px;background:var(--cream3);border-radius:3px;overflow:hidden;min-width:60px;}
+.fst-prog-fill{height:100%;border-radius:3px;transition:width 0.3s;}
+.fst-plat{display:flex;gap:3px;flex-wrap:wrap;}
+.fst-status{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+.fst-done{background:var(--green-light);color:var(--green);}
+.fst-active{background:var(--blue-light);color:var(--blue-dark);}
+.fst-stuck{background:var(--red-light);color:var(--red);}
+.fst-approval{background:var(--purple-light);color:var(--purple);}
+@media(max-width:768px){
+  .flow-summary-table th:nth-child(4),.flow-summary-table td:nth-child(4),
+  .flow-summary-table th:nth-child(5),.flow-summary-table td:nth-child(5){display:none;}
+}
 /* ── FLOW PROGRESS BAR (wide) ── */
 .flow-progress-strip{background:var(--white);border:1px solid var(--border);border-radius:var(--radl);padding:14px 16px;margin-bottom:8px;}
 .fps-title{font-family:var(--ff-head);font-size:12px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
@@ -234,7 +268,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .chip{font-size:9px;padding:2px 7px;border-radius:10px;background:var(--cream2);color:var(--ink3);border:1px solid var(--border);}
 
 /* ── MODAL ── */
-.overlay{position:fixed;inset:0;background:rgba(26,25,22,0.5);display:none;align-items:center;justify-content:center;z-index:100;}
+.overlay{position:fixed;inset:0;background:rgba(26,25,22,0.5);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;}
 .overlay.open{display:flex;}
 .modal{background:var(--white);border-radius:var(--radxl);width:480px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
 .modal-hdr{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
@@ -364,11 +398,11 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .empty-sub{font-size:11px;}
 
 /* ── DIGEST BANNER ── */
-.digest{background:var(--ink);border-radius:var(--radl);padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;}
-.digest-icon{font-size:22px;flex-shrink:0;}
-.digest-content{flex:1;}
-.digest-title{font-family:var(--ff-head);font-size:12px;font-weight:700;color:var(--white);margin-bottom:5px;letter-spacing:0.02em;}
-.digest-items{display:flex;gap:14px;flex-wrap:wrap;}
+.digest{background:var(--navy);border-radius:var(--radl);padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+.digest-icon{font-size:18px;flex-shrink:0;}
+.digest-content{flex:1;min-width:0;}
+.digest-title{font-family:var(--ff-head);font-size:12px;font-weight:700;color:var(--white);margin-bottom:0;letter-spacing:0.02em;}
+.digest-items{display:flex;gap:10px;flex-wrap:wrap;margin-top:3px;}
 .digest-item{font-size:11px;color:rgba(255,255,255,0.55);display:flex;align-items:center;gap:4px;}
 .di-dot{width:5px;height:5px;border-radius:50%;background:var(--coral);flex-shrink:0;}
 
@@ -530,6 +564,26 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .chat-send-btn:hover{background:#001828;}
 .chat-send-btn:disabled{opacity:0.4;cursor:not-allowed;}
 .chat-uploading{font-size:11px;color:var(--ink3);padding:4px 8px;display:flex;align-items:center;gap:6px;}
+/* Inline media in chat */
+.chat-img{max-width:260px;max-height:200px;border-radius:10px;display:block;cursor:zoom-in;object-fit:cover;border:1px solid rgba(0,0,0,0.08);}
+.chat-video{max-width:280px;border-radius:10px;display:block;outline:none;}
+.chat-media-lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;}
+.chat-media-lightbox img{max-width:92vw;max-height:90vh;border-radius:8px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,0.5);}
+.chat-media-lightbox video{max-width:92vw;max-height:85vh;border-radius:8px;outline:none;}
+.chat-media-close{position:absolute;top:18px;right:22px;font-size:28px;color:white;cursor:pointer;line-height:1;opacity:0.8;}
+.chat-media-close:hover{opacity:1;}
+.chat-file-link{display:flex;align-items:center;gap:9px;padding:8px 12px;background:rgba(255,255,255,0.15);border-radius:10px;margin-bottom:4px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:background 0.13s;text-decoration:none;color:inherit;}
+.chat-msg:not(.mine) .chat-file-link{background:var(--cream2);border-color:var(--border);color:var(--ink);}
+.chat-msg:not(.mine) .chat-file-link:hover{background:var(--cream3);}
+.chat-msg.mine .chat-file-link:hover{background:rgba(255,255,255,0.25);}
+/* ── DIRECT MESSAGES ── */
+.chat-dm-section{padding:10px 14px 8px;border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;}
+.chat-dm-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.28);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.chat-dm-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08);}
+.chat-dm-btn{width:100%;text-align:left;padding:6px 10px;border-radius:7px;border:none;background:transparent;cursor:pointer;font-family:var(--ff-body);color:rgba(255,255,255,0.52);transition:all 0.13s;display:flex;align-items:center;gap:7px;font-size:12px;}
+.chat-dm-btn:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.92);}
+.chat-dm-btn.active{background:linear-gradient(135deg,rgba(0,176,255,0.25),rgba(64,224,208,0.15));color:#fff;font-weight:600;border-left:3px solid #00B0FF;padding-left:7px;}
+.chat-dm-unread{margin-left:auto;background:var(--coral);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center;}
 /* Channel room buttons (new icon+name style) */
 .room-icon{font-size:14px;flex-shrink:0;width:18px;text-align:center;}
 .room-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -872,47 +926,215 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .digest-config-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);}
 
 /* ── MOBILE RESPONSIVE ── */
-@media (max-width: 768px) {
-  :root { --sidebar: 0px; }
-  .sidebar { position:fixed;left:-220px;top:0;bottom:0;width:220px;z-index:200;transition:left 0.25s;box-shadow:var(--shadow-lg); }
-  .sidebar.open { left:0; }
-  .app { flex-direction:column; }
-  .content { padding:12px; }
-  .topbar { padding:10px 12px; }
-  .metrics-row { grid-template-columns:repeat(2,1fr) !important; }
-  .analytics-grid, .analytics-section + div { grid-template-columns:1fr !important; }
-  .cal-grid { grid-template-columns:repeat(7,minmax(40px,1fr)); font-size:10px; }
-  .cal-day { min-height:70px; padding:4px; }
-  .modal { width:92vw !important; max-width:92vw; }
-  .kanban { grid-template-columns:repeat(2,1fr); }
-  .mv-overlay .mv-topbar { flex-wrap:wrap; gap:6px; }
-  .mv-actions { flex-wrap:wrap; gap:4px; }
-  .chat-panel { height:calc(100vh - 110px); } .chat-sidebar { width:160px; }
-  .perf-table { font-size:11px; }
-  #pwa-banner { flex-wrap:wrap; }
-  .side-panel { width:100%; position:fixed; bottom:0; left:0; right:0; max-height:70vh; border-radius:var(--radxl) var(--radxl) 0 0; z-index:150; }
-  .hamburger-btn { display:flex !important; }
-}
+/* ═══════════════════════════════════════════
+   HAMBURGER (always defined, hidden on desktop)
+═══════════════════════════════════════════ */
+.hamburger-btn{width:38px;height:38px;background:transparent;border:none;border-radius:var(--rad);cursor:pointer;display:none;align-items:center;justify-content:center;flex-direction:column;gap:5px;flex-shrink:0;padding:0;}
+.hamburger-btn span{display:block;width:20px;height:2px;background:var(--navy);border-radius:2px;transition:all 0.2s;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:199;backdrop-filter:blur(2px);}
+.sidebar-overlay.show{display:block;}
+
 @media (min-width:769px) {
   .hamburger-btn { display:none !important; }
 }
 
-/* ── HAMBURGER for mobile ── */
-.hamburger-btn{width:36px;height:36px;background:var(--navy);border:none;border-radius:var(--rad);cursor:pointer;display:none;align-items:center;justify-content:center;flex-direction:column;gap:4px;flex-shrink:0;}
-.hamburger-btn span{display:block;width:18px;height:2px;background:white;border-radius:2px;}
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:199;}
-.sidebar-overlay.show{display:block;}
+/* ═══════════════════════════════════════════
+   MOBILE  ≤768px
+═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Root & Layout ── */
+  :root { --sidebar: 0px; }
+  .app { flex-direction:column; overflow:hidden; }
+
+  /* ── Sidebar slides in from left ── */
+  .sidebar {
+    position:fixed; left:-240px; top:0; bottom:0; width:240px;
+    z-index:200; transition:left 0.28s cubic-bezier(.4,0,.2,1);
+    box-shadow:var(--shadow-lg); overflow-y:auto;
+  }
+  .sidebar.open { left:0; }
+  .hamburger-btn { display:flex !important; }
+
+  /* ── Topbar — compact, no clutter ── */
+  .topbar { padding:10px 14px; gap:10px; position:sticky; top:0; z-index:100; background:var(--white); }
+  .topbar-title { font-size:14px; }
+  .topbar-date { display:none; }
+  /* Hide desktop-only topbar items on mobile */
+  .logout-btn { display:none !important; }
+  #main-btn  { display:none !important; }
+  .btn-ghost.btn-sm[onclick="go('log')"] { display:none !important; }
+  .role-chip { font-size:10px; padding:3px 8px; }
+  .notif-bell { font-size:16px; }
+
+  /* ── Main content area ── */
+  .content-row { flex:1; overflow:hidden; }
+  .content { padding:12px 12px 80px; overflow-y:auto; height:calc(100vh - 54px); }
+
+  /* ── TODAY'S FLOWS — vertical card layout ── */
+  .flow-board { gap:12px; }
+  .flow-card { border-radius:14px; }
+  .flow-header { padding:12px 14px 10px; }
+  .flow-title { font-size:13px; }
+
+  /* Step track: horizontal scroll on mobile stays but gets bigger touch targets */
+  .flow-steps {
+    padding:10px 14px 12px;
+    gap:0;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .flow-steps::-webkit-scrollbar { display:none; }
+  .step-circle { width:36px; height:36px; font-size:11px; }
+  .step-label  { font-size:9px; max-width:52px; }
+  .step-arrow  { width:18px; }
+
+  /* Active step action area — bigger buttons for fingers */
+  .flow-footer { padding:10px 14px; gap:8px; }
+  .btn { min-height:40px; font-size:13px; }
+  .btn-sm { min-height:34px; font-size:12px; padding:6px 12px; }
+
+  /* Approval action buttons — full width on mobile */
+  .approval-btns { flex-direction:column; gap:8px; }
+  .btn-approve, .btn-reject { width:100%; padding:12px; font-size:14px; border-radius:10px; }
+
+  /* ── FLOW STEP DETAIL (bottom sheet) ── */
+  .side-panel {
+    width:100% !important;
+    position:fixed; bottom:0; left:0; right:0;
+    max-height:82vh;
+    border-radius:18px 18px 0 0;
+    z-index:150;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .side-panel::before {
+    content:'';
+    display:block;
+    width:36px; height:4px;
+    background:var(--border2);
+    border-radius:2px;
+    margin:10px auto 4px;
+  }
+
+  /* ── TASKS ── */
+  .task-card { padding:12px 13px; }
+  .tc-title { font-size:13px; }
+  .kanban { grid-template-columns:1fr !important; }
+
+  /* ── METRICS ── */
+  .metrics-row { grid-template-columns:repeat(2,1fr) !important; gap:8px; }
+  .mc-val { font-size:20px; }
+
+  /* ── MODALS — full-width bottom sheet ── */
+  .overlay { align-items:flex-end !important; padding:0 !important; }
+  .modal {
+    width:100vw !important; max-width:100vw !important;
+    border-radius:20px 20px 0 0 !important;
+    max-height:90vh; overflow-y:auto;
+    margin:0 !important;
+  }
+  .modal-body { padding:14px 16px 24px; }
+
+  /* ── CHAT — full height, channel sidebar collapses ── */
+  .chat-panel { height:calc(100vh - 54px); flex-direction:column; border-radius:0; border:none; }
+  .chat-sidebar {
+    width:100% !important; height:auto;
+    flex-direction:row; padding:0;
+    overflow-x:auto; overflow-y:hidden;
+    flex-shrink:0;
+  }
+  .chat-sidebar-top { padding:8px 12px; flex:1; display:flex; align-items:center; gap:0; border-bottom:1px solid rgba(255,255,255,0.1); }
+  .chat-sidebar-title { display:none; }
+  #chat-rooms { flex-direction:row !important; gap:4px; overflow-x:auto; flex:1; padding-bottom:2px; }
+  #chat-rooms::-webkit-scrollbar { display:none; }
+  .chat-room-btn { white-space:nowrap; padding:6px 12px; font-size:12px; border-radius:20px; flex-shrink:0; }
+  .room-name { font-size:12px; }
+  .chat-sidebar-members { display:none; } /* hidden on mobile — no space */
+  .chat-main { flex:1; min-height:0; display:flex; flex-direction:column; }
+  .chat-header { padding:10px 14px; }
+  .chat-header-title { font-size:13px; }
+  .chat-header-meta { display:none; }
+  .chat-messages { padding:10px 12px; }
+  .chat-bubble { font-size:13px; padding:8px 11px; }
+  .chat-bubble-wrap { max-width:78%; }
+  .chat-input-wrapper { padding:8px 10px 12px; }
+  .chat-input { font-size:14px; } /* 14px prevents iOS zoom on focus */
+  .chat-send-btn { padding:9px 14px; font-size:13px; }
+  .chat-img { max-width:200px; }
+
+  /* ── CALENDAR ── */
+  .cal-grid { grid-template-columns:repeat(7,minmax(36px,1fr)); font-size:10px; }
+  .cal-day { min-height:60px; padding:3px; }
+
+  /* ── AUDIT / TABLES ── */
+  .perf-table { font-size:11px; }
+  #pwa-banner { flex-wrap:wrap; gap:8px; }
+  .mv-overlay .mv-topbar { flex-wrap:wrap; gap:6px; }
+  .mv-actions { flex-wrap:wrap; gap:4px; }
+
+  /* ── ANALYTICS ── */
+  .analytics-grid, .analytics-section + div { grid-template-columns:1fr !important; }
+
+  /* ── Section headers ── */
+  .sec-hdr { flex-wrap:wrap; gap:6px; }
+  .sec-title { font-size:13px; }
+
+  /* ── CM modal (channel manager) ── */
+  .cm-modal { border-radius:20px 20px 0 0 !important; }
+  .cm-tabs { gap:6px; }
+  .cm-tab { padding:5px 10px; font-size:11px; }
+}
+
+/* ── iOS: prevent auto-zoom on input focus (requires font-size ≥ 16px on mobile) ── */
+@media (max-width:768px) {
+  input, textarea, select {
+    font-size:16px !important;
+  }
+  /* Exception: keep small labels small — only affects actual form inputs */
+  .step-name-input, .step-owner-select { font-size:13px !important; }
+}
+
+/* ── Mobile FAB — quick Log Activity ── */
+.mob-fab {
+  display:none;
+  position:fixed;
+  bottom:20px; right:16px;
+  width:52px; height:52px;
+  background:var(--coral);
+  color:white;
+  border:none; border-radius:50%;
+  font-size:22px; line-height:1;
+  box-shadow:0 4px 16px rgba(255,90,60,0.4);
+  cursor:pointer;
+  align-items:center; justify-content:center;
+  z-index:120;
+  transition:transform 0.15s, box-shadow 0.15s;
+}
+.mob-fab:active { transform:scale(0.93); box-shadow:0 2px 8px rgba(255,90,60,0.3); }
+@media (max-width:768px) {
+  .mob-fab { display:flex; }
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 </head>
 <body>
 
 <!-- ── LOGIN SCREEN ── -->
+<div id="app-loading" style="position:fixed;inset:0;background:#0F2744;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;">
+  <div style="font-family:Georgia,serif;font-size:26px;font-weight:900;background:linear-gradient(135deg,#00B0FF,#40E0D0,#FFB347);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">SociaDesk</div>
+  <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;">Connecting…</div>
+  <div style="width:28px;height:28px;border:3px solid rgba(255,255,255,0.1);border-top-color:#00B0FF;border-radius:50%;animation:sd-spin 0.8s linear infinite;margin-top:4px;"></div>
+</div>
+<style>@keyframes sd-spin{to{transform:rotate(360deg)}}</style>
+
 <div class="login-screen" id="login-screen">
 
   <!-- Login box -->
@@ -934,6 +1156,9 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         <input type="password" id="login-password" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()"/>
       </div>
       <button class="btn-login" id="login-btn" onclick="doLogin()">Sign In</button>
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="doForgotPassword()" style="background:none;border:none;color:var(--ink3);font-size:12px;cursor:pointer;font-family:var(--ff-body);text-decoration:underline;">Forgot password?</button>
+      </div>
     </div>
   </div>
 
@@ -963,12 +1188,14 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 </div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<button class="mob-fab" id="mob-fab" onclick="go('log')" title="Log Activity">✏️</button>
 
 <div class="app" id="app" style="display:none;">
 
   <!-- ── SIDEBAR ── -->
   <div class="sidebar">
     <div class="logo">
+      <div class="logo-icon">🚀</div>
       <div class="logo-name">SociaDesk</div>
       <div class="logo-tag">Social Media OS</div>
     </div>
@@ -982,89 +1209,87 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
       </div>
     </div>
 
-    <div class="nav-section">Daily Work</div>
+    <div class="nav-section">⚡ Daily Work</div>
+    <div class="nav-item" id="nav-onboarding" onclick="go('onboarding')" style="background:rgba(255,176,0,0.12);border:1px solid rgba(255,176,0,0.25);margin-bottom:4px;">
+      <span class="nav-icon" style="font-size:15px;">🌟</span>
+      Getting Started
+    </div>
     <div class="nav-item active" id="nav-today" onclick="go('today')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v1.5H2zm0 3.5h8V12H2z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">📋</span>
       Today's Flows
       <span class="nav-badge hot" id="badge-today">3</span>
     </div>
     <div class="nav-item" id="nav-tasks" onclick="go('tasks')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3 4h10v1.5H3zm0 3h10v1.5H3zm0 3h6V12H3z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">✅</span>
       Ad-hoc Tasks
       <span class="nav-badge" id="badge-tasks">4</span>
     </div>
-    <div class="nav-item" id="nav-pipeline" onclick="go('pipeline')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 3h3v10H1zm4 3h3v7H5zm4-2h3v9H9zm3-1V2h2v1z"/></svg>
-      Pipeline
-    </div>
+
     <div class="nav-item" id="nav-log" onclick="go('log')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v1.5H2zm0 3.5h12V7H2zm0 3.5h8V11H2zm0 3h5v1.5H2z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">✏️</span>
       Activity Log
     </div>
 
-    <div class="nav-section">Team</div>
+    <div class="nav-section">👥 Team</div>
     <div class="nav-item" id="nav-workload" onclick="go('workload')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 10h3v4H2zm4-4h3v8H6zm4-3h3v11h-3z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">⚖️</span>
       Workload
       <span class="nav-badge hot" id="badge-workload"></span>
     </div>
     <div class="nav-item" id="nav-regular" onclick="go('regular')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.75 7.75H5.5v-1.5h1.75V4.5h1.5z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">🔁</span>
       Regular Tasks
     </div>
     <div class="nav-item" id="nav-weekly" onclick="go('weekly')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zm0 3h12v9H2zm2 2v1.5h2V7zm4 0v1.5h2V7zM4 11v1.5h2V11zm4 0v1.5h2V11z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">📅</span>
       Weekly Plan
       <span class="nav-badge hot" id="badge-weekly"></span>
     </div>
 
-    <div class="nav-section">Manage</div>
+    <div class="nav-section">🗂 Manage</div>
     <div class="nav-item" id="nav-calendar" onclick="go('calendar')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v2H2zm0 3h12v9H2zm2 2v1.5h2V7zm4 0v1.5h2V7zM4 11v1.5h2V11zm4 0v1.5h2V11z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">🗓️</span>
       Content Calendar
     </div>
     <div class="nav-item" id="nav-campaigns" onclick="go('campaigns')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14v3H1zm0 4h14v3H1zm0 4h9v3H1zm10 1.5 3-1.5-3-1.5z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">🎯</span>
       Campaigns
       <span class="nav-badge" id="badge-campaigns"></span>
     </div>
     <div class="nav-item" id="nav-flows" onclick="go('flows')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 3a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H2a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H2a1 1 0 01-1-1z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">⚙️</span>
       Flow Templates
     </div>
     <div class="nav-item" id="nav-analytics" onclick="go('analytics')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 12V7h2v5zm3-8v8h2V4zm3 3v5h2V7zm3-2v7h2V5z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">📈</span>
       Analytics
     </div>
     <div class="nav-item" id="nav-performance" onclick="go('performance')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm.5 6.5h-3v-1h2V4.5h1z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">🏆</span>
       Post Performance
     </div>
     <div class="nav-item" id="nav-scratchpad" onclick="go('scratchpad')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v1.5H2zm0 3h12V7H2zm0 3.5h8V10H2zm8 1.5 4 2-4 2z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">🖼️</span>
       Media Scratchpad
       <span class="nav-badge" id="badge-scratchpad"></span>
     </div>
     <div class="nav-item" id="nav-audit" onclick="go('audit')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v1.5H2zm0 3h12v1.5H2zm0 3h8v1.5H2zm0 3h6v1.5H2zm9-1l1.5 1.5L15 9l-3 3-1.5-1.5L12 9z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">🔍</span>
       Audit Trail
     </div>
     <div class="nav-item" id="nav-notifications" onclick="go('notifications')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a5 5 0 00-5 5v3l-1.5 2H14.5L13 9V6a5 5 0 00-5-5zm-1 13a1 1 0 002 0H7z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">🔔</span>
       Notifications
       <span class="nav-badge hot" id="badge-notif">3</span>
     </div>
     <div class="nav-item" id="nav-chat" onclick="go('chat')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v9H9l-3 3v-3H2z"/></svg>
+      <span class="nav-icon" style="font-size:15px;">💬</span>
       Team Chat
       <span class="nav-badge hot" id="badge-chat" style="display:none;"></span>
     </div>
-    <div class="nav-item" id="nav-onboarding" onclick="go('onboarding')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.75 7.75H5.5v-1.5h1.75V4.5h1.5z"/></svg>
-      Getting Started
-    </div>
 
-    <div class="nav-section" style="margin-top:8px;">Team</div>
+
+    <div class="nav-section" style="margin-top:8px;">🏠 Team</div>
     <div class="team-section" id="team-list"></div>
     <div style="margin-top:auto;padding:10px 8px;border-top:1px solid rgba(255,255,255,0.08);">
       <div id="conn-status" class="conn-status cs-connecting"><span class="sync-ping">◌</span> Connecting…</div>
@@ -1091,16 +1316,21 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="role-chip rc-manager" id="role-chip">Manager</span>
-        <div class="user-chip" id="user-chip" onclick="go('notifications')">
-          <div class="av av-sm" id="topbar-av" style="width:20px;height:20px;font-size:8px;">?</div>
-          <span id="topbar-name">Loading…</span>
-        </div>
+        <button class="btn btn-ghost btn-sm" onclick="go('log')" id="log-btn" style="display:none;">+ Log</button>
+        <button class="btn btn-coral btn-sm" id="main-btn" onclick="mainAction()">+ New Task</button>
         <div class="notif-bell" onclick="go('notifications')" title="Notifications">
           🔔<div class="notif-pip show" id="notif-pip"></div>
         </div>
-        <button class="logout-btn" onclick="doLogout()">Sign out</button>
-        <button class="btn btn-ghost btn-sm" onclick="go('log')">+ Log Activity</button>
-        <button class="btn btn-coral btn-sm" id="main-btn" onclick="mainAction()">+ New Task</button>
+        <div class="user-chip" id="user-chip" onclick="toggleUserMenu()" style="cursor:pointer;position:relative;">
+          <div class="av av-sm" id="topbar-av" style="width:20px;height:20px;font-size:8px;">?</div>
+          <span id="topbar-name">Loading…</span>
+          <span style="font-size:10px;color:var(--ink3);margin-left:2px;">▾</span>
+          <div id="user-menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radl);box-shadow:var(--shadow);min-width:140px;z-index:200;overflow:hidden;">
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--ink3);" id="user-menu-name"></div>
+            <button onclick="go('notifications');toggleUserMenu();" style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;font-size:13px;cursor:pointer;font-family:var(--ff-body);">🔔 Notifications</button>
+            <button onclick="doLogout()" style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;font-size:13px;cursor:pointer;font-family:var(--ff-body);color:var(--red);">⤴ Sign Out</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1112,9 +1342,16 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
           <div class="digest" id="digest-banner"></div>
           <div class="sec-hdr">
             <span class="sec-title">Daily Post Flows — <span id="flow-date-label"></span></span>
-            <button class="btn btn-sm btn-ghost" id="spawn-flows-btn" onclick="spawnFlows()">↺ Spawn Today's Flows</button>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div class="flow-view-toggle">
+                <button class="fvt-btn active" id="fvt-summary" onclick="setFlowView('summary')">⚡ Summary</button>
+                <button class="fvt-btn" id="fvt-detail" onclick="setFlowView('detail')">☰ Detail</button>
+              </div>
+              <button class="btn btn-sm btn-ghost" id="spawn-flows-btn" onclick="openSpawnModal()">↺ New Flow</button>
+            </div>
           </div>
-          <div id="flow-board"></div>
+          <div id="flow-summary"></div>
+          <div id="flow-board" style="display:none;"></div>
         </div>
 
         <!-- AD-HOC TASKS -->
@@ -1132,7 +1369,6 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
             </select>
             <select id="f-assignee" onchange="renderTasks()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
               <option value="">All Members</option>
-              <option>Akshay</option><option>Chirag</option><option>Anamika</option><option>Shivam</option><option>Sandeep</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
             </select>
             <select id="f-platform" onchange="renderTasks()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
               <option value="">All Platforms</option>
@@ -1145,9 +1381,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         </div>
 
         <!-- PIPELINE -->
-        <div class="panel" id="panel-pipeline" style="height:calc(100vh - 60px);overflow:hidden;">
-          <div class="kanban" id="kanban-board" style="height:100%;"></div>
-        </div>
+        
 
         <!-- ACTIVITY LOG -->
         <div class="panel" id="panel-log">
@@ -1157,7 +1391,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
             <div style="font-family:var(--ff-head);font-size:14px;font-weight:700;margin-bottom:14px;">✏️ Log Activity</div>
             <div class="form-grid">
               <div class="fg"><label>Team Member</label>
-                <select id="lf-member"><option>Akshay</option><option>Chirag</option><option>Anamika</option><option>Shivam</option><option>Sandeep</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option><option>Pawan</option><option>Shantanu</option></select>
+                <select id="lf-member"></select>
               </div>
               <div class="fg"><label>Linked To</label>
                 <select id="lf-type">
@@ -1327,6 +1561,13 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                 <div class="chat-sidebar-title">Channels</div>
                 <div id="chat-rooms" style="display:flex;flex-direction:column;gap:2px;"></div>
               </div>
+              <div class="chat-dm-section">
+                <div class="chat-dm-title">Direct Messages</div>
+                <div id="chat-dm-list"></div>
+                <button class="chat-dm-btn" onclick="openNewDM()" style="margin-top:4px;opacity:0.6;font-size:11px;">
+                  <span style="font-size:13px;">✏️</span> New Message
+                </button>
+              </div>
               <div class="chat-sidebar-members">
                 <div class="chat-sidebar-members-title">Online</div>
                 <div id="chat-online-list"></div>
@@ -1363,7 +1604,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                 <div class="chat-input-row" style="position:relative;">
                   <div id="mention-dropdown" class="mention-dropdown" style="display:none;left:0;right:110px;bottom:calc(100% + 4px);"></div>
                   <textarea class="chat-input" id="chat-input"
-                    placeholder="Message… @name to mention" rows="1"
+                    placeholder="Message…" rows="1"
                     oninput="chatInputHandler(event)"
                     onkeydown="chatKeyHandler(event)"></textarea>
                   <label class="chat-attach-btn" title="Attach file">
@@ -1372,7 +1613,11 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                   </label>
                   <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">Send</button>
                 </div>
-                <div id="chat-uploading" class="chat-uploading" style="display:none;">⏳ Uploading file…</div>
+                <div id="chat-uploading" class="chat-uploading" style="display:none;">⏳ <span>Uploading…</span></div>
+                <div id="chat-upload-progress" style="display:none;margin:4px 0 6px;height:4px;background:var(--border);border-radius:4px;overflow:hidden;">
+                  <div id="chat-upload-fill" style="height:100%;width:0%;background:var(--navy);border-radius:4px;transition:width 0.2s;"></div>
+                </div>
+                <div id="chat-upload-pct" style="display:none;"></div>
               </div>
             </div>
           </div>
@@ -1400,6 +1645,8 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
             <input type="date" id="audit-filter-date" onchange="renderAudit()" style="font-size:12px;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);"/>
             <button class="btn btn-sm btn-ghost" onclick="document.getElementById('audit-filter-member').value='';document.getElementById('audit-filter-type').value='';document.getElementById('audit-filter-date').value='';renderAudit();">✕ Clear</button>
             <span id="audit-count" style="font-size:11px;color:var(--ink3);margin-left:auto;"></span>
+            <button class="btn btn-sm" style="background:var(--navy);color:white;border-color:var(--navy);display:flex;align-items:center;gap:5px;" onclick="downloadFlowReport()">⬇ Flows Report</button>
+            <button class="btn btn-sm" style="background:var(--teal,#0d9488);color:white;border-color:var(--teal,#0d9488);display:flex;align-items:center;gap:5px;" onclick="downloadTaskReport()">⬇ Tasks Report</button>
           </div>
           <div id="audit-list"></div>
         </div>
@@ -1522,7 +1769,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
           <input type="text" id="nt-title" placeholder="e.g. Create Diwali campaign reel for client X"/>
         </div>
         <div class="fg"><label>Assign To</label>
-          <select id="nt-assignee"><option>Akshay</option><option>Chirag</option><option>Anamika</option><option>Shivam</option><option>Sandeep</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option></select>
+          <select id="nt-assignee"></select>
         </div>
         <div class="fg"><label>Priority</label>
           <select id="nt-priority"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select>
@@ -1783,6 +2030,72 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
     <button class="mv-btn mv-btn-ghost" onclick="mvAddComment()" style="flex-shrink:0;">Send</button>
   </div>
 
+</div>
+
+<!-- SPAWN FLOW MODAL -->
+<div class="overlay" id="spawn-modal" style="display:none;" onclick="if(event.target===this)closeSpawnModal()">
+  <div class="modal" style="width:420px;max-width:95vw;">
+    <div class="modal-hdr">
+      <span class="modal-title">↺ Spawn a Flow</span>
+      <button class="close-x" onclick="closeSpawnModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--ink2);margin-bottom:14px;">Choose a template and give this flow a name.</div>
+      <div class="login-field" style="margin-bottom:12px;">
+        <label style="font-size:12px;font-weight:600;color:var(--ink2);">Template</label>
+        <select id="spawn-template-sel" style="width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:13px;font-family:var(--ff-body);outline:none;background:var(--cream);">
+        </select>
+      </div>
+      <div id="spawn-template-meta" style="font-size:11px;color:var(--ink3);margin-bottom:14px;padding:8px 12px;background:var(--cream2);border-radius:var(--rad);"></div>
+      <div class="login-field" style="margin-bottom:16px;">
+        <label style="font-size:12px;font-weight:600;color:var(--ink2);">Flow Name</label>
+        <input type="text" id="spawn-flow-name" style="width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:13px;font-family:var(--ff-body);outline:none;" placeholder="e.g. Morning Post — May 13" onkeydown="if(event.key==='Enter')confirmSpawn()"/>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn" onclick="closeSpawnModal()">Cancel</button>
+        <button class="btn btn-coral" onclick="confirmSpawn()">↺ Spawn Flow</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TASK MODAL -->
+<div class="overlay" id="edit-task-modal" style="display:none;" onclick="if(event.target===this)closeEditTask()">
+  <div class="modal" style="width:460px;max-width:95vw;">
+    <div class="modal-hdr">
+      <span class="modal-title">✏️ Edit Task</span>
+      <button class="close-x" onclick="closeEditTask()">×</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="fg"><label>Title</label><input type="text" id="et-title" style="width:100%;"/></div>
+      <div style="display:flex;gap:10px;">
+        <div class="fg" style="flex:1;"><label>Assignee</label><select id="et-assignee" style="width:100%;"></select></div>
+        <div class="fg" style="flex:1;"><label>Priority</label>
+          <select id="et-priority" style="width:100%;">
+            <option value="high">High</option>
+            <option value="med">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div class="fg" style="flex:1;"><label>Status</label>
+          <select id="et-status" style="width:100%;">
+            <option value="todo">To Do</option>
+            <option value="in-progress">In Progress</option>
+            <option value="blocked">Blocked</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="fg" style="flex:1;"><label>Due Date</label><input type="date" id="et-due" style="width:100%;"/></div>
+      </div>
+      <div class="fg"><label>Notes</label><textarea id="et-notes" rows="3" style="width:100%;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+        <button class="btn" onclick="closeEditTask()">Cancel</button>
+        <button class="btn btn-coral" onclick="saveEditTask()">Save Changes</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- CHANNEL MANAGER MODAL -->
@@ -2136,22 +2449,22 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 // ═══════════════════════════════════════════
 
 const MEMBERS = [
-  {name:'Akshay',    role:'Head',        av:'av-c', status:'online', reportsTo:null},
-  {name:'Chirag',    role:'Manager',     av:'av-a', status:'online', reportsTo:'Akshay'},
-  {name:'Anamika',   role:'Manager',     av:'av-b', status:'online', reportsTo:'Akshay'},
-  {name:'Shivam',    role:'Team Member', av:'av-d', status:'online', reportsTo:'Akshay'},
-  {name:'Sandeep',   role:'Team Member', av:'av-e', status:'online', reportsTo:'Akshay'},
-  {name:'Shantanu',  role:'Team Member', av:'av-a', status:'online', reportsTo:'Akshay'},
-  {name:'Deepanshu', role:'Team Member', av:'av-c', status:'online', reportsTo:'Chirag'},
-  {name:'Harsh',     role:'Team Member', av:'av-d', status:'online', reportsTo:'Chirag'},
-  {name:'Pawan',     role:'Team Member', av:'av-b', status:'online', reportsTo:'Chirag'},
-  {name:'Ria',       role:'Team Member', av:'av-b', status:'online', reportsTo:'Anamika'},
-  {name:'Isha',      role:'Team Member', av:'av-e', status:'online', reportsTo:'Anamika'},
-  {name:'Tamanna',   role:'Team Member', av:'av-a', status:'online', reportsTo:'Anamika'},
-  {name:'Rochelle',  role:'Approver',    av:'av-f', status:'online', reportsTo:null},
-  {name:'Anirudh',   role:'Approver',    av:'av-g', status:'online', reportsTo:null},
-  {name:'Susant',    role:'Approver',    av:'av-h', status:'online', reportsTo:null},
-  {name:'Nasita',    role:'Approver',    av:'av-i', status:'online', reportsTo:null},
+  {name:'Akshay',    role:'head',        av:'av-c', status:'online', reportsTo:null},
+  {name:'Chirag',    role:'manager',     av:'av-a', status:'online', reportsTo:'Akshay'},
+  {name:'Anamika',   role:'manager',     av:'av-b', status:'online', reportsTo:'Akshay'},
+  {name:'Shivam',    role:'member', av:'av-d', status:'online', reportsTo:'Akshay'},
+  {name:'Sandeep',   role:'member', av:'av-e', status:'online', reportsTo:'Akshay'},
+  {name:'Shantanu',  role:'member', av:'av-a', status:'online', reportsTo:'Akshay'},
+  {name:'Deepanshu', role:'member', av:'av-c', status:'online', reportsTo:'Chirag'},
+  {name:'Harsh',     role:'member', av:'av-d', status:'online', reportsTo:'Chirag'},
+  {name:'Pawan',     role:'member', av:'av-b', status:'online', reportsTo:'Chirag'},
+  {name:'Ria',       role:'member', av:'av-b', status:'online', reportsTo:'Anamika'},
+  {name:'Isha',      role:'member', av:'av-e', status:'online', reportsTo:'Anamika'},
+  {name:'Tamanna',   role:'member', av:'av-a', status:'online', reportsTo:'Anamika'},
+  {name:'Rochelle',  role:'approver',    av:'av-f', status:'online', reportsTo:null},
+  {name:'Anirudh',   role:'approver',    av:'av-g', status:'online', reportsTo:null},
+  {name:'Susant',    role:'approver',    av:'av-h', status:'online', reportsTo:null},
+  {name:'Nasita',    role:'approver',    av:'av-i', status:'online', reportsTo:null},
 ];
 
 const AV = {
@@ -2172,9 +2485,12 @@ function getDirectReports(managerName) {
 function getVisibleMembers(viewerName) {
   const viewer = MEMBERS.find(m => m.name === viewerName);
   if (!viewer) return [viewerName];
-  if (viewer.reportsTo === null) return MEMBERS.map(m => m.name); // Head sees all
+  // Approvers are not part of the planning hierarchy — they see nothing
+  if (viewer.role === 'approver') return [];
+  // Head sees everyone
+  if (viewer.role === 'head') return MEMBERS.map(m => m.name);
   // Manager sees themselves + direct reports
-  if (viewer.role === 'Manager') return [viewerName, ...getDirectReports(viewerName)];
+  if (viewer.role === 'manager') return [viewerName, ...getDirectReports(viewerName)];
   // Member sees only themselves
   return [viewerName];
 }
@@ -2198,8 +2514,10 @@ const FLOW_STEPS = [
 const PLATFORMS = ['Instagram','Facebook','LinkedIn','Twitter/X','YouTube','Reels'];
 const PLAT_CLASS = {'Instagram':'plat-ig','Facebook':'plat-fb','LinkedIn':'plat-li','Twitter/X':'plat-tw','YouTube':'plat-yt','Reels':'plat-re'};
 
+let _templatesLoadedFromFirestore = false; // true once Firestore has confirmed template data
+
 const FLOW_TEMPLATES = [
-  {id:'social-daily', name:'Daily Social Post', steps: FLOW_STEPS, platforms: PLATFORMS, freq:'Daily'},
+  {id:'social-daily', name:'Daily Social Post', steps: JSON.parse(JSON.stringify(FLOW_STEPS)), platforms: PLATFORMS, freq:'Daily'},
   {id:'webinar', name:'Webinar', freq:'As needed', platforms: ['LinkedIn','YouTube'],
    steps:[
     {id:'w-plan',    name:'Planning & Brief',        short:'Plan',   owner:'', isApproval:false, subtasks:['Define topic & speaker','Set date & time','Draft agenda','Confirm budget']},
@@ -2243,7 +2561,7 @@ const FIREBASE_CONFIG = {
   authDomain: "social-desk-d823c.firebaseapp.com",
   databaseURL: "https://social-desk-d823c-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "social-desk-d823c",
-  storageBucket: "social-desk-d823c.firebasestorage.app",
+  storageBucket: "social-desk-d823c.appspot.com",
   messagingSenderId: "279457655574",
   appId: "1:279457655574:web:3cc66a3f740fe2a934fe37",
   measurementId: "G-0YBEB8Z796"
@@ -2257,7 +2575,12 @@ let fbReady = false;
 let unsubTasks = null, unsubLogs = null, unsubFlows = null;
 
 function todayKey() {
-  return new Date().toISOString().split('T')[0]; // "2026-05-04"
+  // Use local date (not UTC) so flows don't disappear after midnight UTC
+  const d = new Date();
+  const yr = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const dy = String(d.getDate()).padStart(2, '0');
+  return `${yr}-${mo}-${dy}`; // "2026-05-13" in local timezone
 }
 
 // ── Init Firebase ──────────────────────────
@@ -2333,9 +2656,135 @@ function applyLoggedInUser() {
   // Hide role switcher for non-head users
   const roleBox = document.querySelector('.role-box');
   if (roleBox) roleBox.style.display = loggedInMember.role === 'head' ? '' : 'none';
+
+  // Update user menu name
+  const umn = document.getElementById('user-menu-name');
+  if (umn) umn.textContent = `${loggedInMember.name} · ${loggedInMember.role}`;
+
+  // Show Log Activity button in topbar for members (their main action)
+  const logBtn = document.getElementById('log-btn');
+  if (logBtn) logBtn.style.display = loggedInMember.role === 'member' ? '' : 'none';
+
+  // Hide nav items per role
+  const r = loggedInMember.role;
+  const navRules = {
+    // panel id → minimum role required: 'all', 'member', 'manager', 'head'
+    'workload':    'manager',  // managers + head only
+    'audit':       'manager',  // managers + head only
+    'analytics':   'manager',  // managers + head only
+    'campaigns':   'manager',  // managers + head only
+    'flows':       'manager',  // managers + head only — members don't edit templates
+    'performance': 'manager',  // managers + head only
+    'pipeline':    'all',      // everyone
+    'regular':     'manager',  // managers + head only
+    'weekly':      'all',      // everyone (members submit, managers review)
+    'scratchpad':  'all',      // everyone
+    'log':         'all',      // everyone
+    'today':       'all',
+    'tasks':       'all',
+    'chat':        'all',
+    'notifications':'all',
+    'onboarding':  'all',
+    'calendar':    'manager',
+  };
+  Object.entries(navRules).forEach(([panel, minRole]) => {
+    const navEl = document.getElementById('nav-' + panel);
+    if (!navEl) return;
+    let visible = true;
+    if (minRole === 'manager') visible = (r === 'manager' || r === 'head');
+    if (minRole === 'head')    visible = (r === 'head');
+    navEl.style.display = visible ? '' : 'none';
+  });
 }
 
 // ── Login ──────────────────────────────────
+async function doForgotPassword() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const errEl = document.getElementById('login-error');
+  if (!email) {
+    errEl.textContent = 'Please enter your email address above first.';
+    errEl.classList.add('show');
+    document.getElementById('login-email').focus();
+    return;
+  }
+  // Check email is a recognised team member
+  if (!EMAIL_TO_MEMBER[email]) {
+    errEl.textContent = 'That email is not registered in SociaDesk.';
+    errEl.classList.add('show');
+    return;
+  }
+  try {
+    if (!auth) {
+      auth = firebase.auth();
+    }
+    await auth.sendPasswordResetEmail(email);
+    errEl.style.background = 'var(--green-light)';
+    errEl.style.color = 'var(--green)';
+    errEl.textContent = `✓ Reset link sent to ${email} — check your inbox.`;
+    errEl.classList.add('show');
+  } catch(e) {
+    let msg = 'Could not send reset email. Try again.';
+    if (e.code === 'auth/user-not-found') msg = 'No account found for that email. Contact your admin.';
+    if (e.code === 'auth/too-many-requests') msg = 'Too many attempts. Please wait a few minutes.';
+    errEl.style.background = '';
+    errEl.style.color = '';
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+  }
+}
+
+if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+
+// Restore auth session on page load — keeps user logged in across refreshes
+function hideSplash() {
+  const splash = document.getElementById('app-loading');
+  if (splash) splash.style.display = 'none';
+}
+
+(function restoreSession() {
+  const _auth = firebase.auth();
+  const _db   = firebase.firestore();
+
+  // Try LOCAL persistence — falls back silently on iOS private browsing
+  _auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {
+    // iOS Safari private mode blocks IndexedDB — try SESSION as fallback
+    _auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(() => {});
+  });
+
+  // Set a timeout — if Firebase takes >5s on slow mobile, show login screen anyway
+  const splashTimeout = setTimeout(() => {
+    hideSplash();
+    document.getElementById('login-screen').classList.remove('hidden');
+  }, 5000);
+
+  _auth.onAuthStateChanged(async (user) => {
+    clearTimeout(splashTimeout);
+    hideSplash();
+
+    if (!user) {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('app').style.display = 'none';
+      return;
+    }
+    const email = user.email?.toLowerCase();
+    const member = EMAIL_TO_MEMBER[email];
+    if (!member) {
+      await _auth.signOut();
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('app').style.display = 'none';
+      return;
+    }
+    if (fbReady) return;
+    auth = _auth;
+    db   = _db;
+    currentUser = user;
+    loggedInMember = { ...member, email };
+    fbReady = true;
+    startListeners();
+    showApp();
+  });
+})();
+
 async function doLogin() {
   const email    = document.getElementById('login-email').value.trim().toLowerCase();
   const password = document.getElementById('login-password').value;
@@ -2347,27 +2796,25 @@ async function doLogin() {
 
   btn.disabled = true; btn.textContent = 'Signing in…';
   errEl.classList.remove('show');
+  hideSplash(); // ensure splash is gone before login attempt
 
   try {
-    
-if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    auth = firebase.auth();
-    db   = firebase.firestore();
+    if (!auth) auth = firebase.auth();
+    if (!db)   db   = firebase.firestore();
 
-    
     await auth.signInWithEmailAndPassword(email, password);
     currentUser = auth.currentUser;
     loggedInMember = { ...EMAIL_TO_MEMBER[email], email };
 
-    // Check if this is first login (password matches default)
+    // First login — force password change
     if (password === DEFAULT_PASSWORD) {
-      // Force password change
       showChangePassword();
       btn.disabled = false; btn.textContent = 'Sign In';
       return;
     }
 
-    // Mark first login done in Firestore
+    // onAuthStateChanged will fire and call showApp() — no need to call here
+    // But set fbReady so the handler knows login is in progress
     fbReady = true;
     setConnStatus('live');
     startListeners();
@@ -2468,65 +2915,173 @@ function setConnStatus(state) {
 }
 
 // ── Real-time Firestore listeners ──────────
-function startListeners() {
-  const today = todayKey();
+// ── One-time migration: move old date-keyed flows into flows/active ──
+async function migrateOldFlows() {
+  if (!fbReady || !db) return;
+  try {
+    // Check if flows/active already has data — if so, nothing to migrate
+    const activeSnap = await db.collection('flows').doc('active').get();
+    if (activeSnap.exists && (activeSnap.data().flows || []).length > 0) return;
 
+    // Scan last 30 days of date-keyed documents for any flows
+    const allFlows = [];
+    const seen = new Set();
+    const today = new Date();
+    const checks = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      checks.push(key);
+    }
+
+    // Fetch all date docs in parallel
+    const snaps = await Promise.all(
+      checks.map(k => db.collection('flows').doc(k).get().catch(() => null))
+    );
+
+    snaps.forEach(snap => {
+      if (!snap || !snap.exists) return;
+      const flows = snap.data().flows || [];
+      flows.forEach(f => {
+        if (!seen.has(f.id)) {
+          seen.add(f.id);
+          allFlows.push(deserializeFlowFromFirestore(f));
+        }
+      });
+    });
+
+    if (!allFlows.length) return;
+
+    // Write all found flows into flows/active
+    const serialized = allFlows.map(serializeFlowForFirestore);
+    await db.collection('flows').doc('active').set({
+      flows: serialized,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Update in-memory and localStorage
+    TODAY_FLOWS = allFlows;
+    try { localStorage.setItem('sd_active_flows', JSON.stringify(TODAY_FLOWS)); } catch(e) {}
+    renderToday();
+    console.log(`Migrated ${allFlows.length} flow(s) from date-keyed docs to flows/active`);
+  } catch(e) {
+    console.warn('Flow migration failed (non-critical):', e);
+  }
+}
+
+function startListeners() {
   // Tasks — all time
   unsubTasks = db.collection('tasks').orderBy('createdAt', 'desc')
     .onSnapshot(snap => {
       const newTasks = snap.docs.map(d => ({ ...d.data(), id: d.id }));
       detectTaskChanges(newTasks);
       TASKS = newTasks;
-      if (currentPanel === 'tasks' || currentPanel === 'pipeline') refresh();
+      if (currentPanel === 'tasks') refresh();
       document.getElementById('badge-tasks').textContent = TASKS.filter(t => t.status !== 'done').length;
     }, err => console.error('Tasks listener error:', err));
 
-  // Logs — today only for performance
+  // Logs
   unsubLogs = db.collection('logs').orderBy('createdAt', 'desc').limit(50)
     .onSnapshot(snap => {
       LOGS = snap.docs.map(d => ({ ...d.data(), id: d.id }));
       if (currentPanel === 'log') renderLog();
     }, err => console.error('Logs listener error:', err));
 
-  // Flows — today's date doc
-  unsubFlows = db.collection('flows').doc(today)
-    .onSnapshot(snap => {
+  // Flows — stored in 'flows/active', persist until completed/deleted regardless of date
+  const lsFlows = localStorage.getItem('sd_active_flows');
+  if (lsFlows) {
+    try {
+      const cached = JSON.parse(lsFlows);
+      if (cached && cached.length) {
+        TODAY_FLOWS = cached;
+        if (currentPanel === 'today') renderToday();
+        document.getElementById('badge-today').textContent = TODAY_FLOWS.length;
+      }
+    } catch(e) {}
+  } else {
+    // No localStorage (new device / mobile) — fetch directly from Firestore immediately
+    // Don't wait for onSnapshot — do an eager get() so flows appear fast
+    db.collection('flows').doc('active').get()
+      .then(snap => {
+        if (snap.exists && !TODAY_FLOWS.length) {
+          const rawFlows = (snap.data().flows || []).map(deserializeFlowFromFirestore);
+          TODAY_FLOWS = migrateFlows(rawFlows);
+          try { localStorage.setItem('sd_active_flows', JSON.stringify(TODAY_FLOWS)); } catch(e) {}
+          if (currentPanel === 'today') renderToday();
+          document.getElementById('badge-today').textContent = TODAY_FLOWS.length;
+        }
+      })
+      .catch(e => console.warn('Eager flows fetch failed:', e));
+  }
+
+  function migrateFlows(rawFlows) {
+    return rawFlows.map(f => {
+      if (!f.templateId && FLOW_TEMPLATES.length) f.templateId = FLOW_TEMPLATES[0].id;
+      const steps = getTemplateSteps(f.templateId);
+      if (steps.length && (!f.stepStatuses || f.stepStatuses.length !== steps.length)) {
+        const old = f.stepStatuses || [];
+        f.stepStatuses = steps.map((_, i) => old[i] || (i === f.currentStep ? 'active' : i < f.currentStep ? 'done' : 'pending'));
+      }
+      if (steps.length && (!f.notes || f.notes.length !== steps.length)) {
+        const oldNotes = f.notes || [];
+        f.notes = steps.map((_, i) => oldNotes[i] || '');
+      }
+      if (steps.length) {
+        if (!f.subtaskChecks || f.subtaskChecks.length !== steps.length)
+          f.subtaskChecks = steps.map((s, i) => f.subtaskChecks?.[i] || (s.subtasks||[]).map(()=>false));
+        if (!f.driveFiles || f.driveFiles.length !== steps.length)
+          f.driveFiles = steps.map((_, i) => f.driveFiles?.[i] || []);
+      }
+      return f;
+    });
+  }
+
+  unsubFlows = db.collection('flows').doc('active')
+    .onSnapshot({ includeMetadataChanges: true }, snap => {
+      const fromCache = snap.metadata.fromCache;
+      const hasPending = snap.metadata.hasPendingWrites;
+
       if (snap.exists) {
-        let newFlows = snap.data().flows || [];
-        // Migrate old flows — fix missing templateId and stepStatuses length mismatch
-        newFlows = newFlows.map(f => {
-          if (!f.templateId && FLOW_TEMPLATES.length) f.templateId = FLOW_TEMPLATES[0].id;
-          const steps = getTemplateSteps(f.templateId);
-          // Ensure stepStatuses array matches current template length
-          if (steps.length && (!f.stepStatuses || f.stepStatuses.length !== steps.length)) {
-            const old = f.stepStatuses || [];
-            f.stepStatuses = steps.map((_, i) => old[i] || (i === f.currentStep ? 'active' : i < f.currentStep ? 'done' : 'pending'));
-          }
-          // Ensure notes array matches
-          if (steps.length && (!f.notes || f.notes.length !== steps.length)) {
-            const oldNotes = f.notes || [];
-            f.notes = steps.map((_, i) => oldNotes[i] || '');
-          }
-          // Ensure subtaskChecks and driveFiles arrays match
-          if (steps.length) {
-            if (!f.subtaskChecks || f.subtaskChecks.length !== steps.length)
-              f.subtaskChecks = steps.map((s, i) => f.subtaskChecks?.[i] || (s.subtasks||[]).map(()=>false));
-            if (!f.driveFiles || f.driveFiles.length !== steps.length)
-              f.driveFiles = steps.map((_, i) => f.driveFiles?.[i] || []);
-          }
-          return f;
-        });
+        const rawFlows = (snap.data().flows || []).map(deserializeFlowFromFirestore);
+        const newFlows = migrateFlows(rawFlows);
         detectFlowChanges(newFlows);
         TODAY_FLOWS = newFlows;
-      } else {
-        TODAY_FLOWS = JSON.parse(JSON.stringify(TODAY_FLOWS_DEFAULT));
-        db.collection('flows').doc(today).set({ flows: TODAY_FLOWS, date: today });
+        if (!fromCache || hasPending) {
+          try { localStorage.setItem('sd_active_flows', JSON.stringify(TODAY_FLOWS)); } catch(e) {}
+        }
+      } else if (!fromCache) {
+        // No active flows doc yet — restore from localStorage or start empty
+        let restoredFlows = null;
+        if (lsFlows) {
+          try {
+            const parsed = JSON.parse(lsFlows);
+            if (parsed && parsed.length) restoredFlows = migrateFlows(parsed);
+          } catch(e) {}
+        }
+        TODAY_FLOWS = restoredFlows || JSON.parse(JSON.stringify(TODAY_FLOWS_DEFAULT));
+        if (TODAY_FLOWS.length) {
+          const serializedInit = TODAY_FLOWS.map(serializeFlowForFirestore);
+          db.collection('flows').doc('active')
+            .set({ flows: serializedInit })
+            .catch(e => console.warn('Flow init write failed:', e));
+        }
       }
+
       if (currentPanel === 'today') renderToday();
-      // Re-render after short delay in case templates weren't loaded yet
-      setTimeout(() => { if (currentPanel === 'today') renderToday(); }, 1500);
       document.getElementById('badge-today').textContent = TODAY_FLOWS.length;
-    }, err => console.error('Flows listener error:', err));
+      // Re-render after short delay to ensure templates are loaded
+      setTimeout(() => {
+        if (currentPanel === 'today') renderToday();
+        document.getElementById('badge-today').textContent = TODAY_FLOWS.length;
+      }, 800);
+    }, err => {
+      console.error('Flows listener error:', err);
+      if (lsFlows) {
+        try { TODAY_FLOWS = migrateFlows(JSON.parse(lsFlows)); } catch(e) {}
+        if (currentPanel === 'today') renderToday();
+      }
+    });
 }
 
 // ── Write helpers ──────────────────────────
@@ -2560,16 +3115,45 @@ async function fbSaveLog(entry) {
   } catch(e) { console.error('fbSaveLog:', e); saveToLocalStorage(); }
 }
 
-async function fbSaveFlows() {
-  if (!fbReady) { saveToLocalStorage(); return; }
+// Firestore does not support nested arrays (e.g. subtaskChecks = [[false,false],[true]])
+// Serialize them to JSON strings before saving, deserialize on load
+function serializeFlowForFirestore(f) {
+  return {
+    ...f,
+    subtaskChecks: JSON.stringify(f.subtaskChecks || []),
+    driveFiles:    JSON.stringify(f.driveFiles    || []),
+    stepTimings:   JSON.stringify(f.stepTimings   || []),
+    subAssignees:  JSON.stringify(f.subAssignees  || {}),
+  };
+}
+function deserializeFlowFromFirestore(f) {
   try {
-    const today = todayKey();
-    await db.collection('flows').doc(today).set({
-      flows: TODAY_FLOWS,
-      date: today,
+    return {
+      ...f,
+      subtaskChecks: typeof f.subtaskChecks === 'string' ? JSON.parse(f.subtaskChecks) : (f.subtaskChecks || []),
+      driveFiles:    typeof f.driveFiles    === 'string' ? JSON.parse(f.driveFiles)    : (f.driveFiles    || []),
+      stepTimings:   typeof f.stepTimings   === 'string' ? JSON.parse(f.stepTimings)   : (f.stepTimings   || []),
+      subAssignees:  typeof f.subAssignees  === 'string' ? JSON.parse(f.subAssignees)  : (f.subAssignees  || {}),
+    };
+  } catch(e) { return f; }
+}
+
+async function fbSaveFlows() {
+  // Always persist to localStorage first
+  try {
+    localStorage.setItem('sd_active_flows', JSON.stringify(TODAY_FLOWS));
+  } catch(e) {}
+  if (!fbReady || !db) { return; }
+  try {
+    // Flows stored in 'flows/active' — persist across days until completed or deleted
+    const serialized = TODAY_FLOWS.map(serializeFlowForFirestore);
+    await db.collection('flows').doc('active').set({
+      flows: serialized,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-  } catch(e) { console.error('fbSaveFlows:', e); saveToLocalStorage(); }
+  } catch(e) {
+    console.error('fbSaveFlows Firestore error:', e);
+  }
 }
 
 // ── Unified save() — routes to Firebase or localStorage ──
@@ -2584,15 +3168,17 @@ function saveToLocalStorage() {
   try {
     localStorage.setItem('sd_tasks', JSON.stringify(TASKS));
     localStorage.setItem('sd_logs', JSON.stringify(LOGS));
-    localStorage.setItem('sd_flows', JSON.stringify(TODAY_FLOWS));
+    localStorage.setItem('sd_active_flows', JSON.stringify(TODAY_FLOWS));
   } catch(e) {}
 }
 
 function loadFromLocalStorage() {
   try {
-    TASKS       = JSON.parse(localStorage.getItem('sd_tasks')) || JSON.parse(JSON.stringify(DEFAULT_TASKS));
-    LOGS        = JSON.parse(localStorage.getItem('sd_logs'))  || JSON.parse(JSON.stringify(DEFAULT_LOGS));
-    TODAY_FLOWS = JSON.parse(localStorage.getItem('sd_flows')) || JSON.parse(JSON.stringify(TODAY_FLOWS_DEFAULT));
+    TASKS = JSON.parse(localStorage.getItem('sd_tasks')) || JSON.parse(JSON.stringify(DEFAULT_TASKS));
+    LOGS  = JSON.parse(localStorage.getItem('sd_logs'))  || JSON.parse(JSON.stringify(DEFAULT_LOGS));
+    const lsFlows = localStorage.getItem('sd_active_flows');
+    TODAY_FLOWS = lsFlows ? (JSON.parse(lsFlows) || JSON.parse(JSON.stringify(TODAY_FLOWS_DEFAULT)))
+                          : JSON.parse(JSON.stringify(TODAY_FLOWS_DEFAULT));
   } catch(e) {
     TASKS = JSON.parse(JSON.stringify(DEFAULT_TASKS));
     LOGS  = JSON.parse(JSON.stringify(DEFAULT_LOGS));
@@ -2617,6 +3203,7 @@ function initApp() {
   loadEmailConfig(); // load email notification config
   initPWA();         // PWA service worker + install prompt
   loadChannelMembers(); // load channel membership from Firestore
+  migrateOldFlows(); // one-time migration from date-keyed to flows/active
   // Chat initialises lazily when user opens chat panel
   if (isFriday()) {
     const pending = MEMBERS.filter(m => !getPlanForMemberWeek(m.name, getWeekKey(1))).length;
@@ -2690,8 +3277,20 @@ function go(panel){
   document.getElementById('panel-'+panel).classList.add('active');
   document.getElementById('nav-'+panel)?.classList.add('active');
   currentPanel=panel;
-  const titles={today:"Today's Flows",tasks:'Ad-hoc Tasks',pipeline:'Pipeline',log:'Activity Log',flows:'Flow Templates',analytics:'Analytics',notifications:'Notifications',workload:'Team Workload',regular:'Regular Tasks',weekly:'Weekly Plan',chat:'Team Chat',audit:'Audit Trail',calendar:'Content Calendar',campaigns:'Campaigns',onboarding:'Getting Started',performance:'Post Performance',scratchpad:'Media Scratchpad'};
+  // Auto-close sidebar on mobile after nav tap
+  if(window.innerWidth<=768){
+    const sb=document.querySelector('.sidebar');
+    const ov=document.getElementById('sidebar-overlay');
+    if(sb&&sb.classList.contains('open')){
+      sb.classList.remove('open');
+      if(ov)ov.classList.remove('show');
+      const btn=document.querySelector('.hamburger-btn');
+      if(btn)btn.querySelectorAll('span').forEach(s=>s.style.cssText='');
+    }
+  }
+  const titles={today:"Today's Flows",tasks:'Ad-hoc Tasks',log:'Activity Log',flows:'Flow Templates',analytics:'Analytics',notifications:'Notifications',workload:'Team Workload',regular:'Regular Tasks',weekly:'Weekly Plan',chat:'Team Chat',audit:'Audit Trail',calendar:'Content Calendar',campaigns:'Campaigns',onboarding:'Getting Started',performance:'Post Performance',scratchpad:'Media Scratchpad'};
   document.getElementById('page-title').textContent=titles[panel]||panel;
+  updateMobFab(panel);
   closeSide();
   if(panel==='notifications'){ syncPrefsToUI(); renderNotifHistory(); return; }
   if(panel==='workload'){ renderWorkload(); return; }
@@ -2710,7 +3309,7 @@ function go(panel){
 function refresh(){
   if(currentPanel==='today') renderToday();
   if(currentPanel==='tasks') renderTasks();
-  if(currentPanel==='pipeline') renderPipeline();
+
   if(currentPanel==='log') renderLog();
   if(currentPanel==='flows') renderFlowTemplates();
   if(currentPanel==='analytics') renderAnalytics();
@@ -2743,13 +3342,19 @@ function getFlowStatus(f){
   if(f.stepStatuses.every(s=>s==='done')) return 'done';
   if(f.stepStatuses.some(s=>s==='stuck')) return 'stuck';
   const cs=f.stepStatuses[f.currentStep];
-  if(cs==='active'&&FLOW_STEPS[f.currentStep].id.includes('appr')) return 'approval';
+  const _fSteps = getTemplateSteps(f.templateId); const _fStep = _fSteps[f.currentStep]; if(cs==='active'&&(_fStep?.isApproval||_fStep?.name?.toLowerCase().includes('approv'))) return 'approval';
   return 'active';
 }
 
 function renderToday(){
   const today=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
-  document.getElementById('flow-date-label').textContent=today;
+  // Show active flow count, not just today's date — flows persist until completed
+  const activeCount = TODAY_FLOWS.filter(f => getFlowStatus(f) !== 'done').length;
+  const doneCount = TODAY_FLOWS.filter(f => getFlowStatus(f) === 'done').length;
+  document.getElementById('flow-date-label').textContent =
+    TODAY_FLOWS.length
+      ? `${today} · ${activeCount} active${doneCount ? ', ' + doneCount + ' done' : ''}`
+      : today;
 
   // Show/hide spawn button — managers and head only
   const isManager = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
@@ -2788,30 +3393,24 @@ function renderToday(){
       </div>`;
     return;
   }
-  // Filter flows based on role:
-  // Head → sees all flows
-  // Manager → sees flows where any step belongs to themselves or their direct reports
-  // Member → sees only flows where they personally own a step
-  // Approver → sees only flows currently at an approval step routed to them
+  // All logged-in users see all flows — this is the team's shared work pipeline
+  // Step actions (mark done, approve) are separately gated by ownership
+  // Approvers only see flows currently at an approval step routed to them
   const visibleFlows = TODAY_FLOWS.filter(f => {
     if (!loggedInMember) return false;
     const r = loggedInMember.role;
-    if (r === 'head') return true;
-    const tmplSteps = getTemplateSteps(f.templateId);
-    if (r === 'manager') {
-      const teamNames = [loggedInMember.name, ...MEMBERS.filter(m => m.reportsTo === loggedInMember.name).map(m => m.name)];
-      return tmplSteps.some(s => teamNames.includes(s.owner));
-    }
+    // Head, manager, member — see all flows
+    if (r === 'head' || r === 'manager' || r === 'member') return true;
+    // Approver — only sees flows at an approval step routed to them
     if (r === 'approver') {
+      const tmplSteps = getTemplateSteps(f.templateId);
       const curStep = tmplSteps[f.currentStep] || {};
       const isApprovalStep = curStep.isApproval === true ||
         curStep.name?.toLowerCase().includes('approval') ||
         curStep.name?.toLowerCase().includes('approve');
       return isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
     }
-    // Member — sees flows where they own any step (so they know what's coming)
-    return tmplSteps.some(s => s.owner === loggedInMember.name ||
-      (f.subAssignees && Object.values(f.subAssignees).includes(loggedInMember.name)));
+    return true;
   });
 
   document.getElementById('flow-board').innerHTML = visibleFlows.length ? visibleFlows.map(f => {
@@ -2820,17 +3419,111 @@ function renderToday(){
       return `<div class="flow-card"><div class="flow-header"><div class="flow-num">#${TODAY_FLOWS.indexOf(f)+1}</div><div class="flow-info"><div class="flow-title">${f.title||'Untitled flow'}</div><div style="font-size:11px;color:var(--red);">⚠ Error rendering this flow — try refreshing.</div></div></div></div>`;
     }
   }).join('') : `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No flows assigned to you today</div><div class="empty-sub">You'll see flows here when a step is assigned to you.</div></div>`;
+
+  renderFlowSummary(visibleFlows);
+}
+
+// Members default to Detail (they need to act), Managers default to Summary (they need overview)
+let _flowView = null; // null = auto-set on first render
+
+function setFlowView(view) {
+  _flowView = view;
+  document.getElementById('fvt-summary')?.classList.toggle('active', view === 'summary');
+  document.getElementById('fvt-detail')?.classList.toggle('active', view === 'detail');
+  document.getElementById('flow-summary').style.display = view === 'summary' ? '' : 'none';
+  document.getElementById('flow-board').style.display   = view === 'detail'  ? '' : 'none';
+}
+
+function renderFlowSummary(flows) {
+  const el = document.getElementById('flow-summary');
+  if (!el) return;
+
+  if (!flows || !flows.length) {
+    el.innerHTML = '';
+    return;
+  }
+
+  const STATUS_META = {
+    done:     { cls:'fst-done',     icon:'✓', label:'Done' },
+    active:   { cls:'fst-active',   icon:'●', label:'In Progress' },
+    stuck:    { cls:'fst-stuck',    icon:'!', label:'Stuck' },
+    approval: { cls:'fst-approval', icon:'⚖', label:'Approval' },
+  };
+  const platAbbr = {'Instagram':'IG','Facebook':'FB','LinkedIn':'LI','Twitter/X':'TW','YouTube':'YT','Reels':'RL'};
+  const PLAT_COLOUR = {'IG':'#E1306C','FB':'#1877F2','LI':'#0A66C2','TW':'#1DA1F2','YT':'#FF0000','RL':'#FF4500'};
+
+  const rows = flows.map((f, idx) => {
+    const tmplSteps = getTemplateSteps(f.templateId);
+    const status = getFlowStatus(f);
+    const sm = STATUS_META[status] || STATUS_META.active;
+    const curStep = tmplSteps[f.currentStep] || {};
+    const doneCount = (f.stepStatuses || []).filter(s => s === 'done').length;
+    const total = tmplSteps.length || 1;
+    const pct = Math.round((doneCount / total) * 100);
+    const progCol = pct === 100 ? 'var(--green)' : pct >= 60 ? 'var(--blue)' : pct >= 30 ? 'var(--amber)' : 'var(--coral)';
+    const owner = (f.subAssignees && f.subAssignees[f.currentStep]) || curStep.owner || '';
+    const plats = (f.platforms || []).slice(0, 4);
+    const elapsed = f.stepTimings?.[f.currentStep]?.startedAt
+      ? formatElapsed(f.stepTimings[f.currentStep].startedAt, Date.now())
+      : '—';
+
+    return `<tr onclick="setFlowView('detail');setTimeout(()=>{const el=document.getElementById('fc-${f.id}');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},100)">
+      <td style="width:28px;text-align:center;color:var(--ink3);font-size:11px;font-weight:700;">${idx+1}</td>
+      <td>
+        <div class="fst-title">${f.title || 'Untitled'}</div>
+        <div style="display:flex;gap:3px;margin-top:3px;" class="fst-plat">
+          ${plats.map(p=>{const ab=platAbbr[p]||p.substring(0,2);return `<span style="font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700;background:${PLAT_COLOUR[ab]||'var(--cream3)'};color:white;">${ab}</span>`;}).join('')}
+        </div>
+      </td>
+      <td>
+        <div class="fst-step" style="font-weight:600;">${curStep.name || '—'}</div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:1px;">Step ${f.currentStep+1} of ${total}</div>
+      </td>
+      <td>
+        ${owner ? `<div class="fst-owner"><div class="av av-sm ${AV[owner]||'av-a'}" style="width:22px;height:22px;font-size:9px;">${ini(owner)}</div>${owner.split(' ')[0]}</div>` : '<span style="font-size:11px;color:var(--amber);">Unassigned</span>'}
+      </td>
+      <td style="min-width:90px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="fst-prog"><div class="fst-prog-fill" style="width:${pct}%;background:${progCol};"></div></div>
+          <span style="font-size:10px;color:var(--ink3);white-space:nowrap;">${pct}%</span>
+        </div>
+      </td>
+      <td><span style="font-size:10px;color:var(--ink3);">${elapsed}</span></td>
+      <td><span class="fst-status ${sm.cls}">${sm.icon} ${sm.label}</span></td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `<table class="flow-summary-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Flow</th>
+        <th>Current Step</th>
+        <th>Assigned To</th>
+        <th>Progress</th>
+        <th>Time on Step</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+
+  // Auto-detect default view if not set
+  if (_flowView === null) {
+    _flowView = (loggedInMember?.role === 'member' || loggedInMember?.role === 'approver') ? 'detail' : 'summary';
+  }
+  setFlowView(_flowView);
 }
 
 function getTemplateSteps(templateId) {
-  // Try to find in FLOW_TEMPLATES first
+  // Always read from FLOW_TEMPLATES — never fall back to hardcoded FLOW_STEPS
+  // This ensures edited template names/owners are always reflected
   if (templateId) {
     const t = FLOW_TEMPLATES.find(x => x.id === templateId);
-    if (t && t.steps && t.steps.length) return t.steps;
+    if (t && t.steps && t.steps.length) return JSON.parse(JSON.stringify(t.steps));
   }
-  // Fallback — return FLOW_STEPS (hardcoded default) or a placeholder
-  if (FLOW_STEPS && FLOW_STEPS.length) return FLOW_STEPS;
-  // Last resort — generate placeholder steps from stepStatuses length
+  // If template not found yet (still loading), return empty
+  // The UI will show a loading card and retry after templates load
   return [];
 }
 
@@ -2838,18 +3531,123 @@ async function spawnFlows(template) {
   if (!loggedInMember || (loggedInMember.role !== 'manager' && loggedInMember.role !== 'head')) {
     toast('Only managers and head can spawn flows.', 'warn'); return;
   }
-  const tmpl = template || FLOW_TEMPLATES[0];
-  if (!tmpl) { toast('No flow template found. Create one first.', 'warn'); return; }
-  const steps = getTemplateSteps(tmpl.id);
-  const title = prompt(`Name this flow instance (e.g. "Morning Post — May 5"):`, `${tmpl.name} — ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'})}`);
-  if (!title) return; // cancelled
+  // If a specific template passed (e.g. from templates panel), spawn directly via modal
+  openSpawnModal(template);
+}
+
+async function openSpawnModal(preselect) {
+  // Always fetch latest templates from Firestore with { source: 'server' }
+  // to bypass any local cache and guarantee we get the current saved step names
+  if (fbReady && db) {
+    try {
+      const ftSnap = await db.collection('config').doc('flowTemplates').get();
+      if (ftSnap.exists && ftSnap.data().templates) {
+        const saved = ftSnap.data().templates;
+        saved.forEach(s => {
+          const idx = FLOW_TEMPLATES.findIndex(t => t.id === s.id);
+          if (idx !== -1) FLOW_TEMPLATES[idx] = JSON.parse(JSON.stringify(s));
+          else FLOW_TEMPLATES.push(JSON.parse(JSON.stringify(s)));
+        });
+        _templatesLoadedFromFirestore = true;
+      }
+    } catch(e) {
+      console.warn('Template server fetch failed, using cached:', e);
+      // Try cache as fallback
+      try {
+        const ftSnap = await db.collection('config').doc('flowTemplates').get();
+        if (ftSnap.exists && ftSnap.data().templates) {
+          ftSnap.data().templates.forEach(s => {
+            const idx = FLOW_TEMPLATES.findIndex(t => t.id === s.id);
+            if (idx !== -1) FLOW_TEMPLATES[idx] = JSON.parse(JSON.stringify(s));
+            else FLOW_TEMPLATES.push(JSON.parse(JSON.stringify(s)));
+          });
+        }
+      } catch(e2) { console.warn('Template cache fetch also failed:', e2); }
+    }
+  }
+
+  if (!FLOW_TEMPLATES.length) { toast('No flow templates found. Create one first in Flow Templates.', 'warn'); return; }
+
+  const sel = document.getElementById('spawn-template-sel');
+  sel.innerHTML = FLOW_TEMPLATES.map(t =>
+    `<option value="${t.id}">${t.name}${t.freq ? ' — ' + t.freq : ''}</option>`
+  ).join('');
+  if (preselect) sel.value = preselect.id || preselect;
+
+  // Set default name and meta
+  updateSpawnMeta();
+  sel.onchange = updateSpawnMeta;
+
+  const dateStr = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+  const tmpl = FLOW_TEMPLATES.find(t => t.id === sel.value) || FLOW_TEMPLATES[0];
+  document.getElementById('spawn-flow-name').value = `${tmpl.name} — ${dateStr}`;
+
+  document.getElementById('spawn-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('spawn-flow-name').select(), 100);
+}
+
+function updateSpawnMeta() {
+  const sel = document.getElementById('spawn-template-sel');
+  const tmpl = FLOW_TEMPLATES.find(t => t.id === sel.value);
+  if (!tmpl) return;
+  const steps = tmpl.steps || [];
+  const platforms = (tmpl.platforms || []).join(', ') || 'None';
+  const meta = document.getElementById('spawn-template-meta');
+  if (meta) meta.innerHTML = `<strong>${steps.length} steps</strong> · Platforms: ${platforms}` +
+    (tmpl.freq ? ` · Frequency: ${tmpl.freq}` : '') +
+    `<br><span style="color:var(--ink3);">${steps.map(s => s.name).join(' → ')}</span>`;
+  // Update default flow name
+  const nameInput = document.getElementById('spawn-flow-name');
+  if (nameInput && (!nameInput.value || nameInput.dataset.autoName === 'true')) {
+    const dateStr = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+    nameInput.value = `${tmpl.name} — ${dateStr}`;
+    nameInput.dataset.autoName = 'true';
+  }
+}
+
+function closeSpawnModal() {
+  document.getElementById('spawn-modal').style.display = 'none';
+}
+
+async function confirmSpawn() {
+  const sel = document.getElementById('spawn-template-sel');
+  const nameInput = document.getElementById('spawn-flow-name');
+  const templateId = sel.value;
+  const title = nameInput.value.trim();
+  if (!title) { nameInput.focus(); toast('Please enter a flow name.', 'warn'); return; }
+
+  // Always fetch the very latest template from Firestore before spawning
+  // This guarantees step names reflect the most recent saved version
+  if (fbReady && db) {
+    try {
+      const ftSnap = await db.collection('config').doc('flowTemplates').get();
+      if (ftSnap.exists && ftSnap.data().templates) {
+        ftSnap.data().templates.forEach(s => {
+          const idx = FLOW_TEMPLATES.findIndex(t => t.id === s.id);
+          if (idx !== -1) FLOW_TEMPLATES[idx] = JSON.parse(JSON.stringify(s));
+          else FLOW_TEMPLATES.push(JSON.parse(JSON.stringify(s)));
+        });
+        _templatesLoadedFromFirestore = true;
+      }
+    } catch(e) { console.warn('Template fetch on spawn failed:', e); }
+  }
+
+  const tmpl = FLOW_TEMPLATES.find(t => t.id === templateId);
+  if (!tmpl) { toast('Template not found. Try again.', 'warn'); return; }
+
+  // Read steps directly from the template — do NOT use getTemplateSteps (returns deep copy)
+  const steps = tmpl.steps && tmpl.steps.length ? JSON.parse(JSON.stringify(tmpl.steps)) : [];
+  if (!steps.length) { toast('Template has no steps. Edit the template first.', 'warn'); return; }
   const newFlow = {
     id: 'f_' + Date.now(),
     templateId: tmpl.id,
-    title: title.trim(),
-    platforms: tmpl.platforms,
+    title,
+    platforms: tmpl.platforms || [],
     currentStep: 0,
     stepStatuses: steps.map((_, i) => i === 0 ? 'active' : 'pending'),
+    // Snapshot step owners at spawn time — so display never depends on template loading
+    stepOwners: steps.map(s => s.owner || ''),
+    stepNames: steps.map(s => s.name || ''),
     notes: steps.map(() => ''),
     subtaskChecks: steps.map(s => (s.subtasks || []).map(() => false)),
     driveFiles: steps.map(() => []),
@@ -2858,9 +3656,10 @@ async function spawnFlows(template) {
     assignedSteps: {},
     stuck: false,
   };
+  closeSpawnModal();
   TODAY_FLOWS.push(newFlow);
   await fbSaveFlows();
-  auditLog('flow_spawned', `Spawned flow "${title}" from template "${tmpl.name}"`, { template: tmpl.name, platforms: tmpl.platforms.join(', ') });
+  auditLog('flow_spawned', `Spawned flow "${title}" from template "${tmpl.name}"`, { template: tmpl.name, platforms: (tmpl.platforms||[]).join(', ') });
   renderToday();
   toast(`"${title}" spawned!`, 'ok');
 }
@@ -2904,7 +3703,14 @@ function flowCardHTML(f) {
   const statusCls = {active:'fsp-active',stuck:'fsp-stuck',approval:'fsp-approval',done:'fsp-done',pending:'fsp-pending'}[status] || 'fsp-pending';
   const statusLabel = {active:'In Progress',stuck:'Stuck',approval:'Awaiting Approval',done:'Done',pending:'Pending'}[status] || status;
   const curStepIdx = f.currentStep;
-  const curStep = tmplSteps[curStepIdx] || {};
+  // Use snapshotted step data from flow itself if available (avoids template loading race)
+  // Fall back to live template for subtasks, isApproval flags
+  const _tmplCurStep = tmplSteps[curStepIdx] || {};
+  const curStep = {
+    ..._tmplCurStep,
+    name:  (f.stepNames  && f.stepNames[curStepIdx])  || _tmplCurStep.name  || `Step ${curStepIdx+1}`,
+    owner: (f.stepOwners && f.stepOwners[curStepIdx]) || _tmplCurStep.owner || '',
+  };
   const canInteract = role !== 'viewer';
   const isManager = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
   // Step owner = assigned person OR someone it was sub-delegated to
@@ -2927,16 +3733,19 @@ function flowCardHTML(f) {
   const curChecks = (f.subtaskChecks || [])[curStepIdx] || [];
   const doneCount = curChecks.filter(Boolean).length;
 
+  // For members, visually highlight their step — grey out others
+  const isMemberView = loggedInMember && loggedInMember.role === 'member';
   const steps = tmplSteps.map((s, i) => {
     let cls = 'sc-pending';
     const st = f.stepStatuses[i];
     if (st === 'done') cls = 'sc-done';
     else if (st === 'active') cls = 'sc-active';
     else if (st === 'stuck') cls = 'sc-stuck';
+    const dimStep = isMemberView && i !== f.currentStep && st !== 'done';
     const arrow = i < tmplSteps.length - 1 ? `<div class="step-arrow${st==='done'?' done':''}"></div>` : '';
-    return `<div class="step-node">
+    return `<div class="step-node"${dimStep?' style="opacity:0.35;"':''}>
       <div class="step-circle ${cls}" title="${s.name} — ${s.owner||'Unassigned'}" onclick="openFlowStep('${f.id}',${i})">${st==='done'?'✓':i+1}</div>
-      <div class="step-label">${s.short||s.name.substring(0,6)}</div>
+      <div class="step-label">${s.name?s.name.substring(0,8):i+1}</div>
     </div>${arrow}`;
   }).join('');
 
@@ -3037,19 +3846,24 @@ function flowCardHTML(f) {
     }
   }
 
-  // Sub-assignment — step owner can delegate to team member
+  // Sub-assignment — step owner (including managers) can delegate to their team
   const subAssignee = (f.subAssignees || {})[curStepIdx] || null;
-  const canSubAssign = isStepOwner && !isManager && status !== 'done';
+  // Managers can always sub-assign on steps they own; members can too if they have reports
+  const canSubAssign = isStepOwner && status !== 'done';
   let subAssignSection = '';
   if (canSubAssign || subAssignee) {
+    // Build assignable list: direct reports + themselves (manager assigning to self = unassign)
     const myReports = MEMBERS.filter(m => m.reportsTo === loggedInMember?.name).map(m => m.name);
-    if (myReports.length || subAssignee) {
+    const assignableToManager = isManager
+      ? [loggedInMember.name, ...myReports]  // manager can keep it or give to team
+      : myReports;
+    if (assignableToManager.length || subAssignee) {
       subAssignSection = `<div class="subassign-row">
-        <span class="subassign-label">Delegating to:</span>
-        ${canSubAssign && myReports.length ? `
+        <span class="subassign-label">Assign to:</span>
+        ${canSubAssign && assignableToManager.length ? `
           <select class="subassign-select" onchange="subAssignStep('${f.id}',${curStepIdx},this.value)">
-            <option value="">— Assign to —</option>
-            ${myReports.map(n=>`<option value="${n}"${n===subAssignee?' selected':''}>${n}</option>`).join('')}
+            <option value="">— Select team member —</option>
+            ${assignableToManager.map(n=>`<option value="${n}"${n===subAssignee?' selected':''}>${n}</option>`).join('')}
           </select>` : ''}
         ${subAssignee ? `<span class="subassign-chip">👤 ${subAssignee}</span>` : ''}
       </div>`;
@@ -3063,7 +3877,15 @@ function flowCardHTML(f) {
       ↩ Sent back from ${rejNote.fromStep}: <strong>${rejNote.comment}</strong> — by ${rejNote.by}
     </div>` : '';
 
-  return `<div class="flow-card" id="fc-${f.id}">
+  // Is it this user's turn right now?
+  const isMyTurn = canMarkDone || (isApprovalStep && canApprove);
+  const myTurnBanner = isMyTurn ? `<div style="background:linear-gradient(90deg,#fff3e0,#fff8f0);border-left:4px solid var(--amber);padding:6px 14px;font-size:11px;font-weight:700;color:#b45309;display:flex;align-items:center;gap:6px;">
+    👆 Your turn — <span style="font-weight:400;">${curStep.name}</span>
+  </div>` : '';
+
+  const isDoneFlow = getFlowStatus(f) === 'done';
+  return `<div class="flow-card${isMyTurn?' my-turn-card':''}${isDoneFlow?' done-card':''}" id="fc-${f.id}">
+    ${myTurnBanner}
     <div class="flow-header">
       <div class="flow-num">#${TODAY_FLOWS.indexOf(f)+1}</div>
       <div class="flow-info">
@@ -3106,17 +3928,32 @@ function flowCardHTML(f) {
       </div>
       ${status !== 'done' && !isApprovalStep ? `
         ${canMarkDone ? `
-        <button class="btn btn-sm btn-teal"
-          onclick="markStepDone('${f.id}')"
-          ${!subtasksDone ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
+        <button class="btn btn-sm"
+          style="background:var(--coral);color:white;border-color:var(--coral);font-weight:700;padding:8px 20px;font-size:13px;"
+          onclick="confirmMarkStepDone('${f.id}')"
+          ${!subtasksDone ? 'disabled style="opacity:0.35;cursor:not-allowed;background:var(--coral);color:white;border-color:var(--coral);font-weight:700;padding:8px 20px;font-size:13px;"' : ''}>
           ✓ Mark Step Done
-        </button>` : `<span style="font-size:11px;color:var(--ink3);">Waiting for ${subAssignee||curStep.owner||'owner'}</span>`}
-        <button class="btn btn-sm" onclick="openFlowStep('${f.id}',${curStepIdx})">Details</button>
+        </button>` : `<span style="font-size:11px;color:var(--ink3);">⏳ Waiting for <strong>${subAssignee||curStep.owner||'owner'}</strong></span>`}
+        <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
       ` : status !== 'done' && isApprovalStep ? `
-        <button class="btn btn-sm" onclick="openFlowStep('${f.id}',${curStepIdx})">Details</button>
+        <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
       ` : ''}
     </div>
   </div>`;
+}
+
+function confirmMarkStepDone(flowId) {
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  const tmplSteps = getTemplateSteps(f.templateId);
+  const curStep = tmplSteps[f.currentStep] || {};
+  const isLast = f.currentStep >= tmplSteps.length - 1;
+  const nextStep = !isLast ? tmplSteps[f.currentStep + 1] : null;
+  const msg = isLast
+    ? `Mark "${curStep.name}" done and complete this flow?`
+    : `Mark "${curStep.name}" done?
+Next step: ${nextStep.name}${nextStep.owner ? ' → ' + nextStep.owner : ''}`;
+  if (confirm(msg)) markStepDone(flowId);
 }
 
 async function markStepDone(flowId) {
@@ -3177,6 +4014,14 @@ function openFlowStep(flowId, stepIdx) {
   const st = f.stepStatuses[stepIdx];
   const stLabel = {done:'Done',active:'Active',pending:'Pending',stuck:'Stuck',approval:'Awaiting Approval'}[st] || st;
   const canEdit = role !== 'viewer' && (st === 'active' || st === 'stuck');
+  // Only the step owner or sub-assignee can mark done — not just anyone
+  const _subAssigneeForStep = (f.subAssignees || {})[stepIdx] || null;
+  const isThisStepMine = loggedInMember && (
+    step.owner === loggedInMember.name ||
+    (_subAssigneeForStep && _subAssigneeForStep === loggedInMember.name)
+  );
+  const isManagerOrHead = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
+  const canMarkThisStepDone = isThisStepMine && canEdit;
   const subtasks = step.subtasks || [];
   const checks = (f.subtaskChecks || [])[stepIdx] || [];
   const allDone = areSubtasksDone(f, stepIdx);
@@ -3185,11 +4030,22 @@ function openFlowStep(flowId, stepIdx) {
   document.getElementById('dp-body').innerHTML = `
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
       <div class="av av-md ${AV[step.owner]||'av-a'}">${step.owner?ini(step.owner):'?'}</div>
-      <div>
+      <div style="flex:1;">
         <div style="font-family:var(--ff-head);font-size:15px;font-weight:700;">${step.name}</div>
         <div style="font-size:12px;color:var(--ink3);">Step ${stepIdx+1} of ${tmplSteps.length} · ${step.owner||'<span style="color:var(--amber);">Unassigned</span>'}</div>
       </div>
     </div>
+    ${isManagerOrHead && st !== 'done' ? `
+    <div class="dp-sec">
+      <div class="dp-label">Reassign Step</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="dp-reassign-sel" style="flex:1;padding:6px 9px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;">
+          <option value="">— Select member —</option>
+          ${MEMBERS.filter(m=>m.role!=='approver').map(m=>`<option value="${m.name}"${m.name===step.owner?' selected':''}>${m.name}</option>`).join('')}
+        </select>
+        <button class="btn btn-sm btn-coral" onclick="reassignFlowStep('${f.id}',${stepIdx},document.getElementById('dp-reassign-sel').value)">Reassign</button>
+      </div>
+    </div>` : ''}
     <div class="dp-sec">
       <div class="dp-label">Status</div>
       <span class="sp ${SC[st]||'sp-todo'}" style="display:inline-block;">${stLabel}</span>
@@ -3262,11 +4118,15 @@ function openFlowStep(flowId, stepIdx) {
     </div>
     <div class="divider"></div>
     <div style="display:flex;flex-direction:column;gap:6px;">
+      ${canMarkThisStepDone ? `
       <button class="btn btn-coral"
         onclick="markStepDone('${f.id}');closeSide();"
         ${!allDone?'disabled style="opacity:0.4;cursor:not-allowed;"':''}>
         ✓ Mark as Done & Push
-      </button>
+      </button>` : st === 'active' ? `
+      <div style="font-size:12px;color:var(--ink3);padding:8px 0;">
+        ⏳ Waiting for ${_subAssigneeForStep || step.owner || 'owner'} to complete this step
+      </div>` : ''}
       <button class="btn" onclick="go('log')">✏️ Log Activity</button>
     </div>` : ''}
   `;
@@ -3302,24 +4162,48 @@ function taskCardHTML(t){
   </div>`;
 }
 
+function getVisibleTasks() {
+  if (!loggedInMember) return [];
+  const r = loggedInMember.role;
+  if (r === 'head') return TASKS; // Head sees all
+  if (r === 'manager') {
+    // Manager sees own tasks + direct reports' tasks
+    const teamNames = [loggedInMember.name, ...MEMBERS.filter(m => m.reportsTo === loggedInMember.name).map(m => m.name)];
+    return TASKS.filter(t => teamNames.includes(t.assignee));
+  }
+  if (r === 'approver') return []; // Approvers have no ad-hoc tasks
+  // Member — only their own tasks
+  return TASKS.filter(t => t.assignee === loggedInMember.name);
+}
+
 function renderTasks(){
+  // Populate assignee filter with only visible team members
+  const assigneeSel = document.getElementById('f-assignee');
+  if (assigneeSel) {
+    const visibleNames = [...new Set(getVisibleTasks().map(t => t.assignee).filter(Boolean))];
+    const cur = assigneeSel.value;
+    assigneeSel.innerHTML = '<option value="">All Members</option>' +
+      visibleNames.map(n => `<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+  }
   const fs=document.getElementById('f-status').value;
   const fa=document.getElementById('f-assignee').value;
   const fp=document.getElementById('f-platform').value;
-  let list=TASKS;
+  let list = getVisibleTasks();
   if(fs) list=list.filter(t=>t.status===fs);
   if(fa) list=list.filter(t=>t.assignee===fa);
   if(fp) list=list.filter(t=>(t.platforms||[]).includes(fp));
   document.getElementById('task-count').textContent=list.length+' task'+(list.length!==1?'s':'');
-  document.getElementById('badge-tasks').textContent=TASKS.filter(t=>t.status!=='done').length;
+  // Badge only counts own open tasks
+  const myOpen = getVisibleTasks().filter(t=>t.status!=='done').length;
+  document.getElementById('badge-tasks').textContent = myOpen || '';
   document.getElementById('task-list').innerHTML=list.length?list.map(taskCardHTML).join(''):
-    `<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">No tasks match</div><div class="empty-sub">Adjust filters or create a new task</div></div>`;
+    `<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">No tasks here</div><div class="empty-sub">${loggedInMember?.role==='member'?'Tasks assigned to you will appear here.':'Adjust filters or create a new task.'}</div></div>`;
 }
 
 function openTask(id){
   const t=TASKS.find(x=>x.id===id); if(!t) return;
   selectedId=id;
-  const stageIdx=PIPELINE_STAGES.indexOf(t.status);
+  const stageIdx=0; // pipeline removed
   const canEdit=role!=='viewer';
   document.getElementById('dp-type-label').textContent='Ad-hoc Task';
   document.getElementById('dp-body').innerHTML=`
@@ -3347,9 +4231,9 @@ function openTask(id){
     <div>${t.comments.map(c=>`<div class="comment-item">${c}</div>`).join('')||`<span style="font-size:11px;color:var(--ink3);">No comments yet.</span>`}</div>
     ${canEdit?`<div class="divider"></div>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      ${t.status!=='done'?`<button class="btn btn-coral" onclick="pushTask(${t.id})">→ Push to ${PIPELINE_NAMES[PIPELINE_STAGES[Math.min(stageIdx+1,3)]]}</button>`:'<button class="btn btn-teal" disabled>✓ Complete</button>'}
-      <button class="btn" onclick="go('log')">✏️ Log Activity</button>
-      ${role==='manager'?`<button class="btn" style="border-color:var(--red);color:var(--red);" onclick="delTask(${t.id})">× Delete</button>`:''}
+      <button class="btn btn-coral" onclick="openEditTask(${t.id})">✏️ Edit Task</button>
+      <button class="btn" onclick="go('log')">📝 Log Activity</button>
+      ${(role==='manager'||role==='head')?`<button class="btn" style="border-color:var(--red);color:var(--red);" onclick="delTask(${t.id})">× Delete</button>`:''}
     </div>`:''}
   `;
   document.getElementById('side-panel').classList.add('open');
@@ -3376,47 +4260,82 @@ async function pushTask(id){
 }
 
 async function delTask(id){
+  if (!confirm('Delete this task? This cannot be undone.')) return;
   await fbDeleteTask(id);
   TASKS=TASKS.filter(t=>t.id!==id);
   closeSide(); toast('Task deleted.'); refresh();
 }
 
-// ═══════════════════════════════════════════
-// PIPELINE
-// ═══════════════════════════════════════════
-function renderPipeline(){
-  document.getElementById('kanban-board').innerHTML=PIPELINE_STAGES.map(stage=>{
-    const col=TASKS.filter(t=>t.status===stage);
-    return `<div class="k-col">
-      <div class="k-hdr">
-        <span class="k-title" style="color:${STAGE_COL[stage]};">${PIPELINE_NAMES[stage]}</span>
-        <span class="k-count">${col.length}</span>
-      </div>
-      <div class="k-tasks">
-        ${col.map(t=>`<div class="k-card" onclick="openTask(${t.id})">
-          <div class="k-card-title">${t.title}</div>
-          <div class="k-card-foot">
-            <div class="av av-sm ${AV[t.assignee]||'av-a'}">${ini(t.assignee)}</div>
-            <div class="platform-row">${platChips((t.platforms||[]).slice(0,2))}</div>
-            <span class="k-due">📅 ${fmtDue(t.due)}</span>
-          </div>
-          ${stage!=='done'&&role!=='viewer'?`<button class="push-mini" onclick="event.stopPropagation();pushTask(${t.id})">→ Push forward</button>`:''}
-        </div>`).join('')}
-        ${role==='manager'?`<button class="add-mini" onclick="openTaskModal()">+ Add task</button>`:''}
-      </div>
-    </div>`;
-  }).join('');
+let _editingTaskId = null;
+function openEditTask(id) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  _editingTaskId = id;
+
+  document.getElementById('et-title').value = t.title || '';
+  document.getElementById('et-priority').value = t.priority || 'med';
+  document.getElementById('et-status').value = t.status || 'todo';
+  document.getElementById('et-due').value = t.due || '';
+  document.getElementById('et-notes').value = t.notes || '';
+
+  // Populate assignee — managers can reassign within their team, head can reassign to anyone
+  const assigneeSel = document.getElementById('et-assignee');
+  const r = loggedInMember?.role;
+  let assignable;
+  if (r === 'head') {
+    assignable = MEMBERS.filter(m => m.role !== 'approver');
+  } else if (r === 'manager') {
+    assignable = MEMBERS.filter(m => m.name === loggedInMember.name || m.reportsTo === loggedInMember.name);
+  } else {
+    assignable = MEMBERS.filter(m => m.name === loggedInMember?.name);
+  }
+  assigneeSel.innerHTML = assignable.map(m =>
+    `<option value="${m.name}"${m.name === t.assignee ? ' selected' : ''}>${m.name}</option>`
+  ).join('');
+
+  document.getElementById('edit-task-modal').style.display = 'flex';
 }
+
+function closeEditTask() {
+  document.getElementById('edit-task-modal').style.display = 'none';
+  _editingTaskId = null;
+}
+
+async function saveEditTask() {
+  const t = TASKS.find(x => x.id === _editingTaskId);
+  if (!t) return;
+  const title = document.getElementById('et-title').value.trim();
+  if (!title) { toast('Title cannot be empty.', 'warn'); return; }
+  t.title    = title;
+  t.assignee = document.getElementById('et-assignee').value;
+  t.priority = document.getElementById('et-priority').value;
+  t.status   = document.getElementById('et-status').value;
+  t.due      = document.getElementById('et-due').value;
+  t.notes    = document.getElementById('et-notes').value.trim();
+  await fbSaveTask(t);
+  closeEditTask();
+  renderTasks();
+  if (selectedId === _editingTaskId) openTask(_editingTaskId);
+  toast('Task updated!', 'ok');
+  auditLog('task_edited', `Edited task "${t.title}"`, { task: t.title, assignee: t.assignee });
+}
+
 
 // ═══════════════════════════════════════════
 // ACTIVITY LOG
 // ═══════════════════════════════════════════
 function populateLogItems(){
-  // Auto-set member to logged in user
+  // Populate member dropdown dynamically — only visible members per role
   const memberSel = document.getElementById('lf-member');
-  if (memberSel && loggedInMember) {
-    memberSel.value = loggedInMember.name;
-    memberSel.disabled = loggedInMember.role !== 'manager';
+  if (memberSel) {
+    const visibleNames = loggedInMember?.role === 'head'
+      ? MEMBERS.filter(m => m.role !== 'approver').map(m => m.name)
+      : loggedInMember?.role === 'manager'
+        ? [loggedInMember.name, ...MEMBERS.filter(m => m.reportsTo === loggedInMember.name).map(m => m.name)]
+        : [loggedInMember?.name].filter(Boolean);
+    const cur = memberSel.value || loggedInMember?.name;
+    memberSel.innerHTML = visibleNames.map(n => `<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+    memberSel.disabled = loggedInMember?.role === 'member';
   }
   const type=document.getElementById('lf-type').value;
   const sel=document.getElementById('lf-item');
@@ -3454,7 +4373,7 @@ function renderTatSummary() {
   const el = document.getElementById('tat-summary');
   if (!el) return;
   // Only show TAT summary for managers/head
-  if (!loggedInMember || loggedInMember.role === 'member') { el.innerHTML=''; return; }
+  if (!loggedInMember || loggedInMember.role === 'member' || loggedInMember.role === 'approver') { el.innerHTML=''; return; }
   const completed = TODAY_FLOWS.filter(f => f.completedAt);
   const active    = TODAY_FLOWS.filter(f => !f.completedAt);
   const avgH = completed.length ? Math.round(completed.reduce((s,f) => s + ((f.completedAt - f.startedAt)/3600000), 0) / completed.length * 10) / 10 : null;
@@ -4207,26 +5126,37 @@ function startEditFlow(id) {
   renderFlowTemplates();
 }
 
-function cancelFlowEdit() {
+async function cancelFlowEdit() {
+  // Reload saved templates from Firestore to discard any unsaved in-memory changes
+  if (fbReady && db) {
+    try {
+      const ftSnap = await db.collection('config').doc('flowTemplates').get();
+      if (ftSnap.exists && ftSnap.data().templates) {
+        ftSnap.data().templates.forEach(s => {
+          const idx = FLOW_TEMPLATES.findIndex(t => t.id === s.id);
+          if (idx !== -1) FLOW_TEMPLATES[idx] = JSON.parse(JSON.stringify(s));
+          else FLOW_TEMPLATES.push(JSON.parse(JSON.stringify(s)));
+        });
+      }
+    } catch(e) { console.warn('Cancel reload failed', e); }
+  }
   _editingFlowId = null;
-  // Reload from saved to discard unsaved changes
   renderFlowTemplates();
 }
 
 function updateStepName(templateId, stepIdx, val) {
   const t = FLOW_TEMPLATES.find(x => x.id === templateId);
-  if (t) t.steps[stepIdx].name = val;
+  if (t && t.steps[stepIdx]) {
+    t.steps[stepIdx].name = val;
+    t.steps[stepIdx].short = val.substring(0, 8);
+  }
   const badge = document.getElementById(`unsaved-${templateId}`);
   if (badge) badge.classList.add('show');
 }
 
 function updateStepOwner(templateId, stepIdx, val) {
   const t = FLOW_TEMPLATES.find(x => x.id === templateId);
-  if (t) {
-    t.steps[stepIdx].owner = val;
-    // Also update global FLOW_STEPS if it's the main flow
-    if (templateId === 'social-daily') FLOW_STEPS[stepIdx].owner = val;
-  }
+  if (t && t.steps[stepIdx]) t.steps[stepIdx].owner = val;
   const badge = document.getElementById(`unsaved-${templateId}`);
   if (badge) badge.classList.add('show');
 }
@@ -4236,8 +5166,6 @@ function addStep(templateId) {
   if (!t) return;
   const newStep = { id: 'step_'+Date.now(), name: 'New Step', short: 'Step', owner: '' };
   t.steps.push(newStep);
-  // Sync to FLOW_STEPS if main flow
-  if (templateId === 'social-daily') FLOW_STEPS.push(newStep);
   renderFlowTemplates();
   _editingFlowId = templateId;
   renderFlowTemplates();
@@ -4247,20 +5175,30 @@ function deleteStep(templateId, stepIdx) {
   const t = FLOW_TEMPLATES.find(x => x.id === templateId);
   if (!t || t.steps.length <= 1) { toast('A flow must have at least one step.', 'warn'); return; }
   t.steps.splice(stepIdx, 1);
-  if (templateId === 'social-daily') FLOW_STEPS.splice(stepIdx, 1);
   renderFlowTemplates();
   _editingFlowId = templateId;
   renderFlowTemplates();
 }
 
-function saveFlowEdits(id) {
+async function saveFlowEdits(id) {
   const t = FLOW_TEMPLATES.find(x => x.id === id);
   if (!t) return;
-  // Read current name from input
+  // Read template name from input
   const nameInput = document.getElementById(`tname-${id}`);
   if (nameInput) t.name = nameInput.value.trim() || t.name;
-  // Persist to localStorage
-  saveExtended();
+  // Read ALL step names and owners from their input elements
+  // (in case browser didn't fire oninput for some inputs)
+  t.steps.forEach((s, i) => {
+    const nameEl = document.querySelector(`#slist-${id} #srow-${id}-${i} .step-name-input`);
+    const ownerEl = document.querySelector(`#slist-${id} #srow-${id}-${i} .step-owner-select`);
+    const approvalEl = document.querySelector(`#slist-${id} #srow-${id}-${i} input[type=checkbox]`);
+    if (nameEl) { s.name = nameEl.value.trim() || s.name; s.short = s.name.substring(0, 8); }
+    if (ownerEl) s.owner = ownerEl.value;
+    if (approvalEl) s.isApproval = approvalEl.checked;
+  });
+  const btn = document.querySelector(`#tcard-${id} .btn-coral`);
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+  await saveExtended();
   _editingFlowId = null;
   renderFlowTemplates();
   toast('Flow template saved!', 'ok');
@@ -4280,7 +5218,7 @@ function deleteFlowTemplate(id) {
 function spawnFlowFromTemplate(id) {
   const t = FLOW_TEMPLATES.find(x => x.id === id);
   if (!t) return;
-  spawnFlows(t);
+  openSpawnModal(t);
 }
 
 function updateStepApproval(templateId, stepIdx, val) {
@@ -4384,6 +5322,28 @@ function openTaskModal(){
   if(role==='viewer'){toast('Viewers cannot create tasks.','warn');return;}
   const d=new Date(); d.setDate(d.getDate()+5);
   document.getElementById('nt-due').value=d.toISOString().split('T')[0];
+
+  // Populate assignee dropdown per role
+  const assigneeSel = document.getElementById('nt-assignee');
+  const r = loggedInMember?.role;
+  let assignableMembers;
+  if (r === 'head') {
+    // Head can assign to anyone (except approvers)
+    assignableMembers = MEMBERS.filter(m => m.role !== 'approver');
+  } else if (r === 'manager') {
+    // Manager can assign to themselves + direct reports
+    assignableMembers = MEMBERS.filter(m =>
+      m.name === loggedInMember.name || m.reportsTo === loggedInMember.name
+    );
+  } else {
+    // Member can only assign to themselves
+    assignableMembers = MEMBERS.filter(m => m.name === loggedInMember?.name);
+  }
+  assigneeSel.innerHTML = assignableMembers.map(m =>
+    `<option value="${m.name}"${m.name === loggedInMember?.name ? ' selected' : ''}>${m.name}</option>`
+  ).join('');
+  assigneeSel.disabled = assignableMembers.length <= 1;
+
   document.getElementById('task-modal').classList.add('open');
 }
 function closeTaskModal(){document.getElementById('task-modal').classList.remove('open');}
@@ -5226,17 +6186,13 @@ async function loadExtended() {
       db.collection('config').doc('flowTemplates').onSnapshot(s => {
         if (!s.exists) return;
         const saved = s.data().templates || [];
-        // Clear and rebuild FLOW_TEMPLATES from Firestore
-        // Keep the default 'social-daily' as base, override with saved data
+        // Full replace — preserves all fields including isApproval, subtasks, short, id
         saved.forEach(sv => {
-          const existing = FLOW_TEMPLATES.find(t => t.id === sv.id);
-          if (existing) {
-            existing.steps = sv.steps;
-            existing.name = sv.name;
-            existing.freq = sv.freq;
-            existing.platforms = sv.platforms;
+          const idx = FLOW_TEMPLATES.findIndex(t => t.id === sv.id);
+          if (idx !== -1) {
+            FLOW_TEMPLATES[idx] = JSON.parse(JSON.stringify(sv));
           } else {
-            FLOW_TEMPLATES.push(sv);
+            FLOW_TEMPLATES.push(JSON.parse(JSON.stringify(sv)));
           }
         });
         if (currentPanel === 'flows') renderFlowTemplates();
@@ -5263,19 +6219,19 @@ async function loadExtended() {
 
       if (ftSnap.exists && ftSnap.data().templates) {
         const saved = ftSnap.data().templates;
+        // Full replace — preserves all step fields (isApproval, subtasks, short, id)
         saved.forEach(s => {
-          const existing = FLOW_TEMPLATES.find(t => t.id === s.id);
-          if (existing) {
-            existing.steps = s.steps;
-            existing.name = s.name;
-            existing.freq = s.freq;
-            existing.platforms = s.platforms;
+          const idx = FLOW_TEMPLATES.findIndex(t => t.id === s.id);
+          if (idx !== -1) {
+            FLOW_TEMPLATES[idx] = JSON.parse(JSON.stringify(s));
           } else {
-            FLOW_TEMPLATES.push(s);
+            FLOW_TEMPLATES.push(JSON.parse(JSON.stringify(s)));
           }
         });
-        // Re-render today's flows now that templates are loaded
+        _templatesLoadedFromFirestore = true; // Mark templates as confirmed from server
+        // Re-render now that templates are loaded
         if (currentPanel === 'today') renderToday();
+        if (currentPanel === 'flows') renderFlowTemplates();
       }
       return;
     }
@@ -5295,9 +6251,9 @@ async function loadExtended() {
     if (ft) {
       const saved = JSON.parse(ft);
       saved.forEach(s => {
-        const existing = FLOW_TEMPLATES.find(t => t.id === s.id);
-        if (existing) { existing.steps = s.steps; existing.name = s.name; }
-        else FLOW_TEMPLATES.push(s);
+        const idx = FLOW_TEMPLATES.findIndex(t => t.id === s.id);
+        if (idx !== -1) FLOW_TEMPLATES[idx] = JSON.parse(JSON.stringify(s));
+        else FLOW_TEMPLATES.push(JSON.parse(JSON.stringify(s)));
       });
     }
   } catch(e) {}
@@ -5355,7 +6311,8 @@ function calcOccupancy(memberName) {
 
   // Hours from active flow steps today
   const flowH = TODAY_FLOWS.reduce((sum, f) => {
-    const step = FLOW_STEPS[f.currentStep];
+    const _steps = getTemplateSteps(f.templateId);
+    const step = _steps[f.currentStep];
     const owner = getCover(step?.owner) || step?.owner;
     if (owner === memberName && f.stepStatuses[f.currentStep] === 'active') return sum + FLOW_STEP_HOURS;
     return sum;
@@ -5382,9 +6339,28 @@ function calcOccupancy(memberName) {
 
 // ── Workload Panel ─────────────────────────
 function renderWorkload() {
+  // Access control — members can't see workload panel at all
+  if (!loggedInMember || loggedInMember.role === 'member' || loggedInMember.role === 'approver') {
+    document.getElementById('workload-grid').innerHTML = `<div class="empty" style="grid-column:1/-1;margin-top:20px;"><div class="empty-icon">🔒</div><div class="empty-title">Workload is for managers only</div><div class="empty-sub">Contact your manager if you need this information.</div></div>`;
+    document.getElementById('workload-detail').innerHTML = '';
+    document.getElementById('absent-banners').innerHTML = '';
+    return;
+  }
+
+  // Filter visible members:
+  // Head → all non-approver members
+  // Manager → only their direct reports (not approvers)
+  const visibleWorkloadMembers = MEMBERS.filter(m => {
+    if (m.role === 'approver') return false; // never show approvers
+    if (loggedInMember.role === 'head') return true;
+    // Manager sees themselves + direct reports
+    return m.name === loggedInMember.name || m.reportsTo === loggedInMember.name;
+  });
+
   // Absent banners
   const today = todayKey();
-  const todayAbsent = ABSENCES.filter(a => a.from <= today && a.to >= today);
+  const todayAbsent = ABSENCES.filter(a => a.from <= today && a.to >= today)
+    .filter(a => visibleWorkloadMembers.find(m => m.name === a.absentMember));
   document.getElementById('absent-banners').innerHTML = todayAbsent.map(a => `
     <div class="absent-banner">
       <span>🏥</span>
@@ -5393,8 +6369,8 @@ function renderWorkload() {
       <button class="btn btn-sm" onclick="removeAbsence('${a.id}')" style="margin-left:auto;">✕ Remove</button>
     </div>`).join('');
 
-  // Occupancy cards
-  document.getElementById('workload-grid').innerHTML = MEMBERS.map(m => {
+  // Occupancy cards — only visible members
+  document.getElementById('workload-grid').innerHTML = visibleWorkloadMembers.map(m => {
     const occ = calcOccupancy(m.name);
     const pct = Math.min(Math.round(occ.total / MEMBER_CAPACITY * 100), 120);
     const barCls = pct >= 100 ? 'wl-bar-red' : pct >= 75 ? 'wl-bar-amber' : 'wl-bar-green';
@@ -5436,7 +6412,7 @@ function renderWorkload() {
           <th style="padding:6px 8px;font-weight:600;">Free</th>
           <th style="text-align:left;padding:6px 8px;font-weight:600;">Status</th>
         </tr></thead>
-        <tbody>${MEMBERS.map(m => {
+        <tbody>${visibleWorkloadMembers.map(m => {
           const o = calcOccupancy(m.name);
           const free = Math.max(0, MEMBER_CAPACITY - o.total);
           const pct = Math.min(Math.round(o.total/MEMBER_CAPACITY*100),120);
@@ -5457,7 +6433,7 @@ function renderWorkload() {
     </div>`;
 
   // Badge — count overloaded
-  const overloaded = MEMBERS.filter(m => {
+  const overloaded = visibleWorkloadMembers.filter(m => {
     const o = calcOccupancy(m.name);
     return o.total >= MEMBER_CAPACITY;
   }).length;
@@ -5471,7 +6447,8 @@ function openMemberDetail(name) {
   const myRegular = REGULAR_TASKS.filter(t => (getCover(t.member)||t.member) === name);
   const myTasks = TASKS.filter(t => (getCover(t.assignee)||t.assignee) === name && t.status !== 'done');
   const myFlows = TODAY_FLOWS.filter(f => {
-    const step = FLOW_STEPS[f.currentStep];
+    const _steps = getTemplateSteps(f.templateId);
+    const step = _steps[f.currentStep];
     return (getCover(step?.owner)||step?.owner) === name && f.stepStatuses[f.currentStep]==='active';
   });
   const cover = getCover(name);
@@ -5492,7 +6469,7 @@ function openMemberDetail(name) {
     </div>
     <div class="divider"></div>
     <div class="dp-label">Active flow steps (${myFlows.length})</div>
-    ${myFlows.length ? myFlows.map(f=>`<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);">${FLOW_STEPS[f.currentStep].name} — ${f.title}</div>`).join('') : `<div style="font-size:11px;color:var(--ink3);">None active</div>`}
+    ${myFlows.length ? myFlows.map(f=>{const _s=getTemplateSteps(f.templateId);return `<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);">${_s[f.currentStep]?.name||'Step '+(f.currentStep+1)} — ${f.title}</div>`;}).join('') : `<div style="font-size:11px;color:var(--ink3);">None active</div>`}
     <div class="divider"></div>
     <div class="dp-label">Regular tasks (${myRegular.length})</div>
     ${myRegular.map(t=>`<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span>${t.title}</span><span style="color:var(--ink3);">${t.hours}h</span></div>`).join('')||`<div style="font-size:11px;color:var(--ink3);">None</div>`}
@@ -5666,6 +6643,15 @@ function getPlanForMemberWeek(member, weekKey) {
 }
 
 function renderWeekly() {
+  // Approvers have no role in weekly planning
+  if (loggedInMember && loggedInMember.role === 'approver') {
+    const fridayEl = document.getElementById('friday-reminder');
+    if (fridayEl) fridayEl.innerHTML = '';
+    const el = document.getElementById('weekly-content');
+    if (el) el.innerHTML = `<div class="empty" style="margin-top:40px;"><div class="empty-icon">📅</div><div class="empty-title">Weekly plans are for the production team</div><div class="empty-sub">You'll be notified when your approval is needed on a flow.</div></div>`;
+    document.getElementById('week-tabs').innerHTML = '';
+    return;
+  }
   const currentWeek = getWeekKey(0);
   const nextWeek    = getWeekKey(1);
   const prevWeek    = getWeekKey(-1);
@@ -5974,8 +6960,184 @@ function renderAudit() {
 }
 
 // ═══════════════════════════════════════════
+// EXCEL REPORTS
+// ═══════════════════════════════════════════
+
+function fmtDT(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })
+    + ' ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+}
+function fmtDate(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function xlsxDownload(workbook, filename) {
+  const wbout = XLSX.write(workbook, { bookType:'xlsx', type:'array' });
+  const blob = new Blob([wbout], { type:'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function applyHeaderStyle(ws, range) {
+  // Bold + background for header row
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+    if (cell) {
+      cell.s = {
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '0F2744' } },
+        alignment: { horizontal: 'center' }
+      };
+    }
+  }
+}
+
+function downloadFlowReport() {
+  if (!window.XLSX) { toast('Report library not loaded yet — try again in a moment.', 'warn'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: Flow Steps (one row per step per flow) ──
+  const stepRows = [['Flow Name', 'Flow Date', 'Step #', 'Step Name', 'Assigned To', 'Status', 'Start Date & Time', 'Completed Date & Time', 'Time Taken (hrs)', 'Notes / Comments']];
+
+  TODAY_FLOWS.forEach(f => {
+    const tmplSteps = getTemplateSteps(f.templateId) || [];
+    const flowDate = fmtDate(f.startedAt || f.spawnedAt);
+    tmplSteps.forEach((s, i) => {
+      const timing = (f.stepTimings || [])[i] || {};
+      const status = (f.stepStatuses || [])[i] || 'pending';
+      const owner = (f.subAssignees && f.subAssignees[i]) || s.owner || '';
+      const note = (f.notes || [])[i] || '';
+      const startTs = timing.startedAt;
+      const endTs = timing.completedAt;
+      const hrs = (startTs && endTs) ? ((endTs - startTs) / 3600000).toFixed(2) : '';
+      stepRows.push([
+        f.title || '',
+        flowDate,
+        i + 1,
+        s.name || '',
+        owner,
+        status,
+        fmtDT(startTs),
+        fmtDT(endTs),
+        hrs,
+        note
+      ]);
+    });
+  });
+
+  const ws1 = XLSX.utils.aoa_to_sheet(stepRows);
+  ws1['!cols'] = [28,14,6,22,16,10,20,20,12,30].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws1, 'Flow Steps');
+
+  // ── Sheet 2: Flow Summary (one row per flow) ──
+  const summaryRows = [['Flow Name', 'Date', 'Total Steps', 'Steps Done', 'Current Step', 'Status', 'Started', 'Completed', 'Total Time (hrs)']];
+  TODAY_FLOWS.forEach(f => {
+    const tmplSteps = getTemplateSteps(f.templateId) || [];
+    const done = (f.stepStatuses || []).filter(s => s === 'done').length;
+    const status = f.completedAt ? 'Completed' : 'In Progress';
+    const totalHrs = (f.startedAt && f.completedAt) ? ((f.completedAt - f.startedAt) / 3600000).toFixed(2) : '';
+    summaryRows.push([
+      f.title || '',
+      fmtDate(f.startedAt),
+      tmplSteps.length,
+      done,
+      tmplSteps[f.currentStep]?.name || '',
+      status,
+      fmtDT(f.startedAt),
+      fmtDT(f.completedAt),
+      totalHrs
+    ]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(summaryRows);
+  ws2['!cols'] = [28,14,10,10,22,12,20,20,14].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws2, 'Flow Summary');
+
+  const dateStr = new Date().toISOString().split('T')[0];
+  xlsxDownload(wb, `Flows_Report_${dateStr}.xlsx`);
+  toast('Flows report downloaded!', 'ok');
+}
+
+function downloadTaskReport() {
+  if (!window.XLSX) { toast('Report library not loaded yet — try again in a moment.', 'warn'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: Ad-hoc Tasks ──
+  const taskRows = [['Task Title', 'Assigned To', 'Priority', 'Status', 'Due Date', 'Created', 'Completed', 'Time Taken (hrs)', 'Notes', 'Comments']];
+
+  TASKS.forEach(t => {
+    const startTs = t.createdAt || t.loggedAt;
+    const endTs = t.completedAt;
+    const hrs = (startTs && endTs) ? ((endTs - startTs) / 3600000).toFixed(2) : '';
+    const comments = (t.comments || []).join(' | ');
+    taskRows.push([
+      t.title || '',
+      t.assignee || '',
+      t.priority || '',
+      t.status || '',
+      t.dueDate || '',
+      fmtDT(startTs),
+      fmtDT(endTs),
+      hrs,
+      t.notes || '',
+      comments
+    ]);
+  });
+
+  const ws1 = XLSX.utils.aoa_to_sheet(taskRows);
+  ws1['!cols'] = [28,16,10,12,12,20,20,14,25,35].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws1, 'Ad-hoc Tasks');
+
+  // ── Sheet 2: Tasks by Member ──
+  const byMemberRows = [['Member', 'Total Tasks', 'Done', 'In Progress', 'Blocked', 'Overdue']];
+  const memberNames = [...new Set(TASKS.map(t => t.assignee).filter(Boolean))];
+  memberNames.forEach(name => {
+    const mt = TASKS.filter(t => t.assignee === name);
+    const today = new Date().toISOString().split('T')[0];
+    byMemberRows.push([
+      name,
+      mt.length,
+      mt.filter(t => t.status === 'done').length,
+      mt.filter(t => t.status === 'in-progress' || t.status === 'todo').length,
+      mt.filter(t => t.status === 'blocked').length,
+      mt.filter(t => t.dueDate && t.dueDate < today && t.status !== 'done').length
+    ]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(byMemberRows);
+  ws2['!cols'] = [18,12,10,12,10,10].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws2, 'By Member');
+
+  const dateStr = new Date().toISOString().split('T')[0];
+  xlsxDownload(wb, `Tasks_Report_${dateStr}.xlsx`);
+  toast('Tasks report downloaded!', 'ok');
+}
+
+// ═══════════════════════════════════════════
 // SUB-ASSIGNMENT
 // ═══════════════════════════════════════════
+async function reassignFlowStep(flowId, stepIdx, newOwner) {
+  if (!newOwner) { toast('Please select a member.', 'warn'); return; }
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  // Update the snapshotted owner on the flow
+  if (!f.stepOwners) f.stepOwners = [];
+  f.stepOwners[stepIdx] = newOwner;
+  // Also update subAssignees for current step
+  if (!f.subAssignees) f.subAssignees = {};
+  f.subAssignees[stepIdx] = newOwner;
+  await fbSaveFlows();
+  renderToday();
+  openFlowStep(flowId, stepIdx);
+  toast(`Step reassigned to ${newOwner}`, 'ok');
+  auditLog('step_reassigned', `Reassigned step ${stepIdx+1} on "${f.title}" to ${newOwner}`, { flow: f.title, to: newOwner });
+}
+
 async function subAssignStep(flowId, stepIdx, assignee) {
   const f = TODAY_FLOWS.find(x => x.id === flowId);
   if (!f) return;
@@ -5984,7 +7146,7 @@ async function subAssignStep(flowId, stepIdx, assignee) {
     f.subAssignees[stepIdx] = assignee;
     auditLog('sub_assigned', `Delegated step to ${assignee} on "${f.title}"`, { flow: f.title, delegatedTo: assignee });
     toast(`Step delegated to ${assignee}`, 'ok');
-    notifyMyTurn(FLOW_STEPS[stepIdx]?.name || 'Step', f.title, assignee);
+    const _subSteps = getTemplateSteps(f.templateId); notifyMyTurn(_subSteps[stepIdx]?.name || 'Step', f.title, assignee);
   } else {
     delete f.subAssignees[stepIdx];
   }
@@ -6208,7 +7370,84 @@ const CHAT_ROOMS = [
   { id: 'ideas',      label: 'Ideas',      icon: '💡', desc: 'Creative brainstorming & concepts' },
   { id: 'compliance', label: 'Compliance', icon: '⚖️', desc: 'Compliance & approvals' },
   { id: 'tasks',      label: 'Tasks',      icon: '✅', desc: 'Task coordination & updates' },
+  { id: 'leads',      label: 'Leads',      icon: '🎯', desc: 'Leads team — pipeline & conversions' },
 ];
+
+// ── DIRECT MESSAGES ──
+let currentDM = null; // { roomId, otherUser } or null if viewing a channel
+let DM_UNREAD = {}; // roomId → count
+
+function getDMRoomId(user1, user2) {
+  // Stable room ID regardless of who initiates
+  return 'dm_' + [user1, user2].sort().join('_').replace(/\s+/g, '_');
+}
+
+function openDM(otherUser) {
+  if (!loggedInMember) return;
+  currentDM = {
+    roomId: getDMRoomId(loggedInMember.name, otherUser),
+    otherUser
+  };
+  currentRoom = null;
+  delete DM_UNREAD[currentDM.roomId];
+  renderChat();
+  initChat();
+}
+
+function openNewDM() {
+  // Show a simple picker — list of team members excluding self
+  const others = MEMBERS.filter(m => m.name !== loggedInMember?.name && m.role !== 'approver');
+  const list = document.getElementById('chat-dm-list');
+  if (!list) return;
+  // Toggle a mini picker below the button
+  const existing = document.getElementById('dm-picker');
+  if (existing) { existing.remove(); return; }
+  const picker = document.createElement('div');
+  picker.id = 'dm-picker';
+  picker.style.cssText = 'background:rgba(255,255,255,0.06);border-radius:8px;margin-top:4px;overflow:hidden;';
+  picker.innerHTML = others.map(m => `
+    <button onclick="openDM('${m.name}');document.getElementById('dm-picker')?.remove();"
+      style="width:100%;text-align:left;padding:6px 10px;border:none;background:transparent;cursor:pointer;font-family:var(--ff-body);color:rgba(255,255,255,0.7);font-size:12px;display:flex;align-items:center;gap:7px;transition:background 0.1s;"
+      onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+      <div class="av av-sm ${AV[m.name]||'av-a'}" style="width:20px;height:20px;font-size:8px;">${ini(m.name)}</div>
+      ${m.name}
+    </button>`).join('');
+  list.after(picker);
+  // Click outside to close
+  setTimeout(() => {
+    document.addEventListener('click', function closePicker(e) {
+      if (!picker.contains(e.target) && e.target.textContent !== 'New Message') {
+        picker.remove();
+        document.removeEventListener('click', closePicker);
+      }
+    });
+  }, 100);
+}
+
+function renderDMList() {
+  const el = document.getElementById('chat-dm-list');
+  if (!el || !loggedInMember) return;
+  // Show recent DM partners — get from localStorage for now
+  const recent = JSON.parse(localStorage.getItem('sd_recent_dms') || '[]');
+  el.innerHTML = recent.slice(0, 8).map(name => {
+    const roomId = getDMRoomId(loggedInMember.name, name);
+    const isActive = currentDM?.otherUser === name;
+    const unread = DM_UNREAD[roomId] || 0;
+    return `<button class="chat-dm-btn${isActive?' active':''}" onclick="openDM('${name}')">
+      <div class="av av-sm ${AV[name]||'av-a'}" style="width:20px;height:20px;font-size:8px;flex-shrink:0;">${ini(name)}</div>
+      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>
+      ${unread ? `<span class="chat-dm-unread">${unread}</span>` : ''}
+    </button>`;
+  }).join('');
+}
+
+function trackDMRecent(otherUser) {
+  if (!loggedInMember || !otherUser) return;
+  const key = 'sd_recent_dms';
+  const recent = JSON.parse(localStorage.getItem(key) || '[]');
+  const updated = [otherUser, ...recent.filter(n => n !== otherUser)].slice(0, 10);
+  localStorage.setItem(key, JSON.stringify(updated));
+}
 
 // Load channel membership from Firestore (or use defaults)
 async function loadChannelMembers() {
@@ -6236,8 +7475,9 @@ function getChannelMembers(roomId) {
 function canAccessChannel(roomId) {
   if (!loggedInMember) return false;
   if (loggedInMember.role === 'head') return true; // Head sees all
+  if (roomId === 'general') return true;            // General is always open
   const members = getChannelMembers(roomId);
-  if (roomId === 'general') return true; // General is always open
+  // If no members set yet, only managers/head can see it
   if (!members.length) return loggedInMember.role === 'manager' || loggedInMember.role === 'head';
   return members.includes(loggedInMember.name);
 }
@@ -6362,17 +7602,15 @@ function chatAttachFile(event) {
 function initChat() {
   if (!fbReady || !db) { renderChatMessages(); return; }
   if (chatUnsubscribe) chatUnsubscribe();
+  const chatRoom = currentDM ? currentDM.roomId : currentRoom;
+  // Order by loggedAt (plain number) — avoids Firestore composite index requirement
+  // sentAt is a server timestamp which needs an index; loggedAt is set client-side
   chatUnsubscribe = db.collection('chat')
-    .where('room', '==', currentRoom)
+    .where('room', '==', chatRoom)
+    .orderBy('loggedAt', 'asc')
     .limit(100)
     .onSnapshot(snap => {
-      CHAT_MESSAGES = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => {
-          const ta = a.sentAt?.toMillis?.() || a.loggedAt || 0;
-          const tb = b.sentAt?.toMillis?.() || b.loggedAt || 0;
-          return ta - tb;
-        });
+      CHAT_MESSAGES = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderChatMessages();
       const badge = document.getElementById('badge-chat');
       if (currentPanel !== 'chat' && CHAT_MESSAGES.length) {
@@ -6381,7 +7619,16 @@ function initChat() {
           badge.style.display = ''; badge.textContent = '!';
         }
       }
-    }, err => { console.warn('Chat error:', err); });
+    }, err => {
+      console.error('Chat listener error:', err);
+      if (err.code === 'failed-precondition') {
+        // Firestore index missing — show actionable message
+        toast('Chat needs a Firestore index. Check browser console for the link to create it.', 'warn');
+        console.error('🔧 Create the Firestore index by clicking this link:', err.message);
+      } else if (err.code === 'permission-denied') {
+        toast('Chat: permission denied. Check Firestore rules.', 'warn');
+      }
+    });
 }
 
 function renderChat() {
@@ -6413,14 +7660,24 @@ function renderChat() {
   }
 
   // Update header
-  const rm = CHAT_ROOMS.find(r => r.id === currentRoom) || CHAT_ROOMS[0];
-  document.getElementById('chat-header-title').textContent = `${rm?.icon || '#'} ${rm?.label || 'Chat'}`;
-  const chMembers = getChannelMembers(currentRoom);
-  const memberStr = currentRoom === 'general'
-    ? `All ${MEMBERS.length} members`
-    : chMembers.length ? `${chMembers.length} member${chMembers.length !== 1 ? 's' : ''}: ${chMembers.slice(0,4).join(', ')}${chMembers.length > 4 ? ` +${chMembers.length - 4} more` : ''}`
-    : 'No members yet — click Manage Channels';
-  document.getElementById('chat-header-meta').textContent = rm?.desc ? `${rm.desc} · ${memberStr}` : memberStr;
+  if (currentDM) {
+    const other = currentDM.otherUser;
+    document.getElementById('chat-header-title').textContent = `💬 ${other}`;
+    document.getElementById('chat-header-meta').textContent = `Direct message · ${other}`;
+    trackDMRecent(other);
+  } else {
+    const rm = CHAT_ROOMS.find(r => r.id === currentRoom) || CHAT_ROOMS[0];
+    document.getElementById('chat-header-title').textContent = `${rm?.icon || '#'} ${rm?.label || 'Chat'}`;
+    const chMembers = getChannelMembers(currentRoom);
+    const memberStr = currentRoom === 'general'
+      ? `All ${MEMBERS.length} members`
+      : chMembers.length ? `${chMembers.length} member${chMembers.length !== 1 ? 's' : ''}: ${chMembers.slice(0,4).join(', ')}${chMembers.length > 4 ? ` +${chMembers.length - 4} more` : ''}`
+      : 'No members yet — click Manage Channels';
+    document.getElementById('chat-header-meta').textContent = rm?.desc ? `${rm.desc} · ${memberStr}` : memberStr;
+  }
+
+  // Render DM list in sidebar
+  renderDMList();
 
   // Online members list in sidebar (filtered to channel)
   const onlineList = document.getElementById('chat-online-list');
@@ -6452,6 +7709,7 @@ function renderChat() {
 
 function switchRoom(roomId) {
   if (!canAccessChannel(roomId)) { toast("You're not a member of this channel.", 'warn'); return; }
+  currentDM = null; // leave any DM
   currentRoom = roomId;
   renderChat();
 }
@@ -6482,8 +7740,8 @@ function renderChannelManager() {
   document.getElementById('cm-channel-desc').textContent = room?.desc || '';
 
   const currentMembers = getChannelMembers(_cmEditing);
-  // Exclude approvers from channel membership (they get notified separately)
-  const eligible = MEMBERS.filter(m => m.role !== 'Approver');
+  // All members including approvers can be added to channels
+  const eligible = MEMBERS;
 
   document.getElementById('cm-member-list').innerHTML = eligible.map(m => {
     const isMember = currentMembers.includes(m.name);
@@ -6528,6 +7786,48 @@ async function saveCmChanges() {
   toast('Channel members updated!', 'ok');
 }
 
+// ── Image compression before chat upload ──
+// Resizes to max 1280px and compresses to ~85% quality
+// Reduces typical phone photo from 4-8MB → 150-300KB
+async function compressChatImage(file) {
+  return new Promise((resolve) => {
+    const MAX_PX = 1280;
+    const QUALITY = 0.82;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Calculate new dimensions keeping aspect ratio
+        let { width, height } = img;
+        if (width > MAX_PX || height > MAX_PX) {
+          if (width > height) { height = Math.round(height * MAX_PX / width); width = MAX_PX; }
+          else { width = Math.round(width * MAX_PX / height); height = MAX_PX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob || blob.size > file.size) {
+              // Compression made it bigger (e.g. already compressed PNG) — use original
+              resolve(file);
+            } else {
+              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+            }
+          },
+          'image/jpeg', QUALITY
+        );
+      };
+      img.onerror = () => resolve(file); // fallback to original on error
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 function getFileIcon(name) {
   if (!name) return '📎';
   const ext = name.split('.').pop().toLowerCase();
@@ -6539,6 +7839,29 @@ function getFileIcon(name) {
   if (['ppt','pptx'].includes(ext)) return '📊';
   if (['zip','rar','7z'].includes(ext)) return '🗜️';
   return '📎';
+}
+
+function openChatMediaLightbox(type, url) {
+  // Remove any existing lightbox
+  const existing = document.getElementById('chat-lightbox');
+  if (existing) existing.remove();
+
+  const lb = document.createElement('div');
+  lb.id = 'chat-lightbox';
+  lb.className = 'chat-media-lightbox';
+  lb.innerHTML = type === 'img'
+    ? `<button class="chat-media-close" onclick="document.getElementById('chat-lightbox').remove()">×</button>
+       <img src="${url}" alt="Media" onclick="event.stopPropagation()"/>`
+    : `<button class="chat-media-close" onclick="document.getElementById('chat-lightbox').remove()">×</button>
+       <video controls autoplay onclick="event.stopPropagation()"><source src="${url}"></video>`;
+
+  // Click backdrop to close
+  lb.addEventListener('click', () => lb.remove());
+  // Esc to close
+  const onKey = e => { if (e.key === 'Escape') { lb.remove(); document.removeEventListener('keydown', onKey); } };
+  document.addEventListener('keydown', onKey);
+
+  document.body.appendChild(lb);
 }
 
 function renderChatMessages() {
@@ -6571,19 +7894,49 @@ function renderChatMessages() {
       </div>
     </div>`;
 
-    // File attachment card
+    // File attachment — inline for images/video, downloadable link for everything else
     let fileHtml = '';
     if (msg.fileUrl) {
-      const icon = getFileIcon(msg.fileName);
-      const ext = (msg.fileName||'').split('.').pop().toUpperCase() || 'FILE';
-      fileHtml = `<div class="chat-file-card" onclick="window.open('${msg.fileUrl}','_blank')">
-        <span class="chat-file-icon">${icon}</span>
-        <div class="chat-file-info">
-          <div class="chat-file-name">${msg.fileName||'Attached file'}</div>
-          <div class="chat-file-size">${ext} · tap to open</div>
-        </div>
-        <span class="chat-file-open">↗</span>
-      </div>`;
+      const fname = msg.fileName || '';
+      const ext = fname.split('.').pop().toLowerCase();
+      const isImage = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
+      const isVideo = ['mp4','mov','webm','avi'].includes(ext);
+      const safeUrl = msg.fileUrl.replace(/'/g, "%27");
+      const safeName = fname.replace(/"/g, '&quot;');
+
+      if (isImage) {
+        // Render inline thumbnail — click opens lightbox
+        fileHtml = `<img class="chat-img" src="${safeUrl}" alt="${safeName}"
+          onclick="openChatMediaLightbox('img','${safeUrl}')"
+          onerror="this.style.display='none';this.nextSibling.style.display='flex'"/>
+          <a class="chat-file-link" href="${safeUrl}" target="_blank" rel="noopener" style="display:none;">
+            <span class="chat-file-icon">🖼️</span>
+            <div class="chat-file-info"><div class="chat-file-name">${safeName}</div><div class="chat-file-size">IMAGE · tap to open</div></div>
+            <span class="chat-file-open">↗</span>
+          </a>`;
+      } else if (isVideo) {
+        // Render inline video player
+        fileHtml = `<video class="chat-video" controls preload="metadata">
+          <source src="${safeUrl}">
+          <a class="chat-file-link" href="${safeUrl}" target="_blank" rel="noopener">
+            <span class="chat-file-icon">🎬</span>
+            <div class="chat-file-info"><div class="chat-file-name">${safeName}</div><div class="chat-file-size">VIDEO · tap to open</div></div>
+            <span class="chat-file-open">↗</span>
+          </a>
+        </video>`;
+      } else {
+        // Non-media: proper <a> tag (not window.open — browsers block that)
+        const icon = getFileIcon(fname);
+        const extLabel = ext.toUpperCase() || 'FILE';
+        fileHtml = `<a class="chat-file-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer">
+          <span class="chat-file-icon">${icon}</span>
+          <div class="chat-file-info">
+            <div class="chat-file-name">${safeName || 'Attached file'}</div>
+            <div class="chat-file-size">${extLabel} · tap to open</div>
+          </div>
+          <span class="chat-file-open">↗</span>
+        </a>`;
+      }
     }
 
     // Reactions
@@ -6636,33 +7989,83 @@ async function sendChatMessage() {
   if (tagRef.startsWith('flow:')) { const f = TODAY_FLOWS.find(x=>x.id===tagRef.replace('flow:','')); tagLabel = f?`Flow: ${f.title}`:''; }
   else if (tagRef.startsWith('task:')) { const t = TASKS.find(x=>String(x.id)===tagRef.replace('task:','')); tagLabel = t?`Task: ${t.title}`:''; }
 
-  // Handle file attachment — upload to Firebase Storage for shared access
+  // Handle file attachment — upload to Firebase Storage
   let fileUrl = '', fileName = '';
   if (_chatAttachPending) {
     const uploadIndicator = document.getElementById('chat-uploading');
+    const progressBar = document.getElementById('chat-upload-progress');
+    const progressFill = document.getElementById('chat-upload-fill');
+    const progressPct = document.getElementById('chat-upload-pct');
     const sendBtn = document.getElementById('chat-send-btn');
-    try {
-      if (uploadIndicator) uploadIndicator.style.display = 'flex';
-      if (sendBtn) sendBtn.disabled = true;
-      fileName = _chatAttachPending.name;
-      const storage = firebase.storage();
-      const timestamp = Date.now();
-      const storageRef = storage.ref(`chat-files/${currentRoom}/${timestamp}_${fileName}`);
-      const snapshot = await storageRef.put(_chatAttachPending);
-      fileUrl = await snapshot.ref.getDownloadURL();
-    } catch(e) {
-      console.warn('File upload error', e);
-      toast('File upload failed — check storage permissions.', 'warn');
-    } finally {
-      if (uploadIndicator) uploadIndicator.style.display = 'none';
-      if (sendBtn) sendBtn.disabled = false;
-    }
+    const fileToUpload = _chatAttachPending;
     _chatAttachPending = null;
     clearChatAttach();
+
+    try {
+      if (uploadIndicator) { uploadIndicator.style.display = 'flex'; uploadIndicator.querySelector('span').textContent = 'Preparing…'; }
+      if (progressBar) progressBar.style.display = 'block';
+      if (sendBtn) sendBtn.disabled = true;
+      fileName = fileToUpload.name;
+
+      // Validate Firebase Storage is available
+      if (!firebase.storage) throw new Error('Firebase Storage SDK not loaded');
+      const storage = firebase.storage();
+      const timestamp = Date.now();
+      const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const uploadRoom = currentDM ? currentDM.roomId : (currentRoom || 'general');
+      const storageRef = storage.ref(`chat-files/${uploadRoom}/${timestamp}_${safeName}`);
+
+      // Compress images before upload (reduces 4MB phone photo → ~200KB)
+      const ext = fileName.split('.').pop().toLowerCase();
+      const isCompressible = ['jpg','jpeg','png','webp','gif'].includes(ext);
+      const fileForUpload = isCompressible ? await compressChatImage(fileToUpload) : fileToUpload;
+      if (uploadIndicator) uploadIndicator.querySelector('span').textContent = 'Uploading…';
+
+      // Upload with progress tracking
+      fileUrl = await new Promise((resolve, reject) => {
+        const uploadTask = storageRef.put(fileForUpload);
+        const timeout = setTimeout(() => {
+          uploadTask.cancel();
+          reject(new Error('Upload timed out after 60 seconds'));
+        }, 60000);
+
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+            if (progressFill) progressFill.style.width = pct + '%';
+            if (progressPct) progressPct.textContent = pct + '%';
+            if (uploadIndicator) uploadIndicator.querySelector('span').textContent = `Uploading… ${pct}%`;
+          },
+          (err) => { clearTimeout(timeout); reject(err); },
+          async () => {
+            clearTimeout(timeout);
+            try { resolve(await uploadTask.snapshot.ref.getDownloadURL()); }
+            catch(e) { reject(e); }
+          }
+        );
+      });
+
+    } catch(e) {
+      console.error('File upload error:', e);
+      let msg = 'File upload failed.';
+      if (e.code === 'storage/unauthorized')  msg = 'Upload blocked — Firebase Storage rules need updating. See console for details.';
+      else if (e.code === 'storage/canceled')  msg = 'Upload cancelled.';
+      else if (e.message?.includes('timed out')) msg = 'Upload timed out — file may be too large or connection is slow.';
+      else if (e.code === 'storage/unknown')   msg = 'Storage error — check Firebase Storage is enabled in your Firebase console.';
+      toast(msg, 'warn');
+      fileName = ''; // don't send a broken message
+    } finally {
+      if (uploadIndicator) uploadIndicator.style.display = 'none';
+      if (progressBar) progressBar.style.display = 'none';
+      if (progressFill) progressFill.style.width = '0%';
+      if (sendBtn) sendBtn.disabled = false;
+    }
+
+    if (!fileUrl) return; // abort send if upload failed
   }
 
   const msg = {
-    room: currentRoom,
+    room: currentDM ? currentDM.roomId : currentRoom,
     sender: loggedInMember?.name || 'Unknown',
     text: text || (fileName ? `Shared a file: ${fileName}` : ''),
     tagRef, tagLabel,
@@ -6723,7 +8126,7 @@ async function sendPoll() {
     .map(i => i.value.trim()).filter(Boolean);
   if (opts.length < 2) { toast('Add at least 2 options','warn'); return; }
   const poll = {
-    room: currentRoom,
+    room: currentDM ? currentDM.roomId : currentRoom,
     sender: loggedInMember?.name || 'Unknown',
     type: 'poll',
     text: q,
@@ -7425,12 +8828,11 @@ function detectFlowChanges(newFlows) {
     if (prev === undefined) { prevFlowSteps[f.id] = f.currentStep; return; }
     if (f.currentStep !== prev) {
       // Step changed by someone else (Firebase listener fires for all users)
-      const newStep = FLOW_STEPS[f.currentStep];
+      const _detSteps = getTemplateSteps(f.templateId);
+      const newStep = _detSteps[f.currentStep];
       if (newStep) {
-        // Notify the step owner
         notifyMyTurn(newStep.name, f.title, newStep.owner);
-        // Notify others that flow was pushed
-        notifyFlowPushed(newStep.name, f.title, ''); // pushedBy unknown without auth
+        notifyFlowPushed(newStep.name, f.title, '');
       }
       prevFlowSteps[f.id] = f.currentStep;
     }
@@ -7531,11 +8933,71 @@ load();
 showLoginScreen();
 
 // ── Mobile sidebar toggle ──
+function toggleUserMenu() {
+  const menu = document.getElementById('user-menu');
+  if (!menu) return;
+  const isOpen = menu.style.display === 'block';
+  menu.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    setTimeout(() => {
+      document.addEventListener('click', function closeMenu(e) {
+        if (!document.getElementById('user-chip')?.contains(e.target)) {
+          menu.style.display = 'none';
+          document.removeEventListener('click', closeMenu);
+        }
+      });
+    }, 0);
+  }
+}
+
 function toggleSidebar() {
   const sb = document.querySelector('.sidebar');
   const ov = document.getElementById('sidebar-overlay');
+  const btn = document.querySelector('.hamburger-btn');
   const isOpen = sb.classList.toggle('open');
   ov.classList.toggle('show', isOpen);
+  // Animate hamburger → X
+  if (btn) {
+    const spans = btn.querySelectorAll('span');
+    if (isOpen) {
+      spans[0].style.cssText = 'transform:translateY(7px) rotate(45deg)';
+      spans[1].style.cssText = 'opacity:0;transform:scaleX(0)';
+      spans[2].style.cssText = 'transform:translateY(-7px) rotate(-45deg)';
+    } else {
+      spans[0].style.cssText = '';
+      spans[1].style.cssText = '';
+      spans[2].style.cssText = '';
+    }
+  }
+}
+
+// ── Mobile: swipe left on sidebar to close ──
+(function(){
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+  }, { passive:true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const sb = document.querySelector('.sidebar');
+    // Swipe left > 60px while sidebar is open → close it
+    if (sb && sb.classList.contains('open') && dx < -60) {
+      toggleSidebar();
+    }
+    // Swipe right from left edge (< 20px) → open sidebar
+    if (sb && !sb.classList.contains('open') && touchStartX < 20 && dx > 60) {
+      toggleSidebar();
+    }
+  }, { passive:true });
+})();
+
+// ── Mobile FAB: hide on chat panel (has its own input), show on flows/tasks ──
+function updateMobFab(panel) {
+  const fab = document.getElementById('mob-fab');
+  if (!fab) return;
+  // Hide FAB on panels where it doesn't make sense
+  const hidePanels = ['chat','log','audit','notifications'];
+  fab.style.display = window.innerWidth <= 768 && !hidePanels.includes(panel) ? 'flex' : 'none';
 }
 
 // ── Global keyboard shortcuts ──
