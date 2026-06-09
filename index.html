@@ -1268,6 +1268,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
       <span class="nav-icon" style="font-size:15px;">🏆</span>
       Post Performance
     </div>
+    <div class="nav-item" id="nav-reels" onclick="go('reels')">
+      <span class="nav-icon" style="font-size:15px;">🎬</span>
+      Reels & Videos
+    </div>
     <div class="nav-item" id="nav-scratchpad" onclick="go('scratchpad')">
       <span class="nav-icon" style="font-size:15px;">🖼️</span>
       Media Scratchpad
@@ -1318,6 +1322,9 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         <span class="role-chip rc-manager" id="role-chip">Manager</span>
         <button class="btn btn-ghost btn-sm" onclick="go('log')" id="log-btn" style="display:none;">+ Log</button>
         <button class="btn btn-coral btn-sm" id="main-btn" onclick="mainAction()">+ New Task</button>
+        <button onclick="openSearch()" title="Search (Ctrl+K)" style="background:none;border:1.5px solid var(--border2);border-radius:var(--rad);padding:5px 10px;cursor:pointer;font-size:12px;color:var(--ink3);display:flex;align-items:center;gap:5px;font-family:var(--ff-body);transition:all 0.13s;" onmouseover="this.style.borderColor='var(--navy)';this.style.color='var(--ink)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--ink3)'">
+          🔍 <kbd style="font-size:10px;background:var(--cream2);border:1px solid var(--border2);border-radius:3px;padding:1px 4px;">&#8984;K</kbd>
+        </button>
         <div class="notif-bell" onclick="go('notifications')" title="Notifications">
           🔔<div class="notif-pip show" id="notif-pip"></div>
         </div>
@@ -1665,6 +1672,181 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
           </div>
           <div id="perf-summary-row" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;"></div>
           <div id="perf-table-wrap"></div>
+        </div>
+
+        <!-- REELS & VIDEOS -->
+        <div class="panel" id="panel-reels">
+          <div class="sec-hdr" style="flex-wrap:wrap;gap:8px;">
+            <span class="sec-title">📱 Instagram &amp; Videos</span>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button class="btn btn-sm btn-ghost" id="reels-sync-btn" onclick="syncMetaAll()">⟳ Sync from Meta</button>
+              <button class="btn btn-sm btn-coral" onclick="openIgPublish()">＋ Publish to Instagram</button>
+              <button class="btn btn-sm" onclick="openMetaConfig()" id="reels-config-btn" title="Meta API Settings">⚙️ Setup</button>
+              <span id="reels-sync-status" style="font-size:11px;color:var(--ink3);"></span>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;">
+            <button id="ig-tab-posts" onclick="switchIgTab('posts')" style="padding:9px 20px;font-size:13px;font-weight:600;font-family:var(--ff-head);border:none;background:none;cursor:pointer;color:var(--coral);border-bottom:2.5px solid var(--coral);margin-bottom:-2px;">All Posts</button>
+            <button id="ig-tab-reels" onclick="switchIgTab('reels')" style="padding:9px 20px;font-size:13px;font-weight:600;font-family:var(--ff-head);border:none;background:none;cursor:pointer;color:var(--ink3);border-bottom:2.5px solid transparent;margin-bottom:-2px;">Instagram</button>
+          </div>
+
+          <!-- ALL POSTS TAB -->
+          <div id="ig-tab-posts-content">
+            <div id="ig-stat-cards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;"></div>
+            <div id="ig-insights" style="margin-bottom:18px;"></div>
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radl);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:12px;font-weight:600;color:var(--ink2);">Type</span>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="ig-filter-image" onchange="renderIgTable()" checked style="accent-color:var(--navy);"> Image</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="ig-filter-carousel" onchange="renderIgTable()" checked style="accent-color:var(--navy);"> Carousel</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="ig-filter-video" onchange="renderIgTable()" checked style="accent-color:var(--navy);"> Video/Reel</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
+                <span style="font-size:12px;font-weight:600;color:var(--ink2);">Sort By</span>
+                <select id="ig-sort-by" onchange="renderIgTable()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
+                  <option value="likes">Likes</option>
+                  <option value="comments">Comments</option>
+                  <option value="reach">Reach</option>
+                  <option value="impressions">Impressions</option>
+                  <option value="saved">Saves</option>
+                  <option value="engRate">Eng. Rate</option>
+                  <option value="timestamp">Date Posted</option>
+                </select>
+                <select id="ig-sort-order" onchange="renderIgTable()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
+                <span id="ig-count" style="font-size:12px;color:var(--ink3);"></span>
+              </div>
+            </div>
+            <div id="ig-table-wrap"></div>
+          </div>
+
+          <!-- REELS & VIDEOS TAB -->
+          <div id="ig-tab-reels-content" style="display:none;">
+            <div id="reels-stat-cards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;"></div>
+            <div id="reels-insights" style="margin-bottom:18px;"></div>
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radl);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:12px;font-weight:600;color:var(--ink2);">Source Type</span>
+                <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="reels-filter-video" onchange="renderReelsTable()" checked style="accent-color:var(--navy);"> Video</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="reels-filter-reel" onchange="renderReelsTable()" checked style="accent-color:var(--navy);"> Reel</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
+                <span style="font-size:12px;font-weight:600;color:var(--ink2);">Sort By</span>
+                <select id="reels-sort-by" onchange="renderReelsTable()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
+                  <option value="views">Views</option>
+                  <option value="reach">Reach</option>
+                  <option value="likes">Likes</option>
+                  <option value="comments">Comments</option>
+                  <option value="shares">Shares</option>
+                  <option value="saved">Saves</option>
+                  <option value="engRate">Eng. Rate</option>
+                  <option value="timestamp">Date Posted</option>
+                </select>
+                <select id="reels-sort-order" onchange="renderReelsTable()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
+                <span id="reels-count" style="font-size:12px;color:var(--ink3);"></span>
+              </div>
+            </div>
+            <div id="reels-table-wrap"></div>
+          </div>
+        </div>
+
+        <!-- INSTAGRAM PUBLISH MODAL -->
+        <div class="overlay" id="ig-publish-modal" onclick="if(event.target===this)closeIgPublish()">
+          <div class="modal" style="width:560px;max-height:90vh;overflow-y:auto;">
+            <div class="modal-hdr">
+              <span class="modal-title">📤 Publish to Instagram</span>
+              <button class="close-x" onclick="closeIgPublish()">×</button>
+            </div>
+            <div class="modal-body">
+              <div style="margin-bottom:14px;">
+                <label style="font-size:12px;font-weight:600;color:var(--ink2);display:block;margin-bottom:6px;">Post Type</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;padding:6px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);">
+                    <input type="radio" name="ig-post-type" value="IMAGE" onchange="onIgTypeChange()" checked style="accent-color:var(--coral);"> 🖼 Single Image
+                  </label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;padding:6px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);">
+                    <input type="radio" name="ig-post-type" value="CAROUSEL" onchange="onIgTypeChange()" style="accent-color:var(--coral);"> 🎠 Carousel
+                  </label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;padding:6px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);">
+                    <input type="radio" name="ig-post-type" value="REELS" onchange="onIgTypeChange()" style="accent-color:var(--coral);"> 🎬 Reel
+                  </label>
+                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;padding:6px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);">
+                    <input type="radio" name="ig-post-type" value="STORIES" onchange="onIgTypeChange()" style="accent-color:var(--coral);"> 📸 Story
+                  </label>
+                </div>
+              </div>
+              <div style="margin-bottom:14px;">
+                <label style="font-size:12px;font-weight:600;color:var(--ink2);display:block;margin-bottom:6px;">Media <span id="ig-media-hint" style="font-weight:400;color:var(--ink3);">(JPG/PNG — max 8MB)</span></label>
+                <div id="ig-media-drop" style="border:2px dashed var(--border2);border-radius:var(--radl);padding:20px;text-align:center;cursor:pointer;background:var(--cream2);" onclick="document.getElementById('ig-file-input').click()">
+                  <div style="font-size:28px;margin-bottom:6px;">📁</div>
+                  <div style="font-size:12px;color:var(--ink3);">Click to upload or drag files here</div>
+                  <input type="file" id="ig-file-input" style="display:none;" onchange="onIgFilePick(event)" multiple accept="image/*,video/*"/>
+                </div>
+                <div id="ig-file-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+              </div>
+              <div style="margin-bottom:14px;">
+                <label style="font-size:12px;font-weight:600;color:var(--ink2);display:block;margin-bottom:6px;">Caption</label>
+                <textarea id="ig-caption" rows="4" placeholder="Write your caption here… #hashtags @mentions" oninput="document.getElementById('ig-caption-count').textContent=this.value.length" style="width:100%;font-size:13px;padding:10px;border:1.5px solid var(--border2);border-radius:var(--rad);font-family:var(--ff-body);resize:vertical;box-sizing:border-box;"></textarea>
+                <div style="font-size:11px;color:var(--ink3);margin-top:3px;">Max 2,200 characters. <span id="ig-caption-count">0</span>/2200</div>
+              </div>
+              <div id="ig-publish-status" style="display:none;padding:10px 14px;border-radius:var(--rad);font-size:12px;margin-bottom:8px;"></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn" onclick="closeIgPublish()">Cancel</button>
+              <button class="btn btn-coral" id="ig-publish-btn-submit" onclick="publishToInstagram()">📤 Publish Now</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- META CONFIG MODAL -->
+        <div class="overlay" id="meta-config-modal" onclick="if(event.target===this)closeMetaConfig()">
+          <div class="modal" style="width:500px;">
+            <div class="modal-hdr">
+              <span class="modal-title">⚙️ Meta / Instagram API Setup</span>
+              <button class="close-x" onclick="closeMetaConfig()">×</button>
+            </div>
+            <div class="modal-body">
+              <div style="background:var(--cream2);border-radius:var(--radl);padding:12px 14px;font-size:12px;color:var(--ink2);margin-bottom:14px;line-height:1.6;">
+                Enter your Meta API credentials below. These are saved to your browser only and never sent anywhere except Meta's API directly.
+                The App Secret is required for token refresh. Page Access Token must have <code>instagram_content_publish</code>, <code>instagram_manage_insights</code>, and <code>pages_read_engagement</code> permissions.
+              </div>
+              <div class="form-grid">
+                <div class="fg fc-full"><label>Instagram Business Account ID</label>
+                  <input type="text" id="meta-ig-id" placeholder="e.g. 17841405518148380"/>
+                </div>
+                <div class="fg fc-full"><label>Facebook Page ID</label>
+                  <input type="text" id="meta-page-id" placeholder="e.g. 279320515860081"/>
+                </div>
+                <div class="fg fc-full"><label>App ID</label>
+                  <input type="text" id="meta-app-id" placeholder="e.g. 864139039527765"/>
+                </div>
+                <div class="fg fc-full"><label>App Secret</label>
+                  <input type="password" id="meta-app-secret" placeholder="Your Meta App Secret"/>
+                </div>
+                <div class="fg fc-full"><label>Page Access Token</label>
+                  <input type="password" id="meta-token" placeholder="EAAxxxxxx…"/>
+                </div>
+                <div class="fg fc-full"><label>How many posts to fetch (max 50)</label>
+                  <input type="number" id="meta-limit" value="33" min="1" max="50"/>
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <button class="btn btn-sm btn-ghost" onclick="refreshMetaToken()" style="font-size:12px;">🔄 Refresh Token (extend 60 days)</button>
+                <span id="meta-token-status" style="font-size:11px;color:var(--ink3);margin-left:8px;"></span>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn" onclick="closeMetaConfig()">Cancel</button>
+              <button class="btn btn-coral" onclick="saveMetaConfig()">Save &amp; Sync</button>
+            </div>
+          </div>
         </div>
 
         <!-- MEDIA SCRATCHPAD -->
@@ -2880,7 +3062,7 @@ function checkPwStrength(pw) {
 
 // ── Logout ─────────────────────────────────
 async function doLogout() {
-  if (!confirm('Sign out of SociaDesk?')) return;
+  sdConfirm('Sign Out', 'Sign out of SociaDesk?', () => { if (auth) auth.signOut().then(() => { loggedInMember = null; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display=''; }); }, 'Sign Out', false); return;
   try {
     if (auth) await auth.signOut();
     if (unsubTasks)  unsubTasks();
@@ -2974,7 +3156,13 @@ function startListeners() {
   // Tasks — all time
   unsubTasks = db.collection('tasks').orderBy('createdAt', 'desc')
     .onSnapshot(snap => {
-      const newTasks = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      const newTasks = snap.docs.map(d => {
+        const t = { ...d.data(), id: d.id };
+        if (typeof t.statusHistory === 'string') {
+          try { t.statusHistory = JSON.parse(t.statusHistory); } catch(e) { t.statusHistory = []; }
+        }
+        return t;
+      });
       detectTaskChanges(newTasks);
       TASKS = newTasks;
       if (currentPanel === 'tasks') refresh();
@@ -3089,6 +3277,10 @@ async function fbSaveTask(task) {
   if (!fbReady) { saveToLocalStorage(); return; }
   try {
     const { id, ...data } = task;
+    // Serialize statusHistory (array of objects) — Firestore can't store nested arrays of objects reliably
+    if (Array.isArray(data.statusHistory)) {
+      data.statusHistory = JSON.stringify(data.statusHistory);
+    }
     data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
     if (typeof id === 'number') {
       // new task — use add()
@@ -3223,6 +3415,25 @@ function initApp() {
 // ═══════════════════════════════════════════
 const SL = {todo:'To Do',inprogress:'In Progress',done:'Done',blocked:'Blocked',review:'In Review'};
 const SC = {todo:'sp-todo',inprogress:'sp-inprogress',done:'sp-done',blocked:'sp-blocked',review:'sp-review'};
+
+// ── Custom confirm dialog (replaces browser confirm()) ────
+function sdConfirm(title, msg, onOk, okLabel = 'Confirm', danger = true) {
+  const overlay  = document.getElementById('sd-confirm-overlay');
+  const titleEl  = document.getElementById('sd-confirm-title');
+  const msgEl    = document.getElementById('sd-confirm-msg');
+  const okBtn    = document.getElementById('sd-confirm-ok-btn');
+  const cancelBtn= document.getElementById('sd-confirm-cancel-btn');
+  titleEl.textContent = title;
+  msgEl.textContent   = msg;
+  okBtn.textContent   = okLabel;
+  okBtn.style.background    = danger ? 'var(--red)'  : 'var(--navy)';
+  okBtn.style.borderColor   = danger ? 'var(--red)'  : 'var(--navy)';
+  overlay.classList.add('open');
+  const close = () => overlay.classList.remove('open');
+  okBtn.onclick     = () => { close(); onOk(); };
+  cancelBtn.onclick = () => close();
+  overlay.onclick   = (e) => { if (e.target === overlay) close(); };
+}
 const PIPELINE_STAGES = ['todo','inprogress','review','done'];
 const PIPELINE_NAMES  = {todo:'Incoming',inprogress:'In Progress',review:'In Review',done:'Done'};
 const STAGE_COL = {todo:'var(--ink3)',inprogress:'var(--amber)',review:'var(--purple)',done:'var(--green)'};
@@ -3288,7 +3499,7 @@ function go(panel){
       if(btn)btn.querySelectorAll('span').forEach(s=>s.style.cssText='');
     }
   }
-  const titles={today:"Today's Flows",tasks:'Ad-hoc Tasks',log:'Activity Log',flows:'Flow Templates',analytics:'Analytics',notifications:'Notifications',workload:'Team Workload',regular:'Regular Tasks',weekly:'Weekly Plan',chat:'Team Chat',audit:'Audit Trail',calendar:'Content Calendar',campaigns:'Campaigns',onboarding:'Getting Started',performance:'Post Performance',scratchpad:'Media Scratchpad'};
+  const titles={today:"Today's Flows",tasks:'Ad-hoc Tasks',log:'Activity Log',flows:'Flow Templates',analytics:'Analytics',notifications:'Notifications',workload:'Team Workload',regular:'Regular Tasks',weekly:'Weekly Plan',chat:'Team Chat',audit:'Audit Trail',calendar:'Content Calendar',campaigns:'Campaigns',onboarding:'Getting Started',performance:'Post Performance',reels:'Reels & Videos',scratchpad:'Media Scratchpad'};
   document.getElementById('page-title').textContent=titles[panel]||panel;
   updateMobFab(panel);
   closeSide();
@@ -3302,6 +3513,7 @@ function go(panel){
   if(panel==='campaigns'){ renderCampaigns(); return; }
   if(panel==='onboarding'){ renderOnboarding(); return; }
   if(panel==='performance'){ renderPerformance(); return; }
+  if(panel==='reels'){ loadMetaConfig(); renderIgAllPanel(); renderReelsPanel(); return; }
   if(panel==='scratchpad'){ renderScratchpad(); return; }
   refresh();
 }
@@ -3953,7 +4165,7 @@ function confirmMarkStepDone(flowId) {
     ? `Mark "${curStep.name}" done and complete this flow?`
     : `Mark "${curStep.name}" done?
 Next step: ${nextStep.name}${nextStep.owner ? ' → ' + nextStep.owner : ''}`;
-  if (confirm(msg)) markStepDone(flowId);
+  sdConfirm('Mark Step Done', msg, () => markStepDone(flowId), 'Mark Done', false);
 }
 
 async function markStepDone(flowId) {
@@ -4000,10 +4212,11 @@ async function markStepDone(flowId) {
 }
 
 async function deleteFlow(flowId) {
-  if (!confirm('Delete this flow instance?')) return;
-  TODAY_FLOWS = TODAY_FLOWS.filter(x => x.id !== flowId);
-  await fbSaveFlows(); renderToday();
-  toast('Flow deleted.', '');
+  sdConfirm('Delete Flow', 'Delete this flow? This cannot be undone.', async () => {
+    TODAY_FLOWS = TODAY_FLOWS.filter(x => x.id !== flowId);
+    await fbSaveFlows(); renderToday();
+    toast('Flow deleted.', '');
+  });
 }
 
 function openFlowStep(flowId, stepIdx) {
@@ -4203,8 +4416,46 @@ function renderTasks(){
 function openTask(id){
   const t=TASKS.find(x=>x.id===id); if(!t) return;
   selectedId=id;
-  const stageIdx=0; // pipeline removed
   const canEdit=role!=='viewer';
+  const isAssignee = loggedInMember && t.assignee === loggedInMember.name;
+  const isManager  = role === 'manager' || role === 'head';
+
+  // Status action buttons
+  const statusActions = (() => {
+    if (!isAssignee && !isManager) return '';
+    const s = t.status;
+    const btns = [];
+    if ((isAssignee || isManager) && s === 'todo')
+      btns.push(`<button class="btn btn-coral" style="flex:1;" onclick="setTaskStatus(${t.id},'inprogress')">&#9654; Start Working</button>`);
+    if ((isAssignee || isManager) && s === 'inprogress')
+      btns.push(`<button class="btn btn-coral" style="flex:1;" onclick="setTaskStatus(${t.id},'review')">&#128065; Submit for Review</button>`);
+    if (isManager && s === 'review')
+      btns.push(`<button class="btn btn-coral" style="flex:1;" onclick="setTaskStatus(${t.id},'done')">&#9989; Mark Done</button>`);
+    if ((isAssignee || isManager) && s !== 'done' && s !== 'blocked')
+      btns.push(`<button class="btn" style="border-color:var(--red);color:var(--red);flex:1;" onclick="setTaskStatus(${t.id},'blocked')">&#128308; Mark Blocked</button>`);
+    if (isManager && s === 'blocked')
+      btns.push(`<button class="btn" style="flex:1;" onclick="setTaskStatus(${t.id},'inprogress')">&#8617; Unblock</button>`);
+    if (isManager && s === 'done')
+      btns.push(`<button class="btn" style="flex:1;" onclick="setTaskStatus(${t.id},'inprogress')">&#8617; Reopen</button>`);
+    return btns.length ? `<div class="dp-sec"><div class="dp-label">Update Status</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">${btns.join('')}</div></div>` : '';
+  })();
+
+  // Status history
+  const history = Array.isArray(t.statusHistory) ? t.statusHistory : [];
+  const icons = {todo:'&#128203;',inprogress:'&#9654;',review:'&#128065;',done:'&#9989;',blocked:'&#128308;'};
+  const historyHTML = history.length ? history.slice().reverse().map(h => {
+    const d = new Date(h.at);
+    const timeStr = d.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    return `<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:13px;margin-top:1px;">${icons[h.to]||'&#8226;'}</span>
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:600;color:var(--ink);">${SL[h.to]||h.to}</div>
+        <div style="font-size:10px;color:var(--ink3);">${h.by} &middot; ${timeStr}</div>
+        ${h.note?`<div style="font-size:11px;color:var(--ink2);margin-top:2px;font-style:italic;">"${h.note}"</div>`:''}
+      </div>
+    </div>`;
+  }).join('') : `<span style="font-size:11px;color:var(--ink3);">No status changes yet.</span>`;
+
   document.getElementById('dp-type-label').textContent='Ad-hoc Task';
   document.getElementById('dp-body').innerHTML=`
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
@@ -4218,6 +4469,7 @@ function openTask(id){
       <span class="sp ${SC[t.status]}">${SL[t.status]}</span>
       <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--cream2);display:flex;align-items:center;gap:3px;"><span class="prio-dot pd-${t.priority}"></span>${t.priority}</span>
     </div>
+    ${statusActions}
     <div class="dp-sec"><div class="dp-label">Platforms</div><div class="platform-row">${platChips(t.platforms)}</div></div>
     <div class="dp-sec"><div class="dp-label">Due</div><div class="dp-val">${fmtDue(t.due)}</div></div>
     <div class="dp-sec"><div class="dp-label">Time Logged</div><div class="dp-val">${t.timeLogged}h</div></div>
@@ -4227,15 +4479,24 @@ function openTask(id){
     </div>
     ${t.notes?`<div class="dp-sec"><div class="dp-label">Notes</div><div style="font-size:12px;line-height:1.5;color:var(--ink2);">${t.notes}</div></div>`:''}
     <div class="divider"></div>
+    <div class="dp-label" style="margin-bottom:6px;">Status History</div>
+    <div style="margin-bottom:12px;">${historyHTML}</div>
+    <div class="divider"></div>
     <div class="dp-label" style="margin-bottom:8px;">Comments (${t.comments.length})</div>
-    <div>${t.comments.map(c=>`<div class="comment-item">${c}</div>`).join('')||`<span style="font-size:11px;color:var(--ink3);">No comments yet.</span>`}</div>
+    <div id="task-comments-${t.id}" style="margin-bottom:10px;">${t.comments.length ? t.comments.map(c => {
+      if (typeof c === 'object') return `<div class="comment-item"><span style="font-weight:600;color:var(--ink);">${c.by}</span> <span style="color:var(--ink3);font-size:10px;">${c.at}</span><div style="margin-top:3px;">${c.text}</div></div>`;
+      return `<div class="comment-item">${c}</div>`;
+    }).join('') : `<span style="font-size:11px;color:var(--ink3);">No comments yet.</span>`}</div>
+    ${canEdit ? `<div style="display:flex;gap:6px;margin-bottom:4px;">
+      <input type="text" id="task-comment-input-${t.id}" placeholder="Add a comment…" style="flex:1;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;" onkeydown="if(event.key==='Enter')addTaskComment(${t.id})"/>
+      <button class="btn btn-coral btn-sm" onclick="addTaskComment(${t.id})">Post</button>
+    </div>` : ''}
     ${canEdit?`<div class="divider"></div>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      <button class="btn btn-coral" onclick="openEditTask(${t.id})">✏️ Edit Task</button>
-      <button class="btn" onclick="go('log')">📝 Log Activity</button>
-      ${(role==='manager'||role==='head')?`<button class="btn" style="border-color:var(--red);color:var(--red);" onclick="delTask(${t.id})">× Delete</button>`:''}
-    </div>`:''}
-  `;
+      ${isManager?`<button class="btn btn-coral" onclick="openEditTask(${t.id})">&#9999;&#65039; Edit Task</button>`:''}
+      <button class="btn" onclick="go('log')">&#128221; Log Activity</button>
+      ${isManager?`<button class="btn" style="border-color:var(--red);color:var(--red);" onclick="delTask(${t.id})">&times; Delete</button>`:''}
+    </div>`:''}  `;
   document.getElementById('side-panel').classList.add('open');
   document.querySelectorAll('.task-card,.k-card').forEach(el=>el.classList.remove('sel'));
 }
@@ -4245,6 +4506,26 @@ async function updProg(id,val){
   if(t){t.progress=parseInt(val); await fbSaveTask(t);}
   const el=document.getElementById('pv-'+id);
   if(el) el.textContent=val+'%';
+}
+
+async function setTaskStatus(id, newStatus) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  const prevStatus = t.status;
+  if (prevStatus === newStatus) return;
+  t.status = newStatus;
+  // Append to status history
+  if (!Array.isArray(t.statusHistory)) t.statusHistory = [];
+  t.statusHistory.push({ from: prevStatus, to: newStatus, by: loggedInMember?.name || 'Unknown', at: Date.now() });
+  // Auto-set progress hints
+  if (newStatus === 'inprogress' && t.progress === 0) t.progress = 10;
+  if (newStatus === 'review' && t.progress < 90) t.progress = 90;
+  if (newStatus === 'done') t.progress = 100;
+  await fbSaveTask(t);
+  auditLog('task_status', `Task "${t.title}" moved to ${PIPELINE_NAMES[newStatus]}`, { task: t.title, from: prevStatus, to: newStatus, assignee: t.assignee });
+  toast(`Status updated to "${PIPELINE_NAMES[newStatus]}"`, 'ok');
+  renderTasks();
+  openTask(id); // refresh side panel
 }
 
 async function pushTask(id){
@@ -4260,10 +4541,11 @@ async function pushTask(id){
 }
 
 async function delTask(id){
-  if (!confirm('Delete this task? This cannot be undone.')) return;
-  await fbDeleteTask(id);
-  TASKS=TASKS.filter(t=>t.id!==id);
-  closeSide(); toast('Task deleted.'); refresh();
+  sdConfirm('Delete Task', 'Delete this task? This cannot be undone.', async () => {
+    await fbDeleteTask(id);
+    TASKS = TASKS.filter(t => t.id !== id);
+    closeSide(); toast('Task deleted.'); refresh();
+  });
 }
 
 let _editingTaskId = null;
@@ -4399,6 +4681,38 @@ const DRIVE_FOLDER_NAME = 'SociaDesk';
 let gapiReady = false;
 let _drivePickerTarget = null; // { flowId, stepIdx }
 
+// ── Token cache — avoids repeated Google account picker prompts ──
+let _cachedToken = null;       // access_token string
+let _tokenExpiry = 0;          // ms timestamp when it expires
+const DRIVE_ACCOUNT_HINT = 'oneinsurehelpline@gmail.com';
+
+function getCachedToken() {
+  if (_cachedToken && Date.now() < _tokenExpiry - 30000) return _cachedToken;
+  return null;
+}
+
+function setCachedToken(token, expiresInSec) {
+  _cachedToken = token;
+  _tokenExpiry = Date.now() + (expiresInSec || 3500) * 1000;
+}
+
+function getTokenThen(scope, callback) {
+  const cached = getCachedToken();
+  if (cached) { callback(cached); return; }
+  const tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope,
+    hint: DRIVE_ACCOUNT_HINT,
+    callback: (resp) => {
+      if (resp.access_token) {
+        setCachedToken(resp.access_token, resp.expires_in);
+        callback(resp.access_token);
+      }
+    },
+  });
+  tokenClient.requestAccessToken({ prompt: '' });
+}
+
 function loadGoogleApis() {
   if (GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') return;
 
@@ -4451,12 +4765,10 @@ function openDrivePicker(flowId, stepIdx) {
     return;
   }
   _drivePickerTarget = { flowId, stepIdx };
-  const tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly',
-    callback: (resp) => { if (resp.access_token) buildPicker(resp.access_token); },
-  });
-  tokenClient.requestAccessToken({ prompt: '' });
+  getTokenThen(
+    'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly',
+    buildPicker
+  );
 }
 
 function getDriveIcon(mimeType) {
@@ -4540,51 +4852,48 @@ function confirmUpload() {
   const tmplSteps = f ? getTemplateSteps(f.templateId) : [];
   const stepName = tmplSteps[stepIdx]?.name || `Step ${stepIdx + 1}`;
 
-  const tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/drive.file',
-    callback: async (resp) => {
-      if (!resp.access_token) { toast('Google sign-in cancelled.', 'warn'); return; }
-      const token = resp.access_token;
-      toast(`Uploading "${file.name}"…`, '');
-      try {
-        // SociaDesk / [Step Name] / — shared across all flows
-        const rootId = await findOrCreateFolder(token, 'SociaDesk', null);
-        const stepFolderId = await findOrCreateFolder(token, stepName, rootId);
+  getTokenThen('https://www.googleapis.com/auth/drive.file', async (token) => {
+    toast(`Uploading "${file.name}"…`, '');
+    try {
+      // SociaDesk / [Step Name] / — shared across all flows
+      const rootId = await findOrCreateFolder(token, 'SociaDesk', null);
+      const stepFolderId = await findOrCreateFolder(token, stepName, rootId);
 
-        const metadata = { name: file.name, parents: [stepFolderId] };
-        const form = new FormData();
-        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-        form.append('file', file);
-        const res = await fetch(
-          'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink,mimeType',
-          { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form }
-        );
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: 'reader', type: 'anyone' })
-        });
-        await attachDriveFile(flowId, stepIdx, {
-          id: data.id, name: data.name,
-          url: data.webViewLink || `https://drive.google.com/file/d/${data.id}/view`,
-          mimeType: data.mimeType,
-          addedBy: loggedInMember?.name || 'Unknown',
-          addedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-          folderPath: `SociaDesk / ${stepName}`
-        });
-        toast(`"${file.name}" saved to SociaDesk / ${stepName}!`, 'ok');
-        _pendingUpload = null;
-        document.querySelectorAll('.upload-confirm-btn').forEach(b => b.remove());
-      } catch (e) {
-        console.error('Upload error:', e);
-        toast('Upload failed — check your internet and try again.', 'err');
+      const metadata = { name: file.name, parents: [stepFolderId] };
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', file);
+      const res = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink,mimeType',
+        { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form }
+      );
+      if (!res.ok) {
+        // Token may have expired mid-session — clear cache and retry once
+        if (res.status === 401) { _cachedToken = null; }
+        throw new Error(`HTTP ${res.status}`);
       }
-    },
+      const data = await res.json();
+      await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'reader', type: 'anyone' })
+      });
+      await attachDriveFile(flowId, stepIdx, {
+        id: data.id, name: data.name,
+        url: data.webViewLink || `https://drive.google.com/file/d/${data.id}/view`,
+        mimeType: data.mimeType,
+        addedBy: loggedInMember?.name || 'Unknown',
+        addedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        folderPath: `SociaDesk / ${stepName}`
+      });
+      toast(`"${file.name}" saved to SociaDesk / ${stepName}!`, 'ok');
+      _pendingUpload = null;
+      document.querySelectorAll('.upload-confirm-btn').forEach(b => b.remove());
+    } catch (e) {
+      console.error('Upload error:', e);
+      toast('Upload failed — check your internet and try again.', 'err');
+    }
   });
-  tokenClient.requestAccessToken({ prompt: '' });
 }
 
 async function findOrCreateFolder(token, name, parentId) {
@@ -5206,13 +5515,14 @@ async function saveFlowEdits(id) {
 }
 
 function deleteFlowTemplate(id) {
-  if (!confirm('Delete this flow template? This cannot be undone.')) return;
-  const idx = FLOW_TEMPLATES.findIndex(t => t.id === id);
-  if (idx !== -1) FLOW_TEMPLATES.splice(idx, 1);
-  saveExtended();
-  _editingFlowId = null;
-  renderFlowTemplates();
-  toast('Flow template deleted.', '');
+  sdConfirm('Delete Template', 'Delete this flow template? This cannot be undone.', async () => {
+    const idx = FLOW_TEMPLATES.findIndex(t => t.id === id);
+    if (idx !== -1) FLOW_TEMPLATES.splice(idx, 1);
+    saveExtended();
+    _editingFlowId = null;
+    renderFlowTemplates();
+    toast('Flow template deleted.', '');
+  });
 }
 
 function spawnFlowFromTemplate(id) {
@@ -5871,12 +6181,13 @@ async function saveCampaign() {
 }
 
 async function deleteCampaign(id) {
-  if (!confirm('Delete this campaign? Content ideas linked to it will be unlinked.')) return;
-  CAMPAIGNS = CAMPAIGNS.filter(c=>c.id!==id);
-  CONTENT_IDEAS = CONTENT_IDEAS.map(i=>i.campaignId===id?{...i,campaignId:''}:i);
-  await saveExtended();
-  renderCampaigns();
-  toast('Campaign deleted.','');
+  sdConfirm('Delete Campaign', 'Delete this campaign? Content ideas linked to it will be unlinked.', async () => {
+    CAMPAIGNS = CAMPAIGNS.filter(c=>c.id!==id);
+    CONTENT_IDEAS = CONTENT_IDEAS.map(i=>i.campaignId===id?{...i,campaignId:''}:i);
+    await saveExtended();
+    renderCampaigns();
+    toast('Campaign deleted.','');
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -6163,25 +6474,41 @@ async function loadExtended() {
   try {
     if (fbReady && db) {
       // Always set up real-time listeners — whether or not data exists yet
+      // SHARED listener
       db.collection('config').doc('extended').onSnapshot(s => {
         if (!s.exists) return;
         const d = s.data();
-        REGULAR_TASKS  = d.regularTasks  || [];
-        ABSENCES       = d.absences      || [];
-        WEEKLY_PLANS   = d.weeklyPlans   || [];
-        CONTENT_IDEAS  = d.contentIdeas  || [];
-        CAMPAIGNS      = d.campaigns     || [];
-        FILE_VERSIONS  = d.fileVersions  || {};
+        ABSENCES         = d.absences        || [];
+        CONTENT_IDEAS    = d.contentIdeas    || [];
+        CAMPAIGNS        = d.campaigns       || [];
+        FILE_VERSIONS    = d.fileVersions    || {};
         POST_PERFORMANCE = d.postPerformance || [];
         SCRATCHPAD_FILES = d.scratchpadFiles || [];
         if (currentPanel === 'workload')     renderWorkload();
-        if (currentPanel === 'regular')      renderRegular();
-        if (currentPanel === 'weekly')       renderWeekly();
         if (currentPanel === 'calendar')     renderCalendar();
         if (currentPanel === 'campaigns')    renderCampaigns();
         if (currentPanel === 'performance')  renderPerformance();
         if (currentPanel === 'scratchpad')   renderScratchpad();
       });
+      // PERSONAL listener (regular tasks + weekly plans — per user)
+      const uid = firebase.auth().currentUser?.uid;
+      if (uid) {
+        db.collection('personal').doc(uid).onSnapshot(s => {
+          if (!s.exists) return;
+          const d = s.data();
+          REGULAR_TASKS = d.regularTasks || [];
+          WEEKLY_PLANS  = d.weeklyPlans  || [];
+          // Load notif prefs from Firestore (cross-device)
+          if (d.notifPrefs) {
+            NOTIF_PREFS = { ...NOTIF_PREFS, ...d.notifPrefs };
+            syncPrefsToUI();
+            scheduleTimedNotifs();
+          }
+          if (currentPanel === 'regular') renderRegular();
+          if (currentPanel === 'weekly')  renderWeekly();
+          if (currentPanel === 'notifications') syncPrefsToUI();
+        });
+      }
 
       db.collection('config').doc('flowTemplates').onSnapshot(s => {
         if (!s.exists) return;
@@ -6200,6 +6527,7 @@ async function loadExtended() {
       });
 
       // Also do an immediate fetch to get current values without waiting
+      // uid already declared above — reuse it
       const [extSnap, ftSnap] = await Promise.all([
         db.collection('config').doc('extended').get(),
         db.collection('config').doc('flowTemplates').get()
@@ -6207,14 +6535,26 @@ async function loadExtended() {
 
       if (extSnap.exists) {
         const d = extSnap.data();
-        REGULAR_TASKS    = d.regularTasks    || [];
         ABSENCES         = d.absences        || [];
-        WEEKLY_PLANS     = d.weeklyPlans     || [];
         CONTENT_IDEAS    = d.contentIdeas    || [];
         CAMPAIGNS        = d.campaigns       || [];
         FILE_VERSIONS    = d.fileVersions    || {};
         POST_PERFORMANCE = d.postPerformance || [];
         SCRATCHPAD_FILES = d.scratchpadFiles || [];
+      }
+      // Load personal data (regular tasks + weekly plans)
+      if (uid) {
+        const personalSnap = await db.collection('personal').doc(uid).get();
+        if (personalSnap.exists) {
+          const pd = personalSnap.data();
+          REGULAR_TASKS = pd.regularTasks || [];
+          WEEKLY_PLANS  = pd.weeklyPlans  || [];
+          if (pd.notifPrefs) {
+            NOTIF_PREFS = { ...NOTIF_PREFS, ...pd.notifPrefs };
+            syncPrefsToUI();
+            scheduleTimedNotifs();
+          }
+        }
       }
 
       if (ftSnap.exists && ftSnap.data().templates) {
@@ -6260,20 +6600,27 @@ async function loadExtended() {
 }
 
 async function saveExtended() {
-  // Save to Firestore
   if (fbReady && db) {
     try {
+      // SHARED data — visible to all team members
       await db.collection('config').doc('extended').set({
-        regularTasks: REGULAR_TASKS,
-        absences:     ABSENCES,
-        weeklyPlans:  WEEKLY_PLANS,
-        contentIdeas: CONTENT_IDEAS,
-        campaigns:    CAMPAIGNS,
-        fileVersions: FILE_VERSIONS,
+        absences:        ABSENCES,
+        contentIdeas:    CONTENT_IDEAS,
+        campaigns:       CAMPAIGNS,
+        fileVersions:    FILE_VERSIONS,
         postPerformance: POST_PERFORMANCE,
         scratchpadFiles: SCRATCHPAD_FILES,
-        updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt:       firebase.firestore.FieldValue.serverTimestamp()
       });
+      // PERSONAL data — per-user (regular tasks + weekly plans)
+      const uid = firebase.auth().currentUser?.uid;
+      if (uid) {
+        await db.collection('personal').doc(uid).set({
+          regularTasks: REGULAR_TASKS,
+          weeklyPlans:  WEEKLY_PLANS,
+          updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
       await db.collection('config').doc('flowTemplates').set({
         templates: FLOW_TEMPLATES,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -7003,7 +7350,7 @@ function downloadFlowReport() {
   const wb = XLSX.utils.book_new();
 
   // ── Sheet 1: Flow Steps (one row per step per flow) ──
-  const stepRows = [['Flow Name', 'Flow Date', 'Step #', 'Step Name', 'Assigned To', 'Status', 'Start Date & Time', 'Completed Date & Time', 'Time Taken (hrs)', 'Notes / Comments']];
+  const stepRows = [['Flow Name', 'Flow Date', 'Step #', 'Step Name', 'Assigned To', 'Status', 'Start Date & Time', 'Completed Date & Time', 'Time Taken (hrs)', 'Notes / Comments', 'File Links']];
 
   TODAY_FLOWS.forEach(f => {
     const tmplSteps = getTemplateSteps(f.templateId) || [];
@@ -7016,6 +7363,8 @@ function downloadFlowReport() {
       const startTs = timing.startedAt;
       const endTs = timing.completedAt;
       const hrs = (startTs && endTs) ? ((endTs - startTs) / 3600000).toFixed(2) : '';
+      const stepFiles = (f.driveFiles || [])[i] || [];
+      const fileLinks = stepFiles.map(file => file.url || '').filter(Boolean).join('\n');
       stepRows.push([
         f.title || '',
         flowDate,
@@ -7026,13 +7375,20 @@ function downloadFlowReport() {
         fmtDT(startTs),
         fmtDT(endTs),
         hrs,
-        note
+        note,
+        fileLinks
       ]);
     });
   });
 
   const ws1 = XLSX.utils.aoa_to_sheet(stepRows);
-  ws1['!cols'] = [28,14,6,22,16,10,20,20,12,30].map(w => ({ wch: w }));
+  // Enable text wrapping on File Links column so multiple URLs are readable
+  const stepRange = XLSX.utils.decode_range(ws1['!ref']);
+  for (let R = 1; R <= stepRange.e.r; R++) {
+    const cellAddr = XLSX.utils.encode_cell({ r: R, c: 10 });
+    if (ws1[cellAddr]) ws1[cellAddr].s = { alignment: { wrapText: true, vertical: 'top' } };
+  }
+  ws1['!cols'] = [28,14,6,22,16,10,20,20,12,30,45].map(w => ({ wch: w }));
   XLSX.utils.book_append_sheet(wb, ws1, 'Flow Steps');
 
   // ── Sheet 2: Flow Summary (one row per flow) ──
@@ -8312,9 +8668,10 @@ async function savePerformance() {
 }
 
 async function deletePerf(id) {
-  if (!confirm('Delete this performance entry?')) return;
-  POST_PERFORMANCE = POST_PERFORMANCE.filter(p=>p.id!==id);
-  await saveExtended(); renderPerformance();
+  sdConfirm('Delete Entry', 'Delete this performance entry? This cannot be undone.', async () => {
+    POST_PERFORMANCE = POST_PERFORMANCE.filter(p=>p.id!==id);
+    await saveExtended(); renderPerformance();
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -8384,10 +8741,11 @@ function openScratchFile(id) {
 }
 
 async function deleteScratchFile(id) {
-  if (!confirm('Remove this file from the scratchpad?')) return;
-  SCRATCHPAD_FILES = SCRATCHPAD_FILES.filter(f=>f.id!==id);
-  await saveExtended(); renderScratchpad();
-  toast('File removed.','');
+  sdConfirm('Remove File', 'Remove this file from the scratchpad?', async () => {
+    SCRATCHPAD_FILES = SCRATCHPAD_FILES.filter(f=>f.id!==id);
+    await saveExtended(); renderScratchpad();
+    toast('File removed.','');
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -8589,7 +8947,7 @@ function loadNotifData() {
   } catch(e) {}
 }
 
-function saveNotifPrefs() {
+async function saveNotifPrefs() {
   NOTIF_PREFS = {
     turn:    document.getElementById('nt-turn')?.checked    ?? true,
     blocked: document.getElementById('nt-blocked')?.checked ?? true,
@@ -8600,6 +8958,18 @@ function saveNotifPrefs() {
     digest:  document.getElementById('nt-digest')?.checked  ?? false,
   };
   localStorage.setItem('sd_notif_prefs', JSON.stringify(NOTIF_PREFS));
+  // Also persist to Firestore so prefs survive device/browser changes
+  if (fbReady && db) {
+    const uid = firebase.auth().currentUser?.uid;
+    if (uid) {
+      try {
+        await db.collection('personal').doc(uid).set(
+          { notifPrefs: NOTIF_PREFS, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+          { merge: true }
+        );
+      } catch(e) { console.warn('Failed to save notif prefs to Firestore:', e); }
+    }
+  }
   scheduleTimedNotifs();
   toast('Notification preferences saved', 'ok');
 }
@@ -8840,8 +9210,11 @@ function detectFlowChanges(newFlows) {
 }
 
 function detectTaskChanges(newTasks) {
-  // Detect newly blocked tasks
+  if (!loggedInMember) return;
+  const myName = loggedInMember.name;
+
   newTasks.forEach(t => {
+    // ── Blocked detection (fires for managers) ──
     if (t.status === 'blocked') {
       const key = 'blocked_notified_' + t.id;
       if (!localStorage.getItem(key)) {
@@ -8852,7 +9225,66 @@ function detectTaskChanges(newTasks) {
     } else {
       localStorage.removeItem('blocked_notified_' + t.id);
     }
+
+    // ── Cross-device: notify assignee when their task status changes ──
+    if (t.assignee === myName) {
+      const prevStatus = _taskStatusCache[t.id];
+      if (prevStatus && prevStatus !== t.status) {
+        const statusLabels = {todo:'To Do', inprogress:'In Progress', review:'In Review', done:'Done', blocked:'Blocked'};
+        if (t.status === 'done') {
+          pushNotif({ title: `✅ Task marked done`, body: `"${t.title}" has been completed.`, icon: '✅', type: 'push', tag: 'task-done-' + t.id });
+        } else if (t.status === 'review') {
+          pushNotif({ title: `👁 Task in review`, body: `"${t.title}" is now being reviewed.`, icon: '👁', type: 'push', tag: 'task-review-' + t.id });
+        }
+      }
+      _taskStatusCache[t.id] = t.status;
+    }
+
+    // ── Cross-device: notify manager when assignee's task moves to review ──
+    if ((role === 'manager' || role === 'head') && t.status === 'review') {
+      const key = 'review_notified_' + t.id;
+      const lastHistory = Array.isArray(t.statusHistory) ? t.statusHistory[t.statusHistory.length-1] : null;
+      const movedAt = lastHistory?.at || 0;
+      const notifiedAt = parseInt(localStorage.getItem(key) || '0');
+      if (movedAt > notifiedAt) {
+        pushNotif({ title: `👁 Ready for review`, body: `"${t.title}" submitted for review by ${t.assignee}.`, icon: '👁', type: 'push', tag: 'review-' + t.id });
+        localStorage.setItem(key, String(movedAt));
+      }
+    }
   });
+}
+
+// Cache of last-known task statuses for cross-device change detection
+const _taskStatusCache = {};
+
+async function addTaskComment(id) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  const input = document.getElementById('task-comment-input-' + id);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  const comment = {
+    by: loggedInMember?.name || 'Unknown',
+    text,
+    at: new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+  };
+  if (!Array.isArray(t.comments)) t.comments = [];
+  t.comments.push(comment);
+  await fbSaveTask(t);
+  input.value = '';
+  // Re-render comments in place without closing panel
+  const commentsEl = document.getElementById('task-comments-' + id);
+  if (commentsEl) {
+    commentsEl.innerHTML = t.comments.map(c => {
+      if (typeof c === 'object') return `<div class="comment-item"><span style="font-weight:600;color:var(--ink);">${c.by}</span> <span style="color:var(--ink3);font-size:10px;">${c.at}</span><div style="margin-top:3px;">${c.text}</div></div>`;
+      return `<div class="comment-item">${c}</div>`;
+    }).join('');
+    commentsEl.scrollTop = commentsEl.scrollHeight;
+  }
+  // Update comment count label
+  const dpLabel = commentsEl?.previousElementSibling;
+  if (dpLabel && dpLabel.classList.contains('dp-label')) dpLabel.textContent = `Comments (${t.comments.length})`;
 }
 
 // ── Test & History ─────────────────────────
@@ -9000,6 +9432,766 @@ function updateMobFab(panel) {
   fab.style.display = window.innerWidth <= 768 && !hidePanels.includes(panel) ? 'flex' : 'none';
 }
 
+
+// ══════════════════════════════════════════════════════════
+// GLOBAL SEARCH
+// ══════════════════════════════════════════════════════════
+let _searchIdx = -1;
+
+function openSearch() {
+  document.getElementById('search-modal').classList.add('open');
+  setTimeout(() => {
+    const inp = document.getElementById('search-input');
+    if (inp) { inp.focus(); inp.value = ''; }
+    document.getElementById('search-results').innerHTML = '<div style="padding:24px;text-align:center;color:var(--ink3);font-size:13px;">Start typing to search…</div>';
+    _searchIdx = -1;
+  }, 50);
+}
+
+function closeSearch() {
+  document.getElementById('search-modal').classList.remove('open');
+}
+
+function runSearch(q) {
+  q = q.trim().toLowerCase();
+  const el = document.getElementById('search-results');
+  if (!q) {
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--ink3);font-size:13px;">Start typing to search…</div>';
+    _searchIdx = -1;
+    return;
+  }
+  const results = [];
+
+  TODAY_FLOWS.forEach(f => {
+    if (f.title?.toLowerCase().includes(q)) {
+      const steps = getTemplateSteps(f.templateId);
+      const cur = steps[f.currentStep]?.name || '';
+      results.push({ icon:'&#128260;', label: f.title, sub: `Flow · ${cur ? 'Step: ' + cur : 'Done'}`, action: () => { closeSearch(); go('today'); } });
+    }
+  });
+
+  TASKS.forEach(t => {
+    if (t.title?.toLowerCase().includes(q) || t.notes?.toLowerCase().includes(q) || t.assignee?.toLowerCase().includes(q)) {
+      results.push({ icon:'&#9989;', label: t.title, sub: `Task · ${t.assignee} · ${SL[t.status] || t.status}`, action: () => { closeSearch(); go('tasks'); setTimeout(() => openTask(t.id), 150); } });
+    }
+  });
+
+  CONTENT_IDEAS.forEach(i => {
+    if (i.title?.toLowerCase().includes(q) || i.caption?.toLowerCase().includes(q) || i.platform?.toLowerCase().includes(q)) {
+      results.push({ icon:'&#128161;', label: i.title || 'Untitled idea', sub: `Content Idea · ${i.platform || ''} · ${i.status || ''}`, action: () => { closeSearch(); go('calendar'); } });
+    }
+  });
+
+  CAMPAIGNS.forEach(c => {
+    if (c.name?.toLowerCase().includes(q) || c.objective?.toLowerCase().includes(q)) {
+      results.push({ icon:'&#128226;', label: c.name, sub: `Campaign · ${c.start || ''} – ${c.end || ''}`, action: () => { closeSearch(); go('campaigns'); } });
+    }
+  });
+
+  CHAT_MESSAGES.slice(-200).forEach(m => {
+    if (m.text?.toLowerCase().includes(q)) {
+      const preview = m.text.length > 60 ? m.text.slice(0, 60) + '…' : m.text;
+      results.push({ icon:'&#128172;', label: preview, sub: `Chat · ${m.sender} · ${m.room || 'general'}`, action: () => { closeSearch(); go('chat'); } });
+    }
+  });
+
+  LOGS.slice(0, 100).forEach(l => {
+    if (l.description?.toLowerCase().includes(q)) {
+      results.push({ icon:'&#128203;', label: l.description, sub: `Audit · ${l.member || ''} · ${l.type || ''}`, action: () => { closeSearch(); go('audit'); } });
+    }
+  });
+
+  _searchIdx = -1;
+  if (!results.length) {
+    el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--ink3);font-size:13px;">No results for "<strong>${q}</strong>"</div>`;
+    return;
+  }
+
+  el.innerHTML = results.slice(0, 12).map((r, i) => `
+    <div class="search-result-item" data-idx="${i}" onclick="searchSelectIdx(${i})"
+      style="display:flex;align-items:flex-start;gap:10px;padding:9px 16px;cursor:pointer;transition:background 0.1s;"
+      onmouseover="highlightSearch(${i})" onmouseout="this.style.background=''">
+      <span style="font-size:15px;margin-top:1px;">${r.icon}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.label}</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:1px;">${r.sub}</div>
+      </div>
+      <span style="font-size:10px;color:var(--ink3);margin-top:4px;">↵</span>
+    </div>`).join('');
+
+  window._searchActions = results.slice(0, 12).map(r => r.action);
+}
+
+function highlightSearch(idx) {
+  document.querySelectorAll('.search-result-item').forEach((el, i) => {
+    el.style.background = i === idx ? 'var(--cream2)' : '';
+  });
+  _searchIdx = idx;
+}
+
+function searchSelectIdx(idx) {
+  if (window._searchActions && window._searchActions[idx]) window._searchActions[idx]();
+}
+
+function searchKeyNav(e) {
+  const items = document.querySelectorAll('.search-result-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _searchIdx = Math.min(_searchIdx + 1, items.length - 1);
+    items.forEach((el, i) => el.style.background = i === _searchIdx ? 'var(--cream2)' : '');
+    items[_searchIdx]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _searchIdx = Math.max(_searchIdx - 1, 0);
+    items.forEach((el, i) => el.style.background = i === _searchIdx ? 'var(--cream2)' : '');
+    items[_searchIdx]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter') {
+    if (_searchIdx >= 0) searchSelectIdx(_searchIdx);
+    else if (items.length > 0) searchSelectIdx(0);
+  } else if (e.key === 'Escape') {
+    closeSearch();
+  }
+}
+
+
+// ══════════════════════════════════════════════════════════
+// INSTAGRAM & META — Publishing + Analytics
+// ══════════════════════════════════════════════════════════
+let REELS_DATA = [];
+let IG_ALL_DATA = [];  // all post types
+let META_CONFIG = { igId: '', pageId: '', appId: '', appSecret: '', token: '', limit: 33 };
+let _igPublishFiles = [];  // files staged for publishing
+
+// ── Config ──────────────────────────────────────────────
+function loadMetaConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('sd_meta_config') || '{}');
+    if (saved.token) META_CONFIG = { ...META_CONFIG, ...saved };
+  } catch(e) {}
+}
+
+function openMetaConfig() {
+  loadMetaConfig();
+  document.getElementById('meta-ig-id').value     = META_CONFIG.igId     || '';
+  document.getElementById('meta-page-id').value   = META_CONFIG.pageId   || '';
+  document.getElementById('meta-app-id').value    = META_CONFIG.appId    || '';
+  document.getElementById('meta-app-secret').value= META_CONFIG.appSecret|| '';
+  document.getElementById('meta-token').value     = META_CONFIG.token    || '';
+  document.getElementById('meta-limit').value     = META_CONFIG.limit    || 33;
+  document.getElementById('meta-config-modal').classList.add('open');
+}
+function closeMetaConfig() { document.getElementById('meta-config-modal').classList.remove('open'); }
+
+function saveMetaConfig() {
+  const igId      = document.getElementById('meta-ig-id').value.trim();
+  const pageId    = document.getElementById('meta-page-id').value.trim();
+  const appId     = document.getElementById('meta-app-id').value.trim();
+  const appSecret = document.getElementById('meta-app-secret').value.trim();
+  const token     = document.getElementById('meta-token').value.trim();
+  const limit     = parseInt(document.getElementById('meta-limit').value) || 33;
+  if (!igId || !token) { toast('Instagram Business Account ID and Token are required.', 'warn'); return; }
+  META_CONFIG = { igId, pageId, appId, appSecret, token, limit };
+  localStorage.setItem('sd_meta_config', JSON.stringify(META_CONFIG));
+  closeMetaConfig();
+  syncMetaAll();
+}
+
+async function refreshMetaToken() {
+  loadMetaConfig();
+  const statusEl = document.getElementById('meta-token-status');
+  if (!META_CONFIG.appId || !META_CONFIG.appSecret || !META_CONFIG.token) {
+    if (statusEl) statusEl.textContent = 'App ID, App Secret and Token required.';
+    return;
+  }
+  if (statusEl) statusEl.textContent = 'Refreshing…';
+  try {
+    const url = `https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${META_CONFIG.appId}&client_secret=${META_CONFIG.appSecret}&fb_exchange_token=${META_CONFIG.token}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    META_CONFIG.token = data.access_token;
+    localStorage.setItem('sd_meta_config', JSON.stringify(META_CONFIG));
+    document.getElementById('meta-token').value = data.access_token;
+    const expDays = data.expires_in ? Math.floor(data.expires_in / 86400) : 60;
+    if (statusEl) statusEl.textContent = `✅ Token refreshed! Valid for ~${expDays} days.`;
+    toast('Token refreshed successfully!', 'ok');
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Refresh failed: ' + (e.message || 'Unknown error');
+    toast('Token refresh failed: ' + (e.message || ''), 'warn');
+  }
+}
+
+function fmtK(n) {
+  n = parseInt(n) || 0;
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return n.toString();
+}
+
+// ── Tab switching ────────────────────────────────────────
+function switchIgTab(tab) {
+  const postsContent = document.getElementById('ig-tab-posts-content');
+  const reelsContent = document.getElementById('ig-tab-reels-content');
+  const postsBtn     = document.getElementById('ig-tab-posts');
+  const reelsBtn     = document.getElementById('ig-tab-reels');
+  if (tab === 'posts') {
+    postsContent.style.display = '';
+    reelsContent.style.display = 'none';
+    postsBtn.style.color = 'var(--coral)';
+    postsBtn.style.borderBottom = '2.5px solid var(--coral)';
+    reelsBtn.style.color = 'var(--ink3)';
+    reelsBtn.style.borderBottom = '2.5px solid transparent';
+  } else {
+    postsContent.style.display = 'none';
+    reelsContent.style.display = '';
+    reelsBtn.style.color = 'var(--coral)';
+    reelsBtn.style.borderBottom = '2.5px solid var(--coral)';
+    postsBtn.style.color = 'var(--ink3)';
+    postsBtn.style.borderBottom = '2.5px solid transparent';
+    renderReelsStats();
+    renderReelsInsights();
+    renderReelsTable();
+  }
+}
+
+// ── Sync all posts from Meta ─────────────────────────────
+async function syncMetaAll() {
+  loadMetaConfig();
+  if (!META_CONFIG.token || !META_CONFIG.igId) { openMetaConfig(); return; }
+  const statusEl = document.getElementById('reels-sync-status');
+  const btn = document.getElementById('reels-sync-btn');
+  if (statusEl) statusEl.textContent = 'Syncing…';
+  if (btn) btn.disabled = true;
+
+  try {
+    const fields = 'id,caption,media_type,media_url,thumbnail_url,timestamp,permalink';
+    const mediaUrl = `https://graph.facebook.com/v19.0/${META_CONFIG.igId}/media?fields=${fields}&limit=${META_CONFIG.limit}&access_token=${META_CONFIG.token}`;
+    const mediaResp = await fetch(mediaUrl);
+    const mediaData = await mediaResp.json();
+    if (mediaData.error) throw new Error(mediaData.error.message);
+
+    const items = mediaData.data || [];
+    if (!items.length) {
+      toast('No posts found on this account.', 'warn');
+      if (statusEl) statusEl.textContent = 'No posts found.';
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    // Fetch insights per post
+    const insightPromises = items.map(async item => {
+      try {
+        const isVideo = item.media_type === 'VIDEO' || item.media_type === 'REEL';
+        const metricList = isVideo
+          ? 'impressions,reach,likes,comments,shares,saved,video_views,plays'
+          : 'impressions,reach,likes,comments,shares,saved';
+        const url = `https://graph.facebook.com/v19.0/${item.id}/insights?metric=${metricList}&access_token=${META_CONFIG.token}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+        const ins = {};
+        (data.data || []).forEach(m => { ins[m.name] = m.values?.[0]?.value ?? m.value ?? 0; });
+        return { ...item, insights: ins };
+      } catch(e) { return { ...item, insights: {} }; }
+    });
+
+    const results = await Promise.all(insightPromises);
+
+    IG_ALL_DATA = results.map(item => {
+      const ins       = item.insights;
+      const views     = ins.video_views || ins.plays || 0;
+      const reach     = ins.reach || 0;
+      const impressions = ins.impressions || 0;
+      const likes     = ins.likes || 0;
+      const comments  = ins.comments || 0;
+      const shares    = ins.shares || 0;
+      const saved     = ins.saved || 0;
+      const engRate   = reach > 0 ? ((likes + comments + shares + saved) / reach * 100) : 0;
+      const caption   = (item.caption || '').split('\n')[0].slice(0, 80) || 'Untitled';
+      const posted    = item.timestamp ? new Date(item.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
+      const mediaType = item.media_type; // IMAGE, VIDEO, REEL, CAROUSEL_ALBUM
+      return {
+        id: item.id, caption, mediaType,
+        thumbnail: item.thumbnail_url || item.media_url || '',
+        permalink: item.permalink || '',
+        timestamp: item.timestamp || '',
+        posted, views, reach, impressions, likes, comments, shares, saved,
+        engRate: parseFloat(engRate.toFixed(2)),
+      };
+    });
+
+    // REELS_DATA = video/reel subset (backward compat)
+    REELS_DATA = IG_ALL_DATA.filter(p => p.mediaType === 'VIDEO' || p.mediaType === 'REEL').map(p => ({
+      ...p,
+      type: p.mediaType === 'REEL' ? 'Reel' : 'Video',
+    }));
+
+    localStorage.setItem('sd_ig_all_data',  JSON.stringify(IG_ALL_DATA));
+    localStorage.setItem('sd_reels_data',   JSON.stringify(REELS_DATA));
+    const syncedAt = new Date().toLocaleString('en-IN');
+    localStorage.setItem('sd_reels_synced', syncedAt);
+    if (statusEl) statusEl.textContent = 'Last synced: ' + syncedAt;
+    if (btn) btn.disabled = false;
+
+    renderIgAllPanel();
+    renderReelsPanel();
+    toast(`Synced ${IG_ALL_DATA.length} post${IG_ALL_DATA.length !== 1 ? 's' : ''} from Instagram!`, 'ok');
+  } catch(e) {
+    console.error('Meta sync error:', e);
+    if (statusEl) statusEl.textContent = 'Sync failed — check token & ID.';
+    if (btn) btn.disabled = false;
+    toast('Meta sync failed: ' + (e.message || 'Unknown error'), 'warn');
+  }
+}
+
+// Legacy alias so old references still work
+async function syncMetaVideos() { return syncMetaAll(); }
+
+function loadReelsFromCache() {
+  try {
+    const cached = localStorage.getItem('sd_ig_all_data');
+    if (cached) IG_ALL_DATA = JSON.parse(cached);
+    const rc = localStorage.getItem('sd_reels_data');
+    if (rc) REELS_DATA = JSON.parse(rc);
+    const syncedAt = localStorage.getItem('sd_reels_synced');
+    const statusEl = document.getElementById('reels-sync-status');
+    if (statusEl && syncedAt) statusEl.textContent = 'Last synced: ' + syncedAt;
+  } catch(e) {}
+}
+
+// ── All Posts panel ──────────────────────────────────────
+function renderIgAllPanel() {
+  loadReelsFromCache();
+  renderIgStats();
+  renderIgInsights();
+  renderIgTable();
+}
+
+function renderIgStats() {
+  const el = document.getElementById('ig-stat-cards');
+  if (!el) return;
+  if (!IG_ALL_DATA.length) { el.innerHTML = ''; return; }
+  const totalLikes    = IG_ALL_DATA.reduce((s,p) => s + p.likes, 0);
+  const totalComments = IG_ALL_DATA.reduce((s,p) => s + p.comments, 0);
+  const totalReach    = IG_ALL_DATA.reduce((s,p) => s + p.reach, 0);
+  const totalSaved    = IG_ALL_DATA.reduce((s,p) => s + p.saved, 0);
+  const avgEng        = IG_ALL_DATA.length ? (IG_ALL_DATA.reduce((s,p) => s + p.engRate, 0) / IG_ALL_DATA.length).toFixed(1) : 0;
+  const cards = [
+    { icon:'&#10084;', label:'Total Likes',    val: fmtK(totalLikes),    color:'#FF6B6B' },
+    { icon:'&#128172;', label:'Total Comments', val: fmtK(totalComments), color:'#4A90D9' },
+    { icon:'&#128065;', label:'Total Reach',    val: fmtK(totalReach),    color:'#27AE60' },
+    { icon:'&#128278;', label:'Total Saves',    val: fmtK(totalSaved),    color:'#9B59B6' },
+    { icon:'&#128200;', label:'Avg Engagement', val: avgEng + '%',        color:'#E67E22' },
+  ];
+  el.innerHTML = cards.map(c => `
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radl);padding:14px 16px;display:flex;align-items:center;gap:12px;">
+      <div style="width:38px;height:38px;border-radius:10px;background:${c.color}18;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${c.icon}</div>
+      <div>
+        <div style="font-size:11px;color:var(--ink3);margin-bottom:2px;">${c.label}</div>
+        <div style="font-size:20px;font-weight:700;font-family:var(--ff-head);color:var(--ink);">${c.val}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderIgInsights() {
+  const el = document.getElementById('ig-insights');
+  if (!el || !IG_ALL_DATA.length) { if (el) el.innerHTML = ''; return; }
+  const byEng  = [...IG_ALL_DATA].sort((a,b) => b.engRate - a.engRate)[0];
+  const byReach= [...IG_ALL_DATA].sort((a,b) => b.reach   - a.reach)[0];
+  const bySaved= [...IG_ALL_DATA].sort((a,b) => b.saved   - a.saved)[0];
+  const insightCard = (emoji, title, item, stats, bg) => `
+    <div style="background:${bg};border:1px solid var(--border);border-radius:var(--radl);padding:14px 16px;cursor:pointer;" onclick="window.open('${item.permalink}','_blank')">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px;">${emoji} ${title}</div>
+      <div style="font-size:12px;color:var(--ink2);margin-bottom:8px;line-height:1.4;">${item.caption}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">${stats.map(s=>`<span style="font-size:11px;color:var(--ink3);">${s}</span>`).join('')}</div>
+    </div>`;
+  el.innerHTML = `
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radl);padding:16px 18px;">
+      <div style="font-size:14px;font-weight:700;font-family:var(--ff-head);margin-bottom:12px;">Top Performing Posts</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        ${insightCard('&#129351;','Best Engagement Rate', byEng,
+          [`&#128200; ${byEng.engRate}% engagement`, `&#128065; ${fmtK(byEng.reach)} reach`], '#F0FBF4')}
+        ${insightCard('&#128640;','Highest Reach', byReach,
+          [`&#128065; ${fmtK(byReach.reach)} reach`, `&#10084; ${fmtK(byReach.likes)} likes`], '#EEF4FB')}
+        ${insightCard('&#128278;','Most Saved', bySaved,
+          [`&#128278; ${fmtK(bySaved.saved)} saves`, `&#128200; ${bySaved.engRate}% eng.`], '#F5F0FB')}
+      </div>
+    </div>`;
+}
+
+function renderIgTable() {
+  const el = document.getElementById('ig-table-wrap');
+  const countEl = document.getElementById('ig-count');
+  if (!el) return;
+  if (!IG_ALL_DATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📱</div><div class="empty-title">No posts synced yet</div><div class="empty-sub">Click "⟳ Sync from Meta" to fetch all your Instagram posts.</div></div>`;
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+  const showImage    = document.getElementById('ig-filter-image')?.checked    ?? true;
+  const showCarousel = document.getElementById('ig-filter-carousel')?.checked ?? true;
+  const showVideo    = document.getElementById('ig-filter-video')?.checked    ?? true;
+  const sortBy       = document.getElementById('ig-sort-by')?.value || 'likes';
+  const sortOrder    = document.getElementById('ig-sort-order')?.value || 'desc';
+
+  let data = IG_ALL_DATA.filter(p => {
+    const t = p.mediaType;
+    if (t === 'IMAGE' && !showImage) return false;
+    if (t === 'CAROUSEL_ALBUM' && !showCarousel) return false;
+    if ((t === 'VIDEO' || t === 'REEL') && !showVideo) return false;
+    return true;
+  });
+  data.sort((a,b) => {
+    const av = sortBy === 'timestamp' ? (a.timestamp||'') : (a[sortBy]||0);
+    const bv = sortBy === 'timestamp' ? (b.timestamp||'') : (b[sortBy]||0);
+    return sortOrder === 'desc' ? (bv > av ? 1 : -1) : (av > bv ? 1 : -1);
+  });
+  if (countEl) countEl.textContent = `Showing ${data.length} post${data.length !== 1 ? 's' : ''}`;
+
+  const typeBadge = t => {
+    const map = {
+      IMAGE: ['🖼', '#F0FBF4', '#27AE60'],
+      CAROUSEL_ALBUM: ['🎠', '#EEF4FB', '#4A90D9'],
+      VIDEO: ['🎬', '#F0F0F0', '#666'],
+      REEL: ['🎬', '#EEF4FB', '#4A90D9'],
+    };
+    const [icon, bg, color] = map[t] || ['●', '#F0F0F0', '#666'];
+    const label = t === 'CAROUSEL_ALBUM' ? 'Carousel' : t.charAt(0) + t.slice(1).toLowerCase();
+    return `<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:${bg};color:${color};font-weight:600;">${icon} ${label}</span>`;
+  };
+  const engColor = p => p.engRate >= 3 ? 'var(--green)' : p.engRate >= 1 ? 'var(--amber)' : 'var(--red)';
+  const thumbCell = p => p.thumbnail
+    ? `<img src="${p.thumbnail}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;display:block;" onerror="this.style.display='none'">`
+    : `<div style="width:36px;height:36px;border-radius:6px;background:var(--cream2);display:flex;align-items:center;justify-content:center;font-size:16px;">📷</div>`;
+
+  el.innerHTML = `
+    <div style="font-size:14px;font-weight:700;font-family:var(--ff-head);margin-bottom:10px;">All Posts — Performance</div>
+    <div style="overflow-x:auto;">
+      <table class="perf-table">
+        <thead><tr>
+          <th style="width:40px;"></th>
+          <th style="min-width:180px;">Caption</th>
+          <th>Posted</th><th>Type</th><th>Reach</th><th>Impressions</th>
+          <th>Likes</th><th>Comments</th><th>Shares</th><th>Saves</th>
+          <th>Eng. Rate</th><th>Link</th>
+        </tr></thead>
+        <tbody>${data.map(p => `<tr>
+          <td>${thumbCell(p)}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.caption}">${p.caption}</td>
+          <td style="white-space:nowrap;">${p.posted}</td>
+          <td>${typeBadge(p.mediaType)}</td>
+          <td>${fmtK(p.reach)}</td>
+          <td>${fmtK(p.impressions)}</td>
+          <td style="color:${p.likes>0?'var(--coral)':'var(--ink3)'};">${fmtK(p.likes)}</td>
+          <td style="color:${p.comments>0?'var(--navy)':'var(--ink3)'};">${fmtK(p.comments)}</td>
+          <td>${fmtK(p.shares)}</td>
+          <td>${fmtK(p.saved)}</td>
+          <td><span style="font-weight:700;color:${engColor(p)};">${p.engRate}%</span></td>
+          <td><a href="${p.permalink}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--navy);color:#fff;border-radius:var(--rad);font-size:11px;font-weight:600;text-decoration:none;">&#128279; View</a></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── Reels panel (original) ───────────────────────────────
+function renderReelsPanel() {
+  loadReelsFromCache();
+  renderReelsStats();
+  renderReelsInsights();
+  renderReelsTable();
+}
+
+function renderReelsStats() {
+  const el = document.getElementById('reels-stat-cards');
+  if (!el) return;
+  if (!REELS_DATA.length) { el.innerHTML = ''; return; }
+  const totalLikes    = REELS_DATA.reduce((s,r) => s + r.likes, 0);
+  const totalComments = REELS_DATA.reduce((s,r) => s + r.comments, 0);
+  const totalShares   = REELS_DATA.reduce((s,r) => s + r.shares, 0);
+  const totalSaved    = REELS_DATA.reduce((s,r) => s + r.saved, 0);
+  const avgEng        = REELS_DATA.length ? (REELS_DATA.reduce((s,r) => s + r.engRate, 0) / REELS_DATA.length).toFixed(1) : 0;
+  const cards = [
+    { icon:'&#128077;', label:'Total Likes',    val: fmtK(totalLikes),    color:'#FF6B6B' },
+    { icon:'&#128172;', label:'Total Comments', val: fmtK(totalComments), color:'#4A90D9' },
+    { icon:'&#8652;',   label:'Total Shares',   val: fmtK(totalShares),   color:'#27AE60' },
+    { icon:'&#128278;', label:'Total Saves',    val: fmtK(totalSaved),    color:'#9B59B6' },
+    { icon:'&#128200;', label:'Avg Engagement', val: avgEng + '%',        color:'#E67E22' },
+  ];
+  el.innerHTML = cards.map(c => `
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radl);padding:14px 16px;display:flex;align-items:center;gap:12px;">
+      <div style="width:38px;height:38px;border-radius:10px;background:${c.color}18;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${c.icon}</div>
+      <div>
+        <div style="font-size:11px;color:var(--ink3);margin-bottom:2px;">${c.label}</div>
+        <div style="font-size:20px;font-weight:700;font-family:var(--ff-head);color:var(--ink);">${c.val}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderReelsInsights() {
+  const el = document.getElementById('reels-insights');
+  if (!el || !REELS_DATA.length) { if (el) el.innerHTML = ''; return; }
+  const byEng  = [...REELS_DATA].sort((a,b) => b.engRate - a.engRate)[0];
+  const byViews= [...REELS_DATA].sort((a,b) => b.views   - a.views)[0];
+  const bySaved= [...REELS_DATA].sort((a,b) => b.saved   - a.saved)[0];
+  const insightCard = (emoji, title, item, stats, bg) => `
+    <div style="background:${bg};border:1px solid var(--border);border-radius:var(--radl);padding:14px 16px;cursor:pointer;" onclick="window.open('${item.permalink}','_blank')">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px;">${emoji} ${title}</div>
+      <div style="font-size:12px;color:var(--ink2);margin-bottom:8px;line-height:1.4;">${item.caption}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">${stats.map(s=>`<span style="font-size:11px;color:var(--ink3);">${s}</span>`).join('')}</div>
+    </div>`;
+  el.innerHTML = `
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radl);padding:16px 18px;">
+      <div style="font-size:14px;font-weight:700;font-family:var(--ff-head);margin-bottom:12px;">Performance Insights</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        ${insightCard('&#129351;','Best Performing (by Engagement Rate)', byEng,
+          [`&#128202; ${byEng.engRate}% engagement`, `&#128065; ${fmtK(byEng.views)} views`], '#F0FBF4')}
+        ${insightCard('&#128640;','Most Viral (by Views)', byViews,
+          [`&#128065; ${fmtK(byViews.views)} views`, `&#128205; ${fmtK(byViews.reach)} reach`, `&#10084; ${fmtK(byViews.likes)} likes`], '#EEF4FB')}
+        ${insightCard('&#128278;','Most Saved', bySaved,
+          [`&#128278; ${fmtK(bySaved.saved)} saves`, `&#128200; ${bySaved.engRate}% eng.`, `&#128065; ${fmtK(bySaved.views)} views`], '#F5F0FB')}
+      </div>
+    </div>`;
+}
+
+function renderReelsTable() {
+  const el = document.getElementById('reels-table-wrap');
+  const countEl = document.getElementById('reels-count');
+  if (!el) return;
+  if (!REELS_DATA.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🎬</div><div class="empty-title">No data yet</div><div class="empty-sub">Click "⟳ Sync from Meta" to fetch your videos and reels from Instagram.</div></div>`;
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+  const showVideo = document.getElementById('reels-filter-video')?.checked ?? true;
+  const showReel  = document.getElementById('reels-filter-reel')?.checked  ?? true;
+  const sortBy    = document.getElementById('reels-sort-by')?.value || 'views';
+  const sortOrder = document.getElementById('reels-sort-order')?.value || 'desc';
+  let data = REELS_DATA.filter(r => (r.type === 'Video' && showVideo) || (r.type === 'Reel' && showReel));
+  data.sort((a,b) => {
+    const av = sortBy === 'timestamp' ? (a.timestamp||'') : (a[sortBy]||0);
+    const bv = sortBy === 'timestamp' ? (b.timestamp||'') : (b[sortBy]||0);
+    return sortOrder === 'desc' ? (bv > av ? 1 : -1) : (av > bv ? 1 : -1);
+  });
+  if (countEl) countEl.textContent = `Showing ${data.length} video${data.length !== 1 ? 's' : ''}`;
+  const typeBadge = t => t === 'Reel'
+    ? `<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:#EEF4FB;color:#4A90D9;font-weight:600;">Reel</span>`
+    : `<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:#F0F0F0;color:#666;font-weight:600;">Video</span>`;
+  const engColor = r => r.engRate >= 3 ? 'var(--green)' : r.engRate >= 1 ? 'var(--amber)' : 'var(--red)';
+  el.innerHTML = `
+    <div style="font-size:14px;font-weight:700;font-family:var(--ff-head);margin-bottom:10px;">Video Performance Details</div>
+    <div style="overflow-x:auto;">
+      <table class="perf-table">
+        <thead><tr>
+          <th style="min-width:200px;">Video Name</th>
+          <th>Posted</th><th>Type</th><th>Views</th><th>Reach</th>
+          <th>Likes</th><th>Comments</th><th>Shares</th><th>Saves</th>
+          <th>Eng. Rate</th><th>Preview</th>
+        </tr></thead>
+        <tbody>${data.map(r => `<tr>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.caption}">${r.caption}</td>
+          <td style="white-space:nowrap;">${r.posted}</td>
+          <td>${typeBadge(r.type)}</td>
+          <td>${fmtK(r.views)}</td>
+          <td>${fmtK(r.reach)}</td>
+          <td style="color:${r.likes>0?'var(--coral)':'var(--ink3)'};">${fmtK(r.likes)}</td>
+          <td style="color:${r.comments>0?'var(--navy)':'var(--ink3)'};">${fmtK(r.comments)}</td>
+          <td style="color:${r.shares>0?'var(--green)':'var(--ink3)'};">${fmtK(r.shares)}</td>
+          <td>${fmtK(r.saved)}</td>
+          <td><span style="font-weight:700;color:${engColor(r)};">${r.engRate}%</span></td>
+          <td><a href="${r.permalink}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--navy);color:#fff;border-radius:var(--rad);font-size:11px;font-weight:600;text-decoration:none;">&#9654; Play</a></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── Publish to Instagram ─────────────────────────────────
+function openIgPublish() {
+  loadMetaConfig();
+  if (!META_CONFIG.token || !META_CONFIG.igId) {
+    toast('Set up Meta API credentials first.', 'warn');
+    openMetaConfig();
+    return;
+  }
+  _igPublishFiles = [];
+  document.getElementById('ig-caption').value = '';
+  document.getElementById('ig-caption-count').textContent = '0';
+  document.getElementById('ig-file-preview').innerHTML = '';
+  document.getElementById('ig-publish-status').style.display = 'none';
+  document.getElementById('ig-publish-btn-submit').disabled = false;
+  document.getElementById('ig-publish-btn-submit').textContent = '📤 Publish Now';
+  // Reset to IMAGE
+  document.querySelector('input[name="ig-post-type"][value="IMAGE"]').checked = true;
+  onIgTypeChange();
+  document.getElementById('ig-publish-modal').classList.add('open');
+}
+function closeIgPublish() { document.getElementById('ig-publish-modal').classList.remove('open'); }
+
+function onIgTypeChange() {
+  const type = document.querySelector('input[name="ig-post-type"]:checked')?.value || 'IMAGE';
+  const hint = document.getElementById('ig-media-hint');
+  const fileInput = document.getElementById('ig-file-input');
+  if (type === 'IMAGE' || type === 'STORIES') {
+    if (hint) hint.textContent = '(JPG/PNG — max 8MB, single file)';
+    if (fileInput) { fileInput.multiple = false; fileInput.accept = 'image/*'; }
+  } else if (type === 'CAROUSEL') {
+    if (hint) hint.textContent = '(JPG/PNG — max 8MB each, 2–10 images)';
+    if (fileInput) { fileInput.multiple = true; fileInput.accept = 'image/*'; }
+  } else if (type === 'REELS') {
+    if (hint) hint.textContent = '(MP4 — max 1GB, single video file)';
+    if (fileInput) { fileInput.multiple = false; fileInput.accept = 'video/*'; }
+  }
+}
+
+function onIgFilePick(event) {
+  const files = Array.from(event.target.files);
+  _igPublishFiles = files;
+  const preview = document.getElementById('ig-file-preview');
+  if (!preview) return;
+  preview.innerHTML = files.map((f, i) => {
+    const isVideo = f.type.startsWith('video/');
+    const objUrl = URL.createObjectURL(f);
+    return isVideo
+      ? `<div style="position:relative;"><video src="${objUrl}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border2);" muted></video><span style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:1px 4px;border-radius:4px;">Video</span></div>`
+      : `<img src="${objUrl}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border2);">`;
+  }).join('');
+}
+
+function igSetStatus(msg, type) {
+  const el = document.getElementById('ig-publish-status');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.background = type === 'ok' ? '#F0FBF4' : type === 'error' ? '#FFF0F0' : '#FFF8E6';
+  el.style.color      = type === 'ok' ? '#27AE60' : type === 'error' ? '#E53E3E' : '#B7791F';
+  el.style.border     = `1px solid ${type === 'ok' ? '#27AE60' : type === 'error' ? '#E53E3E' : '#D69E2E'}`;
+  el.textContent = msg;
+}
+
+async function uploadToFirebaseStorage(file) {
+  // Upload to Firebase Storage and get a temporary signed-style download URL
+  if (!firebase.storage) throw new Error('Firebase Storage not available');
+  const storage = firebase.storage();
+  const timestamp = Date.now();
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const ref = storage.ref(`ig-publish/${timestamp}_${safeName}`);
+  await ref.put(file);
+  const url = await ref.getDownloadURL();
+  return url;
+}
+
+async function publishToInstagram() {
+  loadMetaConfig();
+  const postType = document.querySelector('input[name="ig-post-type"]:checked')?.value || 'IMAGE';
+  const caption  = document.getElementById('ig-caption').value.trim();
+  const btn      = document.getElementById('ig-publish-btn-submit');
+
+  if (!_igPublishFiles.length) { igSetStatus('Please select at least one media file.', 'warn'); return; }
+  if (postType === 'CAROUSEL' && _igPublishFiles.length < 2) { igSetStatus('Carousel requires at least 2 images.', 'warn'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Uploading media…';
+  igSetStatus('Uploading media to secure storage…', 'info');
+
+  try {
+    // 1. Upload files to Firebase Storage → get public download URLs
+    const mediaUrls = [];
+    for (let i = 0; i < _igPublishFiles.length; i++) {
+      igSetStatus(`Uploading file ${i+1} of ${_igPublishFiles.length}…`, 'info');
+      const url = await uploadToFirebaseStorage(_igPublishFiles[i]);
+      mediaUrls.push(url);
+    }
+
+    btn.textContent = '⏳ Publishing to Instagram…';
+    igSetStatus('Sending to Instagram…', 'info');
+
+    const igId  = META_CONFIG.igId;
+    const token = META_CONFIG.token;
+    let mediaContainerId;
+
+    if (postType === 'IMAGE' || postType === 'STORIES') {
+      // Single image or story
+      const params = new URLSearchParams({
+        image_url: mediaUrls[0],
+        caption: postType === 'STORIES' ? '' : caption,
+        access_token: token,
+      });
+      if (postType === 'STORIES') params.set('media_type', 'STORIES');
+      const resp = await fetch(`https://graph.facebook.com/v19.0/${igId}/media`, { method: 'POST', body: params });
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error.message);
+      mediaContainerId = data.id;
+
+    } else if (postType === 'REELS') {
+      const params = new URLSearchParams({
+        media_type: 'REELS',
+        video_url: mediaUrls[0],
+        caption,
+        access_token: token,
+      });
+      const resp = await fetch(`https://graph.facebook.com/v19.0/${igId}/media`, { method: 'POST', body: params });
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error.message);
+      mediaContainerId = data.id;
+      // Poll until video is ready
+      igSetStatus('Processing video… this may take a minute.', 'info');
+      await pollUntilReady(mediaContainerId, token);
+
+    } else if (postType === 'CAROUSEL') {
+      // Step 1: create item containers for each image
+      const itemIds = [];
+      for (const url of mediaUrls) {
+        const params = new URLSearchParams({ image_url: url, is_carousel_item: 'true', access_token: token });
+        const resp = await fetch(`https://graph.facebook.com/v19.0/${igId}/media`, { method: 'POST', body: params });
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error.message);
+        itemIds.push(data.id);
+      }
+      // Step 2: create carousel container
+      const params = new URLSearchParams({
+        media_type: 'CAROUSEL',
+        children: itemIds.join(','),
+        caption,
+        access_token: token,
+      });
+      const resp = await fetch(`https://graph.facebook.com/v19.0/${igId}/media`, { method: 'POST', body: params });
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error.message);
+      mediaContainerId = data.id;
+    }
+
+    // Publish the container
+    igSetStatus('Publishing post…', 'info');
+    const pubParams = new URLSearchParams({ creation_id: mediaContainerId, access_token: token });
+    const pubResp = await fetch(`https://graph.facebook.com/v19.0/${igId}/media_publish`, { method: 'POST', body: pubParams });
+    const pubData = await pubResp.json();
+    if (pubData.error) throw new Error(pubData.error.message);
+
+    igSetStatus('✅ Published successfully! Post is live on Instagram.', 'ok');
+    btn.textContent = '✅ Published!';
+    auditLog('ig_published', `Published ${postType.toLowerCase()} to Instagram`, { type: postType, caption: caption.slice(0, 60) });
+    toast('Post published to Instagram!', 'ok');
+
+    // Auto-sync after 5s to pick up new post
+    setTimeout(() => syncMetaAll(), 5000);
+
+  } catch(e) {
+    console.error('Instagram publish error:', e);
+    igSetStatus('❌ Failed: ' + (e.message || 'Unknown error'), 'error');
+    btn.disabled = false;
+    btn.textContent = '📤 Publish Now';
+    toast('Publish failed: ' + (e.message || ''), 'warn');
+  }
+}
+
+async function pollUntilReady(containerId, token, maxAttempts = 12) {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(r => setTimeout(r, 5000));
+    const resp = await fetch(`https://graph.facebook.com/v19.0/${containerId}?fields=status_code&access_token=${token}`);
+    const data = await resp.json();
+    if (data.status_code === 'FINISHED') return;
+    if (data.status_code === 'ERROR') throw new Error('Video processing failed on Instagram.');
+  }
+  throw new Error('Video processing timed out. Try publishing again.');
+}
+
 // ── Global keyboard shortcuts ──
 document.addEventListener('keydown', e => {
   if (!loggedInMember) return;
@@ -9008,11 +10200,27 @@ document.addEventListener('keydown', e => {
     document.querySelectorAll('.overlay.open').forEach(m => m.classList.remove('open'));
     if (document.getElementById('mv-overlay')?.classList.contains('open')) closeMv();
   }
-  // Cmd/Ctrl+K → jump to chat
-  if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); go('chat'); document.getElementById('chat-input')?.focus(); }
+  // Cmd/Ctrl+K → open global search
+  if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); openSearch(); return; }
   // Cmd/Ctrl+N → new task
   if ((e.metaKey||e.ctrlKey) && e.key==='n' && currentPanel==='tasks') { e.preventDefault(); openTaskModal(); }
 });
 </script>
+
+<!-- CUSTOM CONFIRM MODAL -->
+<div class="overlay" id="sd-confirm-overlay" style="z-index:9999;">
+  <div class="modal" style="width:360px;border-radius:14px;">
+    <div class="modal-hdr" style="border-bottom:none;padding-bottom:4px;">
+      <span class="modal-title" id="sd-confirm-title" style="font-size:14px;"></span>
+    </div>
+    <div class="modal-body" style="padding-top:6px;">
+      <p id="sd-confirm-msg" style="font-size:13px;color:var(--ink2);line-height:1.55;margin:0;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="sd-confirm-cancel-btn">Cancel</button>
+      <button class="btn btn-coral" id="sd-confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
