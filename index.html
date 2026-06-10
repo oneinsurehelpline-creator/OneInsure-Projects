@@ -278,6 +278,20 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .close-x{background:none;border:none;cursor:pointer;color:var(--ink3);font-size:20px;line-height:1;padding:0 4px;border-radius:4px;}
 .close-x:hover{background:var(--cream2);}
 
+/* ── GLOBAL SEARCH MODAL ── */
+#search-modal{position:fixed;inset:0;background:rgba(26,25,22,0.55);display:none;align-items:flex-start;justify-content:center;z-index:200;padding:80px 16px 16px;}
+#search-modal.open{display:flex;}
+#search-modal .search-box{background:var(--white);border-radius:var(--radxl);width:100%;max-width:560px;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden;}
+#search-input{width:100%;border:none;outline:none;padding:16px 20px;font-size:16px;font-family:var(--ff-body);background:transparent;color:var(--ink);border-bottom:1px solid var(--border);}
+#search-input::placeholder{color:var(--ink3);}
+#search-results{max-height:360px;overflow-y:auto;}
+.search-result-item{display:flex;align-items:center;gap:12px;padding:10px 20px;cursor:pointer;transition:background 0.1s;}
+.search-result-item:hover{background:var(--cream2);}
+.search-result-item .sri-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
+.search-result-item .sri-label{font-size:14px;font-weight:600;color:var(--ink);}
+.search-result-item .sri-sub{font-size:12px;color:var(--ink3);margin-top:1px;}
+#search-footer{padding:8px 20px;font-size:11px;color:var(--ink3);border-top:1px solid var(--border);display:flex;gap:16px;}
+
 /* ── DETAIL PANEL ── */
 .dp-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .dp-body{padding:16px;}
@@ -10222,5 +10236,20 @@ document.addEventListener('keydown', e => {
     </div>
   </div>
 </div>
+
+<!-- GLOBAL SEARCH MODAL -->
+<div id="search-modal" onclick="if(event.target===this)closeSearch()">
+  <div class="search-box">
+    <input id="search-input" type="text" placeholder="Search flows, tasks, campaigns, chat…"
+      oninput="runSearch(this.value)" onkeydown="searchKeyNav(event)" autocomplete="off" spellcheck="false">
+    <div id="search-results">
+      <div style="padding:24px;text-align:center;color:var(--ink3);font-size:13px;">Start typing to search…</div>
+    </div>
+    <div id="search-footer">
+      <span>↑↓ navigate</span><span>↵ open</span><span>Esc close</span>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
