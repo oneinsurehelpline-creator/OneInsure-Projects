@@ -7,28 +7,42 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="SociaDesk"/>
-<title>SociaDesk Mobile</title>
-
+<title>SociaDesk</title>
 <style>
-/* ── RESET ── */
+/* ─────────────────────────────────────
+   RESET & BASE
+───────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html{-webkit-text-size-adjust:100%;}
 html,body{height:100%;overflow:hidden;background:#00243E;}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   font-size:16px;color:#0D1117;
-  -webkit-font-smoothing:antialiased;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
 }
 button{font-family:inherit;cursor:pointer;border:none;background:none;font-size:inherit;}
 input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none;appearance:none;}
 ::-webkit-scrollbar{display:none;}
 *{scrollbar-width:none;}
+a{text-decoration:none;color:inherit;}
 
-/* ── CSS VARS ── */
+/* ─────────────────────────────────────
+   DESIGN TOKENS
+───────────────────────────────────── */
 :root{
-  --navy:#00243E;
-  --coral:#FF6B6B;
+  /* 60% Neutral */
   --cream:#F2F0EA;
+  --white:#FFFFFF;
+  --bg-subtle:#F8F7F4;
+  /* 30% Primary */
+  --navy:#00243E;
+  --navy-mid:#003559;
+  --navy-deep:#001828;
+  /* 10% Accent */
+  --coral:#FF6B6B;
+  --coral-light:rgba(255,107,107,0.12);
+  --coral-tint:rgba(255,107,107,0.04);
+  /* Status */
   --green:#27AE60;
   --amber:#F59E0B;
   --red:#EF4444;
@@ -39,25 +53,35 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
   --brown:#92400E;
   --slate:#64748B;
   --orange:#F97316;
-  --white:#FFFFFF;
-  --bg:#F2F0EA;
-  --card:#FFFFFF;
-  --border:#E5E7EB;
+  /* Text scale */
   --ink:#0D1117;
   --ink2:#1E293B;
   --ink3:#475569;
   --ink4:#94A3B8;
-  --shadow:0 1px 8px rgba(0,0,0,0.08),0 0 0 1px rgba(0,0,0,0.04);
-  --shadow-md:0 4px 16px rgba(0,0,0,0.10);
-  --rad:10px;
-  --radl:14px;
-  --radxl:18px;
-  --tab-h:58px;
-  --safe-bottom:env(safe-area-inset-bottom,0px);
+  /* Surfaces */
+  --card:#FFFFFF;
+  --border:#E8E6DF;
+  --border-light:#F0EEE8;
+  /* Shadows */
+  --shadow:0 1px 4px rgba(0,0,0,0.06),0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.09),0 1px 4px rgba(0,0,0,0.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.12);
+  /* Radii */
+  --r-sm:8px;
+  --r-md:12px;
+  --r-lg:16px;
+  --r-xl:20px;
+  --r-pill:999px;
+  /* Layout */
+  --topbar-h:56px;
+  --tabbar-h:58px;
   --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 
-/* ── AVATAR COLORS ── */
+/* ─────────────────────────────────────
+   AVATAR COLORS
+───────────────────────────────────── */
 .av-a{background:#FF6B6B;color:#fff;}
 .av-b{background:#3B82F6;color:#fff;}
 .av-c{background:#27AE60;color:#fff;}
@@ -68,207 +92,286 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
 .av-h{background:#92400E;color:#fff;}
 .av-i{background:#64748B;color:#fff;}
 
-/* ════════════════════════════════
-   LOGIN
-════════════════════════════════ */
+/* ─────────────────────────────────────
+   LOGIN SCREEN
+───────────────────────────────────── */
 #login-screen{
   position:fixed;inset:0;z-index:1000;
-  background:linear-gradient(160deg,#00243E 0%,#001525 60%,#000C17 100%);
+  background:linear-gradient(160deg,#00243E 0%,#001B30 55%,#000E1A 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:32px 24px;
-  padding-top:calc(32px + var(--safe-top));
+  padding-top:calc(48px + var(--safe-top));
   padding-bottom:calc(32px + var(--safe-bottom));
+  overflow-y:auto;
 }
-.login-logo{text-align:center;margin-bottom:44px;}
-.login-logo-icon{font-size:60px;line-height:1;margin-bottom:16px;}
+.login-logo{text-align:center;margin-bottom:48px;}
+.login-logo-icon{
+  width:80px;height:80px;border-radius:22px;
+  background:linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.06));
+  border:1px solid rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;margin:0 auto 20px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3);
+}
 .login-brand{
-  font-size:34px;font-weight:800;letter-spacing:-0.04em;
-  background:linear-gradient(135deg,#60CDFF 0%,#7DD3FA 40%,#FBB16E 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-size:32px;font-weight:700;letter-spacing:-0.03em;color:#fff;
 }
-.login-tagline{font-size:15px;color:rgba(255,255,255,0.38);margin-top:8px;letter-spacing:0.06em;text-transform:uppercase;}
-.login-form{width:100%;max-width:390px;}
+.login-tagline{
+  font-size:14px;font-weight:500;color:rgba(255,255,255,0.4);
+  margin-top:8px;letter-spacing:0.05em;text-transform:uppercase;
+}
+.login-form{width:100%;max-width:400px;}
 .login-error{
-  background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.28);
-  border-radius:var(--rad);padding:14px 16px;
-  font-size:15px;color:#FCA5A5;margin-bottom:18px;display:none;line-height:1.4;
+  background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);
+  border-radius:var(--r-md);padding:14px 16px;
+  font-size:14px;color:#FCA5A5;margin-bottom:24px;display:none;line-height:1.5;
 }
-.login-field{margin-bottom:18px;}
-.login-label{font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:10px;display:block;}
+.login-field{margin-bottom:16px;}
+.login-label{
+  font-size:14px;font-weight:500;color:rgba(255,255,255,0.5);
+  letter-spacing:0.03em;margin-bottom:8px;display:block;
+}
 .login-input{
-  width:100%;padding:17px 18px;
-  background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.10);
-  border-radius:var(--radl);font-size:18px;color:#fff;outline:none;
+  width:100%;padding:16px 18px;
+  background:rgba(255,255,255,0.07);
+  border:1.5px solid rgba(255,255,255,0.10);
+  border-radius:var(--r-md);font-size:16px;color:#fff;outline:none;
   transition:border-color 0.2s,background 0.2s;
+  min-height:52px;
 }
 .login-input::placeholder{color:rgba(255,255,255,0.22);}
-.login-input:focus{border-color:rgba(96,205,255,0.55);background:rgba(255,255,255,0.10);}
-.login-btn{
-  width:100%;padding:19px;margin-top:10px;
-  background:linear-gradient(135deg,#0070B8,#0095E0);
-  border-radius:var(--radl);font-size:18px;font-weight:700;color:#fff;
-  letter-spacing:0.01em;transition:opacity 0.15s;
+.login-input:focus{
+  border-color:rgba(255,107,107,0.5);
+  background:rgba(255,255,255,0.10);
 }
-.login-btn:active{opacity:0.82;}
+.login-btn{
+  width:100%;padding:0 24px;height:52px;margin-top:8px;
+  background:var(--coral);border-radius:var(--r-md);
+  font-size:16px;font-weight:600;color:#fff;
+  letter-spacing:0.01em;
+  transition:opacity 0.15s,transform 0.1s;
+  box-shadow:0 4px 20px rgba(255,107,107,0.35);
+}
+.login-btn:active{opacity:0.85;transform:scale(0.99);}
 .login-btn:disabled{opacity:0.45;}
-.login-version{font-size:13px;color:rgba(255,255,255,0.18);margin-top:36px;text-align:center;}
+.login-version{font-size:14px;color:rgba(255,255,255,0.18);margin-top:32px;text-align:center;}
 
-/* ════════════════════════════════
+/* ─────────────────────────────────────
    APP SHELL
-════════════════════════════════ */
+───────────────────────────────────── */
 #app{
   position:fixed;inset:0;display:none;flex-direction:column;
-  background:var(--bg);
+  background:var(--cream);
 }
 
-/* Top bar */
+/* TOP BAR */
 .topbar{
   flex-shrink:0;
   background:var(--navy);
-  height:calc(56px + var(--safe-top));
   padding-top:var(--safe-top);
-  display:flex;align-items:center;
-  padding:var(--safe-top) 14px 0;
-  padding-bottom:0;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  height:calc(var(--topbar-h) + var(--safe-top));
   position:relative;z-index:100;
-  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+  box-shadow:0 2px 16px rgba(0,0,0,0.2);
 }
 .topbar-inner{
-  height:56px;
-  display:flex;align-items:center;gap:10px;width:100%;
+  height:var(--topbar-h);display:flex;align-items:center;
+  padding:0 16px;gap:8px;
 }
+.topbar-logo-mark{
+  font-size:24px;font-weight:800;letter-spacing:-0.04em;color:#fff;flex:1;
+}
+.topbar-logo-mark span{color:var(--coral);}
 .topbar-btn{
   width:40px;height:40px;border-radius:50%;
-  background:rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.08);
   display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:20px;flex-shrink:0;
+  color:#fff;font-size:18px;flex-shrink:0;
+  transition:background 0.15s;
 }
-.topbar-title{font-size:20px;font-weight:700;color:#fff;flex:1;letter-spacing:-0.02em;}
-.topbar-action-btn{
+.topbar-btn:active{background:rgba(255,255,255,0.15);}
+.topbar-title-text{
+  font-size:18px;font-weight:600;color:#fff;flex:1;letter-spacing:-0.01em;
+}
+.topbar-add-btn{
   width:40px;height:40px;border-radius:50%;
-  background:rgba(255,255,255,0.10);
+  background:rgba(255,107,107,0.18);
   display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:22px;flex-shrink:0;
+  color:var(--coral);font-size:24px;font-weight:300;flex-shrink:0;
+}
+.topbar-add-btn.hidden{display:none;}
+.topbar-av{
+  width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;flex-shrink:0;
+  border:2px solid rgba(255,255,255,0.2);
 }
 
-/* Panels */
+/* PANELS */
 .panels{flex:1;overflow:hidden;position:relative;}
 .panel{
   position:absolute;inset:0;overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   transform:translateX(100%);opacity:0;pointer-events:none;
-  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1),opacity 0.3s;
+  transition:transform 0.28s cubic-bezier(0.4,0,0.2,1),opacity 0.28s;
   will-change:transform;
+  background:var(--cream);
 }
 .panel.active{transform:translateX(0);opacity:1;pointer-events:auto;}
-.panel.exit-left{transform:translateX(-30%);opacity:0;pointer-events:none;}
+.panel.exit-left{transform:translateX(-24%);opacity:0;pointer-events:none;}
 
-/* Tab bar */
+/* TAB BAR */
 .tabbar{
   flex-shrink:0;background:var(--white);
-  border-top:1px solid var(--border);
+  border-top:1px solid var(--border-light);
   display:flex;align-items:stretch;
   padding-bottom:var(--safe-bottom);
-  z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,0.07);
+  z-index:100;
+  box-shadow:0 -4px 24px rgba(0,0,0,0.07);
 }
 .tab{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:var(--tab-h);padding:8px 2px;
+  min-height:var(--tabbar-h);padding:6px 0;
   color:var(--ink4);transition:color 0.15s;position:relative;
 }
 .tab.active{color:var(--navy);}
-.tab-icon{font-size:24px;line-height:1;margin-bottom:3px;}
-.tab-label{font-size:12px;font-weight:700;letter-spacing:0.01em;}
+.tab-icon{font-size:22px;line-height:1;margin-bottom:3px;}
+.tab-label{font-size:14px;font-weight:500;letter-spacing:0.01em;}
+.tab.active .tab-label{font-weight:700;}
 .tab-dot{
-  position:absolute;top:8px;left:calc(50% + 6px);
+  position:absolute;top:7px;left:calc(50% + 8px);
   width:8px;height:8px;border-radius:50%;background:var(--coral);
   border:2px solid #fff;display:none;
 }
 .tab-dot.show{display:block;}
-.tab-bar{
+.tab-indicator{
   position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-  width:28px;height:3px;border-radius:2px 2px 0 0;
+  width:24px;height:3px;border-radius:3px 3px 0 0;
   background:var(--navy);opacity:0;transition:opacity 0.15s;
 }
-.tab.active .tab-bar{opacity:1;}
+.tab.active .tab-indicator{opacity:1;}
 
-/* ════════════════════════════════
-   PAGE HELPERS
-════════════════════════════════ */
-.page-pad{padding:16px 16px 24px;}
-.page-bottom{height:90px;}
-.section-label{
-  font-size:13px;font-weight:700;text-transform:uppercase;
+/* ─────────────────────────────────────
+   SHARED COMPONENTS
+───────────────────────────────────── */
+.page-scroll{padding:0 16px 24px;}
+.page-bottom{height:88px;}
+
+.section-hdr{
+  font-size:14px;font-weight:700;text-transform:uppercase;
   letter-spacing:0.08em;color:var(--ink4);
-  margin-bottom:12px;padding:0 2px;
+  margin:24px 0 16px;padding-left:2px;
 }
 
-/* Cards */
+/* Filter chips */
+.filter-row{
+  display:flex;gap:8px;overflow-x:auto;
+  padding:16px 16px 0;
+  -webkit-overflow-scrolling:touch;
+}
+.filter-chip{
+  flex-shrink:0;padding:0 16px;height:36px;border-radius:var(--r-pill);
+  background:var(--white);border:1.5px solid var(--border);
+  font-size:14px;font-weight:500;color:var(--ink3);
+  white-space:nowrap;
+  display:flex;align-items:center;
+  transition:all 0.15s;
+}
+.filter-chip.active{
+  background:var(--navy);color:#fff;border-color:var(--navy);
+  font-weight:600;
+}
+
+/* Cards base */
 .card{
-  background:var(--card);border-radius:var(--radxl);
+  background:var(--card);border-radius:var(--r-lg);
   box-shadow:var(--shadow);overflow:hidden;
 }
 
 /* Empty state */
-.empty-state{text-align:center;padding:60px 24px 40px;}
-.empty-icon{font-size:54px;margin-bottom:16px;}
-.empty-title{font-size:20px;font-weight:700;color:var(--ink2);margin-bottom:8px;}
+.empty-state{text-align:center;padding:64px 24px 40px;}
+.empty-icon{font-size:56px;margin-bottom:16px;line-height:1;}
+.empty-title{font-size:18px;font-weight:600;color:var(--ink2);margin-bottom:8px;}
 .empty-sub{font-size:16px;color:var(--ink4);line-height:1.6;}
 
 /* Loader */
 .loader{display:flex;align-items:center;justify-content:center;padding:48px;}
 .spinner{
   width:28px;height:28px;
-  border:3px solid var(--border);
-  border-top-color:var(--navy);
-  border-radius:50%;
-  animation:spin 0.7s linear infinite;
+  border:2.5px solid var(--border);border-top-color:var(--navy);
+  border-radius:50%;animation:spin 0.65s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* ════════════════════════════════
+/* ─────────────────────────────────────
    TODAY TAB
-════════════════════════════════ */
+───────────────────────────────────── */
 .today-hero{
-  padding:20px 16px 16px;
+  background:linear-gradient(160deg,var(--navy) 0%,var(--navy-mid) 70%,#004A75 100%);
+  padding:24px 16px 24px;
+  position:relative;overflow:hidden;
 }
-.today-greeting{font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-0.03em;line-height:1.2;}
-.today-date{font-size:15px;color:var(--ink4);margin-top:4px;font-weight:500;}
-.today-section{padding:4px 16px;}
+.today-hero::after{
+  content:'';position:absolute;
+  right:-32px;top:-32px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(255,255,255,0.03);
+}
+.today-greeting{
+  font-size:24px;font-weight:700;color:#fff;
+  letter-spacing:-0.03em;line-height:1.2;margin-bottom:4px;
+}
+.today-date-lbl{
+  font-size:14px;font-weight:500;color:rgba(255,255,255,0.5);margin-bottom:20px;
+}
+.stats-row{display:flex;gap:8px;}
+.stat-pill{
+  flex:1;padding:10px 8px;border-radius:var(--r-md);
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.10);
+  text-align:center;
+}
+.stat-pill-val{font-size:18px;font-weight:700;color:#fff;line-height:1.2;}
+.stat-pill-lbl{font-size:14px;font-weight:500;color:rgba(255,255,255,0.5);margin-top:2px;}
 
-/* Flow cards */
+.today-body{padding:16px 16px 0;}
+
+/* ─────────────────────────────────────
+   FLOW CARDS
+───────────────────────────────────── */
 .flow-card{
-  background:var(--card);border-radius:var(--radxl);
+  background:var(--card);border-radius:var(--r-lg);
   box-shadow:var(--shadow);overflow:hidden;
-  margin-bottom:10px;
-  border-left:4px solid transparent;
-  transition:border-color 0.2s;
+  margin-bottom:8px;
+  border-left:3px solid transparent;
+  transition:border-color 0.2s,box-shadow 0.2s;
+  cursor:pointer;
 }
+.flow-card:active{box-shadow:var(--shadow-md);}
 .flow-card.my-turn{
   border-left-color:var(--coral);
+  background:var(--white);
+  box-shadow:var(--shadow-md);
 }
-.flow-card-head{
-  padding:14px 16px 12px;
-  border-bottom:1px solid var(--border);
-}
-.flow-card-title-row{
-  display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;
-}
-.flow-card-title{
-  font-size:18px;font-weight:700;letter-spacing:-0.02em;flex:1;line-height:1.3;
+.flow-card-inner{background:var(--coral-tint);}
+.flow-card-inner.no-tint{background:transparent;}
+
+.flow-head{padding:16px 16px 12px;}
+.flow-title-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;}
+.flow-title{
+  font-size:18px;font-weight:600;letter-spacing:-0.02em;flex:1;line-height:1.3;
+  color:var(--ink);
 }
 .your-turn-badge{
   flex-shrink:0;
-  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;
-  padding:4px 10px;border-radius:20px;
+  font-size:14px;font-weight:700;padding:4px 10px;
+  border-radius:var(--r-pill);
   background:var(--coral);color:#fff;
-  white-space:nowrap;
-  margin-top:2px;
+  white-space:nowrap;margin-top:1px;
 }
-.plat-row{display:flex;gap:5px;flex-wrap:wrap;}
+.plat-row{display:flex;gap:6px;flex-wrap:wrap;}
 .plat-chip{
-  font-size:12px;font-weight:700;padding:4px 9px;border-radius:6px;
-  text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;
+  font-size:14px;font-weight:500;padding:3px 10px;border-radius:var(--r-sm);
+  white-space:nowrap;
 }
 .pc-instagram{background:#FCE4EC;color:#880E4F;}
 .pc-facebook{background:#E3F2FD;color:#0D47A1;}
@@ -278,105 +381,114 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
 .pc-reels{background:#FFF3E0;color:#E65100;}
 .pc-default{background:#F1F5F9;color:var(--ink3);}
 
-/* Step dots row */
-.steps-row{
-  padding:14px 16px;
+/* Step dots */
+.steps-track{
+  padding:12px 16px;
   display:flex;align-items:center;
-  overflow-x:auto;
-  gap:0;
+  overflow-x:auto;gap:0;
+  border-top:1px solid var(--border-light);
 }
 .sdot{
-  width:36px;height:36px;border-radius:50%;
+  width:32px;height:32px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:700;
-  flex-shrink:0;
+  font-size:14px;font-weight:700;flex-shrink:0;
+  transition:all 0.2s;
 }
 .sdot-done{background:var(--green);color:#fff;}
-.sdot-active{background:var(--coral);color:#fff;box-shadow:0 0 0 4px rgba(255,107,107,0.18);}
-.sdot-pending{background:#F1F5F9;color:var(--ink4);border:1.5px solid var(--border);}
-.sdot-line{
-  height:2px;flex:1;min-width:14px;max-width:32px;flex-shrink:0;
-  margin-bottom:0;
+.sdot-active{
+  background:var(--coral);color:#fff;
+  box-shadow:0 0 0 4px rgba(255,107,107,0.2);
 }
+.sdot-pending{background:var(--bg-subtle);color:var(--ink4);border:1.5px solid var(--border);}
+.sdot-line{height:2px;flex:1;min-width:12px;max-width:28px;flex-shrink:0;}
 .sdot-line-done{background:var(--green);}
 .sdot-line-pending{background:var(--border);}
 
 /* Flow card footer */
-.flow-card-foot{
+.flow-foot{
   padding:12px 16px;
-  display:flex;align-items:center;gap:10px;
-  border-top:1px solid var(--border);
-  background:#FAFBFC;
+  border-top:1px solid var(--border-light);
+  background:var(--bg-subtle);
 }
-.flow-step-info{
-  flex:1;font-size:15px;color:var(--ink3);line-height:1.4;
+.flow-step-label{
+  font-size:14px;color:var(--ink4);margin-bottom:8px;
 }
-.flow-step-name{font-weight:700;color:var(--ink2);}
-.push-btn{
-  padding:12px 20px;border-radius:24px;
-  background:var(--navy);color:#fff;
-  font-size:15px;font-weight:700;letter-spacing:0.02em;
-  flex-shrink:0;min-height:44px;
+.flow-step-label strong{color:var(--ink2);font-weight:600;}
+
+.push-btn-full{
+  width:100%;height:52px;border-radius:var(--r-md);
+  background:var(--coral);color:#fff;
+  font-size:16px;font-weight:600;letter-spacing:0.01em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 12px rgba(255,107,107,0.3);
   transition:opacity 0.15s,transform 0.1s;
 }
-.push-btn:active{opacity:0.8;transform:scale(0.97);}
-.push-btn:disabled{opacity:0.35;pointer-events:none;}
-.push-btn.my-turn-btn{background:var(--coral);}
+.push-btn-full:active{opacity:0.85;transform:scale(0.99);}
+.push-btn-full:disabled{opacity:0.35;pointer-events:none;box-shadow:none;}
+
+.push-btn-navy{
+  width:100%;height:44px;border-radius:var(--r-md);
+  background:var(--navy);color:#fff;
+  font-size:14px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:opacity 0.15s;
+}
+.push-btn-navy:active{opacity:0.8;}
+.push-btn-navy:disabled{opacity:0.35;pointer-events:none;}
+
+.flow-waiting{
+  font-size:14px;color:var(--ink4);text-align:center;padding:4px 0;
+}
 .flow-done-banner{
-  padding:14px 16px;text-align:center;
-  background:#DCFCE7;font-size:15px;font-weight:700;color:#166534;
+  text-align:center;padding:14px;
+  background:#DCFCE7;font-size:14px;font-weight:600;color:#166534;
+  border-top:1px solid #BBF7D0;
 }
 
-/* ════════════════════════════════
+/* ─────────────────────────────────────
    TASKS TAB
-════════════════════════════════ */
-.filter-row{
-  display:flex;gap:8px;overflow-x:auto;
-  padding-bottom:2px;margin-bottom:16px;
-  -webkit-overflow-scrolling:touch;
-}
-.filter-chip{
-  flex-shrink:0;padding:10px 18px;border-radius:24px;
-  background:var(--card);border:1.5px solid var(--border);
-  font-size:15px;font-weight:600;color:var(--ink3);
-  white-space:nowrap;min-height:44px;
-  display:flex;align-items:center;
-}
-.filter-chip.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+───────────────────────────────────── */
+.tasks-body{padding:8px 16px 0;}
 
 .task-card{
-  background:var(--card);border-radius:var(--radl);
-  padding:14px 16px;margin-bottom:10px;
+  background:var(--card);border-radius:var(--r-lg);
+  padding:16px 16px 14px;margin-bottom:8px;
   box-shadow:var(--shadow);
-  border-left:4px solid var(--border);
+  border-left:3px solid var(--border);
+  cursor:pointer;transition:box-shadow 0.15s;
 }
+.task-card:active{box-shadow:var(--shadow-md);}
 .task-card.pri-high{border-left-color:var(--red);}
 .task-card.pri-medium{border-left-color:var(--amber);}
 .task-card.pri-low{border-left-color:var(--blue);}
-.task-card.st-blocked{border-left-color:var(--red);background:#FFF8F8;}
+.task-card.st-done{opacity:0.65;}
+.task-card.st-done .task-title{text-decoration:line-through;color:var(--ink4);}
+
 .task-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
-.task-title{font-size:18px;font-weight:600;flex:1;line-height:1.3;letter-spacing:-0.01em;}
+.task-title{
+  font-size:18px;font-weight:600;flex:1;line-height:1.3;
+  letter-spacing:-0.01em;color:var(--ink);
+}
 .status-pill{
-  font-size:13px;font-weight:700;padding:5px 12px;border-radius:20px;
-  flex-shrink:0;white-space:nowrap;letter-spacing:0.02em;
+  font-size:14px;font-weight:600;padding:4px 10px;
+  border-radius:var(--r-pill);flex-shrink:0;white-space:nowrap;
 }
 .sp-todo{background:#F1F5F9;color:var(--ink4);}
 .sp-inprogress{background:#FEF3C7;color:#92400E;}
-.sp-review{background:#FEF9C3;color:#713F12;}
+.sp-review{background:#EFF6FF;color:#1D4ED8;}
 .sp-done{background:#DCFCE7;color:#166534;}
 .sp-blocked{background:#FEE2E2;color:#991B1B;}
-.task-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;}
-.task-assignee{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--ink3);}
-.task-due{font-size:14px;color:var(--ink4);}
-.task-due.overdue{color:var(--red);font-weight:700;}
+
+.task-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.task-assignee{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ink3);}
 .mini-av{
-  width:26px;height:26px;border-radius:50%;
+  width:24px;height:24px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   font-size:10px;font-weight:700;flex-shrink:0;
 }
-.pri-tag{
-  font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:0.03em;
-}
+.task-due{font-size:14px;color:var(--ink4);}
+.task-due.overdue{color:var(--red);font-weight:600;}
+.pri-tag{font-size:14px;font-weight:500;padding:2px 8px;border-radius:var(--r-pill);}
 .pri-tag-high{background:#FEE2E2;color:#991B1B;}
 .pri-tag-medium{background:#FEF3C7;color:#92400E;}
 .pri-tag-low{background:#EFF6FF;color:#1D4ED8;}
@@ -384,62 +496,77 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
 /* FAB */
 .fab{
   position:fixed;z-index:90;
-  bottom:calc(var(--tab-h) + var(--safe-bottom) + 18px);right:18px;
+  bottom:calc(var(--tabbar-h) + var(--safe-bottom) + 16px);right:16px;
   width:56px;height:56px;border-radius:50%;
   background:var(--coral);color:#fff;
   display:flex;align-items:center;justify-content:center;
   font-size:28px;font-weight:300;
-  box-shadow:0 4px 18px rgba(255,107,107,0.45);
+  box-shadow:0 4px 20px rgba(255,107,107,0.45);
   transition:transform 0.15s,opacity 0.2s;
 }
-.fab:active{transform:scale(0.92);}
+.fab:active{transform:scale(0.9);}
 .fab.hidden{opacity:0;pointer-events:none;}
 
-/* ════════════════════════════════
+/* ─────────────────────────────────────
    CHAT TAB — LIST
-════════════════════════════════ */
-.chat-section{
-  background:var(--card);border-radius:var(--radxl);
-  margin:12px 16px;overflow:hidden;box-shadow:var(--shadow);
+───────────────────────────────────── */
+.chat-list-body{padding:16px 16px 0;}
+.chat-section-card{
+  background:var(--card);border-radius:var(--r-lg);
+  box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;
 }
-.chat-section-hdr{
-  padding:14px 16px 10px;
-  font-size:13px;font-weight:700;text-transform:uppercase;
+.chat-sec-hdr{
+  padding:12px 16px 10px;
+  font-size:14px;font-weight:700;text-transform:uppercase;
   letter-spacing:0.08em;color:var(--ink4);
-  border-bottom:1px solid var(--border);
+  border-bottom:1px solid var(--border-light);
 }
-.chat-list-item{
+.chat-list-row{
   display:flex;align-items:center;gap:12px;
-  padding:14px 16px;border-bottom:1px solid var(--border);
-  min-height:68px;
+  padding:14px 16px;border-bottom:1px solid var(--border-light);
+  min-height:64px;cursor:pointer;
+  transition:background 0.1s;
 }
-.chat-list-item:last-child{border-bottom:none;}
-.chat-list-item:active{background:#F8FAFC;}
-.ch-icon{
-  width:44px;height:44px;border-radius:12px;
-  background:#F1F5F9;display:flex;align-items:center;justify-content:center;
+.chat-list-row:last-child{border-bottom:none;}
+.chat-list-row:active{background:var(--bg-subtle);}
+.ch-icon-box{
+  width:44px;height:44px;border-radius:var(--r-md);
+  background:var(--bg-subtle);
+  display:flex;align-items:center;justify-content:center;
   font-size:22px;flex-shrink:0;
 }
-.ch-name{font-size:18px;font-weight:600;letter-spacing:-0.01em;}
-.ch-desc{font-size:14px;color:var(--ink4);margin-top:2px;}
-.ch-arrow{color:var(--ink4);font-size:18px;margin-left:auto;flex-shrink:0;}
-.dm-av{
+.ch-text{flex:1;min-width:0;}
+.ch-name{font-size:18px;font-weight:600;letter-spacing:-0.01em;color:var(--ink);}
+.ch-preview{font-size:14px;color:var(--ink4);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ch-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.ch-time{font-size:14px;color:var(--ink4);}
+.ch-unread{
+  min-width:20px;height:20px;border-radius:var(--r-pill);
+  background:var(--coral);color:#fff;
+  font-size:14px;font-weight:700;padding:0 6px;
+  display:flex;align-items:center;justify-content:center;
+}
+.dm-av-icon{
   width:44px;height:44px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   font-size:18px;font-weight:700;flex-shrink:0;
 }
-.dm-name{font-size:18px;font-weight:600;}
-.dm-role-lbl{font-size:13px;color:var(--ink4);margin-top:2px;text-transform:capitalize;}
+.dm-role-badge{
+  font-size:14px;color:var(--ink4);
+  text-transform:capitalize;margin-top:2px;
+}
+.ch-chevron{color:var(--ink4);font-size:18px;flex-shrink:0;}
 
-/* ════════════════════════════════
+/* ─────────────────────────────────────
    CHAT ROOM SCREEN
-════════════════════════════════ */
+───────────────────────────────────── */
 #chat-room-screen{
   position:fixed;inset:0;z-index:200;
-  background:var(--bg);
+  background:var(--cream);
   display:flex;flex-direction:column;
   transform:translateX(100%);
-  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
   will-change:transform;
 }
 #chat-room-screen.open{transform:translateX(0);}
@@ -447,180 +574,224 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
 .chat-topbar{
   flex-shrink:0;
   background:var(--navy);
-  height:calc(56px + var(--safe-top));
   padding-top:var(--safe-top);
-  display:flex;align-items:center;
-  padding-left:14px;padding-right:14px;
-  padding-bottom:0;
-  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+  height:calc(var(--topbar-h) + var(--safe-top));
+  display:flex;flex-direction:column;justify-content:flex-end;
+  box-shadow:0 2px 16px rgba(0,0,0,0.2);
 }
 .chat-topbar-inner{
-  height:56px;display:flex;align-items:center;gap:10px;width:100%;
+  height:var(--topbar-h);display:flex;align-items:center;
+  padding:0 16px;gap:12px;
 }
 .chat-back-btn{
   width:40px;height:40px;border-radius:50%;
-  background:rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.08);
   display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:20px;flex-shrink:0;
 }
-.chat-room-title{font-size:18px;font-weight:700;color:#fff;flex:1;letter-spacing:-0.01em;}
+.chat-room-name{font-size:18px;font-weight:600;color:#fff;flex:1;letter-spacing:-0.01em;}
+.chat-room-subtitle{font-size:14px;color:rgba(255,255,255,0.45);}
+
 .chat-messages{
   flex:1;overflow-y:auto;
   -webkit-overflow-scrolling:touch;
-  padding:8px 0 4px;
+  padding:8px 0 8px;
 }
 .chat-date-divider{
-  text-align:center;padding:12px 0 8px;
-  font-size:13px;color:var(--ink4);font-weight:600;
+  text-align:center;padding:16px 0 8px;
+}
+.chat-date-divider span{
+  display:inline-block;
+  background:rgba(0,0,0,0.06);border-radius:var(--r-pill);
+  padding:4px 14px;font-size:14px;font-weight:500;color:var(--ink3);
 }
 .chat-msg{
-  padding:4px 14px;
+  padding:2px 16px;
   display:flex;gap:8px;align-items:flex-end;
-  margin-bottom:2px;
+  margin-bottom:1px;
 }
 .chat-msg.mine{flex-direction:row-reverse;}
 .msg-av{
-  width:32px;height:32px;border-radius:50%;
+  width:30px;height:30px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;flex-shrink:0;
+  font-size:12px;font-weight:700;flex-shrink:0;margin-bottom:2px;
 }
-.msg-body{max-width:76%;display:flex;flex-direction:column;}
+.msg-body{max-width:78%;display:flex;flex-direction:column;}
 .chat-msg.mine .msg-body{align-items:flex-end;}
-.msg-sender{font-size:13px;font-weight:600;color:var(--ink3);margin-bottom:3px;margin-left:4px;}
+.msg-sender-name{
+  font-size:14px;font-weight:600;color:var(--ink3);
+  margin-bottom:3px;padding-left:4px;
+}
 .msg-bubble{
-  padding:11px 15px;
-  border-radius:20px;
-  border-bottom-left-radius:5px;
+  padding:10px 14px;
+  border-radius:18px;border-bottom-left-radius:4px;
   background:var(--card);
-  box-shadow:var(--shadow);
+  box-shadow:0 1px 4px rgba(0,0,0,0.07);
   font-size:16px;line-height:1.5;
   color:var(--ink);word-break:break-word;
 }
 .chat-msg.mine .msg-bubble{
   background:var(--navy);color:#fff;
-  border-bottom-left-radius:20px;
-  border-bottom-right-radius:5px;
+  border-radius:18px;border-bottom-right-radius:4px;
 }
-.msg-time{font-size:12px;color:var(--ink4);margin-top:3px;padding:0 4px;}
-.chat-empty{padding:48px 24px;text-align:center;color:var(--ink4);font-size:16px;}
+.msg-time{
+  font-size:14px;color:var(--ink4);
+  margin-top:3px;padding:0 4px;
+}
+.chat-empty{
+  display:flex;flex-direction:column;align-items:center;
+  padding:64px 24px;text-align:center;
+  font-size:16px;color:var(--ink4);
+}
+.chat-empty-icon{font-size:48px;margin-bottom:16px;}
+
 .chat-input-bar{
   flex-shrink:0;
   background:var(--white);
-  border-top:1px solid var(--border);
-  padding:10px 12px;
-  padding-bottom:calc(10px + var(--safe-bottom));
+  border-top:1px solid var(--border-light);
+  padding:8px 16px;
+  padding-bottom:calc(8px + var(--safe-bottom));
   display:flex;gap:8px;align-items:flex-end;
 }
 .chat-input{
-  flex:1;padding:12px 16px;
+  flex:1;padding:11px 16px;
   border-radius:24px;border:1.5px solid var(--border);
-  background:#F8FAFC;font-size:16px;color:var(--ink);
-  outline:none;resize:none;max-height:120px;min-height:46px;line-height:1.45;
+  background:var(--bg-subtle);font-size:16px;color:var(--ink);
+  outline:none;resize:none;max-height:120px;min-height:44px;
+  line-height:1.45;transition:border-color 0.2s;
 }
-.chat-input:focus{border-color:rgba(0,36,62,0.3);}
+.chat-input:focus{border-color:rgba(0,36,62,0.25);background:var(--white);}
 .chat-send-btn{
-  width:46px;height:46px;border-radius:50%;
+  width:44px;height:44px;border-radius:50%;
   background:var(--navy);color:#fff;
   display:flex;align-items:center;justify-content:center;
-  font-size:20px;flex-shrink:0;
+  font-size:18px;flex-shrink:0;
+  transition:opacity 0.15s,transform 0.1s;
 }
-.chat-send-btn:active{opacity:0.8;}
+.chat-send-btn:active{opacity:0.8;transform:scale(0.93);}
 
-/* ════════════════════════════════
+/* ─────────────────────────────────────
    CALENDAR TAB
-════════════════════════════════ */
+───────────────────────────────────── */
+.cal-body{padding:8px 16px 0;}
 .idea-card{
-  background:var(--card);border-radius:var(--radl);
-  padding:14px 16px;margin-bottom:10px;
+  background:var(--card);border-radius:var(--r-lg);
+  padding:16px;margin-bottom:8px;
   box-shadow:var(--shadow);
   display:flex;gap:14px;align-items:flex-start;
+  cursor:pointer;transition:box-shadow 0.15s;
 }
-.idea-date-blk{flex-shrink:0;width:40px;text-align:center;}
-.idea-day{font-size:28px;font-weight:800;color:var(--navy);line-height:1;}
-.idea-month{font-size:12px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;}
+.idea-card:active{box-shadow:var(--shadow-md);}
+.idea-date-blk{
+  flex-shrink:0;width:44px;
+  background:var(--bg-subtle);border-radius:var(--r-md);
+  padding:8px 4px;text-align:center;
+}
+.idea-day{font-size:24px;font-weight:700;color:var(--navy);line-height:1;}
+.idea-month{font-size:14px;font-weight:500;color:var(--ink4);text-transform:uppercase;margin-top:2px;}
 .idea-content{flex:1;min-width:0;}
-.idea-title{font-size:17px;font-weight:600;letter-spacing:-0.01em;margin-bottom:8px;line-height:1.3;}
-.idea-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.idea-status-pill{font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px;}
+.idea-title{font-size:18px;font-weight:600;letter-spacing:-0.01em;margin-bottom:8px;line-height:1.3;color:var(--ink);}
+.idea-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.idea-status-pill{font-size:14px;font-weight:600;padding:3px 10px;border-radius:var(--r-pill);}
 .is-idea{background:#EFF6FF;color:#1D4ED8;}
 .is-approved{background:#DCFCE7;color:#166534;}
 .is-inprod{background:#FEF3C7;color:#92400E;}
 .is-scheduled{background:#F3E8FF;color:#6B21A8;}
 .is-posted{background:#F1F5F9;color:var(--ink4);}
-.idea-plat-chip{font-size:12px;font-weight:600;padding:3px 9px;border-radius:5px;background:#F1F5F9;color:var(--ink3);}
-.idea-cat{font-size:13px;color:var(--ink4);}
+.idea-plat-chip{
+  font-size:14px;font-weight:500;padding:3px 10px;
+  border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--ink3);
+}
+.idea-cat-lbl{font-size:14px;color:var(--ink4);text-transform:capitalize;}
 
-/* ════════════════════════════════
+/* ─────────────────────────────────────
    ME TAB
-════════════════════════════════ */
+───────────────────────────────────── */
 .profile-hero{
-  background:linear-gradient(160deg,var(--navy) 0%,#001828 100%);
-  padding:36px 20px 28px;text-align:center;
+  background:linear-gradient(160deg,var(--navy) 0%,var(--navy-deep) 100%);
+  padding:40px 16px 32px;text-align:center;
+  position:relative;overflow:hidden;
 }
-.profile-av{
-  width:76px;height:76px;border-radius:50%;
+.profile-hero-ring{
+  position:absolute;right:-40px;top:-40px;
+  width:180px;height:180px;border-radius:50%;
+  background:rgba(255,255,255,0.03);
+}
+.profile-av-large{
+  width:72px;height:72px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:28px;font-weight:800;margin:0 auto 14px;
+  font-size:28px;font-weight:800;margin:0 auto 16px;
   border:3px solid rgba(255,255,255,0.2);
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
 }
-.profile-name{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.02em;}
+.profile-name-txt{font-size:24px;font-weight:700;color:#fff;letter-spacing:-0.02em;}
 .profile-role-chip{
-  display:inline-block;font-size:14px;font-weight:700;
-  padding:6px 18px;border-radius:20px;margin-top:10px;letter-spacing:0.03em;
+  display:inline-block;font-size:14px;font-weight:600;
+  padding:5px 16px;border-radius:var(--r-pill);margin-top:8px;
 }
-.prc-head{background:rgba(0,176,255,0.2);color:#7DD3FC;}
-.prc-manager{background:rgba(59,130,246,0.2);color:#93C5FD;}
-.prc-member{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);}
-.prc-approver{background:rgba(139,92,246,0.2);color:#C4B5FD;}
-.profile-email{font-size:14px;color:rgba(255,255,255,0.4);margin-top:6px;}
+.prc-head{background:rgba(0,176,255,0.18);color:#7DD3FC;}
+.prc-manager{background:rgba(59,130,246,0.18);color:#93C5FD;}
+.prc-member{background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.7);}
+.prc-approver{background:rgba(139,92,246,0.18);color:#C4B5FD;}
+.profile-email-txt{font-size:14px;color:rgba(255,255,255,0.35);margin-top:6px;}
 
-.me-section{padding:20px 16px 0;}
-.me-section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink4);margin-bottom:12px;}
-.me-list-item{
+.me-cards{padding:16px 16px 0;}
+.me-card{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--shadow);margin-bottom:8px;overflow:hidden;}
+.me-card-title{
+  font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+  color:var(--ink4);padding:14px 16px 10px;border-bottom:1px solid var(--border-light);
+}
+.me-row{
   display:flex;align-items:center;gap:14px;
-  padding:16px 0;border-bottom:1px solid var(--border);
+  padding:14px 16px;border-bottom:1px solid var(--border-light);
   min-height:56px;
 }
-.me-list-icon{font-size:22px;width:38px;text-align:center;flex-shrink:0;}
-.me-list-label{font-size:17px;font-weight:500;flex:1;}
-.me-list-val{font-size:15px;color:var(--ink4);}
+.me-row:last-child{border-bottom:none;}
+.me-row-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0;}
+.me-row-label{font-size:16px;font-weight:400;flex:1;color:var(--ink);}
+.me-row-val{font-size:14px;color:var(--ink4);}
+
 .notif-toggle{
-  width:50px;height:30px;border-radius:15px;
+  width:48px;height:28px;border-radius:14px;
   background:#CBD5E1;position:relative;cursor:pointer;
   transition:background 0.2s;flex-shrink:0;
 }
 .notif-toggle.on{background:var(--green);}
 .notif-toggle::after{
   content:'';position:absolute;top:3px;left:3px;
-  width:24px;height:24px;border-radius:50%;background:#fff;
+  width:22px;height:22px;border-radius:50%;background:#fff;
   box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform 0.2s;
 }
 .notif-toggle.on::after{transform:translateX(20px);}
-.logout-btn{
-  margin:24px 16px 28px;width:calc(100% - 32px);padding:18px;
-  border-radius:var(--radl);background:#FEE2E2;color:#991B1B;
-  font-size:17px;font-weight:700;text-align:center;
-}
-.logout-btn:active{opacity:0.8;}
-.team-item{
+
+.team-row{
   display:flex;align-items:center;gap:12px;
-  padding:10px 0;border-bottom:1px solid var(--border);
-  min-height:52px;
+  padding:10px 16px;border-bottom:1px solid var(--border-light);
+  min-height:56px;
 }
-.team-av{
+.team-row:last-child{border-bottom:none;}
+.team-av-sm{
   width:36px;height:36px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   font-size:14px;font-weight:700;flex-shrink:0;
 }
-.team-name{font-size:16px;font-weight:600;}
-.team-role{font-size:13px;color:var(--ink4);text-transform:capitalize;margin-top:1px;}
+.team-name-txt{font-size:16px;font-weight:600;color:var(--ink);}
+.team-role-txt{font-size:14px;color:var(--ink4);text-transform:capitalize;margin-top:1px;}
 
-/* ════════════════════════════════
+.signout-btn{
+  margin:16px 16px 0;width:calc(100% - 32px);height:52px;
+  border-radius:var(--r-md);background:#FEE2E2;color:#991B1B;
+  font-size:16px;font-weight:600;text-align:center;
+  transition:opacity 0.15s;
+}
+.signout-btn:active{opacity:0.8;}
+
+/* ─────────────────────────────────────
    BOTTOM SHEETS
-════════════════════════════════ */
+───────────────────────────────────── */
 .sheet-overlay{
   position:fixed;inset:0;z-index:300;
-  background:rgba(0,0,0,0.5);
+  background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);
   opacity:0;pointer-events:none;transition:opacity 0.25s;
 }
 .sheet-overlay.open{opacity:1;pointer-events:auto;}
@@ -629,111 +800,148 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
   background:var(--card);border-radius:24px 24px 0 0;
   padding-bottom:var(--safe-bottom);
   transform:translateY(100%);
-  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);
   max-height:92vh;overflow-y:auto;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.15);
 }
 .sheet.open{transform:translateY(0);}
-.sheet-handle{width:36px;height:4px;border-radius:2px;background:#CBD5E1;margin:12px auto 16px;}
-.sheet-title{font-size:22px;font-weight:800;padding:0 20px 16px;letter-spacing:-0.02em;}
-.sheet-field{padding:0 20px;margin-bottom:18px;}
-.sheet-label{font-size:14px;font-weight:600;color:var(--ink3);margin-bottom:8px;display:block;letter-spacing:0.01em;}
-.sheet-input{
-  width:100%;padding:14px 16px;border-radius:var(--rad);
-  border:1.5px solid var(--border);background:#F8FAFC;
-  font-size:17px;color:var(--ink);outline:none;
+.sheet-handle{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--border);margin:12px auto 0;
 }
-.sheet-input:focus{border-color:rgba(0,36,62,0.35);}
+.sheet-header{
+  padding:20px 20px 16px;
+  border-bottom:1px solid var(--border-light);
+  margin-bottom:8px;
+}
+.sheet-title{font-size:24px;font-weight:700;letter-spacing:-0.02em;color:var(--ink);}
+.sheet-subtitle{font-size:14px;color:var(--ink4);margin-top:4px;}
+.sheet-field{padding:0 20px;margin-bottom:16px;}
+.sheet-label{
+  font-size:14px;font-weight:500;color:var(--ink3);
+  margin-bottom:8px;display:block;
+}
+.sheet-input{
+  width:100%;padding:13px 16px;border-radius:var(--r-md);
+  border:1.5px solid var(--border);background:var(--bg-subtle);
+  font-size:16px;color:var(--ink);outline:none;
+  transition:border-color 0.2s,background 0.2s;
+  min-height:48px;
+}
+.sheet-input:focus{border-color:rgba(0,36,62,0.3);background:var(--white);}
 .sheet-textarea{resize:none;min-height:88px;line-height:1.5;}
 .sheet-select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 14px center;
-  padding-right:36px;
+  padding-right:38px;cursor:pointer;
 }
-.sheet-actions{display:flex;gap:12px;padding:8px 20px 20px;}
+.sheet-actions{
+  display:flex;gap:12px;padding:8px 20px 24px;
+  border-top:1px solid var(--border-light);
+  margin-top:8px;
+}
 .sheet-btn-cancel{
-  flex:1;padding:16px;border-radius:var(--radl);
-  background:#F1F5F9;color:var(--ink3);font-size:17px;font-weight:600;
-  min-height:52px;
+  flex:1;height:52px;border-radius:var(--r-md);
+  background:var(--bg-subtle);color:var(--ink3);
+  font-size:16px;font-weight:600;
+  transition:opacity 0.15s;
 }
-.sheet-btn-cancel:active{opacity:0.75;}
-.sheet-btn-save{
-  flex:2;padding:16px;border-radius:var(--radl);
-  background:var(--navy);color:#fff;font-size:17px;font-weight:700;
-  min-height:52px;
+.sheet-btn-cancel:active{opacity:0.7;}
+.sheet-btn-primary{
+  flex:2;height:52px;border-radius:var(--r-md);
+  background:var(--navy);color:#fff;
+  font-size:16px;font-weight:600;
+  transition:opacity 0.15s;
 }
-.sheet-btn-save:active{opacity:0.85;}
-.sheet-btn-save:disabled{opacity:0.45;}
+.sheet-btn-primary:active{opacity:0.85;}
+.sheet-btn-primary:disabled{opacity:0.4;}
+.sheet-btn-coral{
+  flex:2;height:52px;border-radius:var(--r-md);
+  background:var(--coral);color:#fff;
+  font-size:16px;font-weight:600;
+  box-shadow:0 4px 12px rgba(255,107,107,0.3);
+  transition:opacity 0.15s;
+}
+.sheet-btn-coral:active{opacity:0.85;}
 
-/* Flow detail sheet */
+/* Status picker in task detail */
+.status-row{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px;}
+.s-btn{
+  padding:0 16px;height:36px;border-radius:var(--r-pill);
+  font-size:14px;font-weight:500;
+  border:1.5px solid var(--border);color:var(--ink3);
+  transition:all 0.15s;
+}
+.s-btn.active-st{
+  border-color:var(--navy);background:var(--navy);color:#fff;font-weight:600;
+}
+
+/* Task detail fields */
+.tdf{padding:0 20px 14px;}
+.tdf-lbl{
+  font-size:14px;font-weight:500;text-transform:uppercase;
+  letter-spacing:0.06em;color:var(--ink4);margin-bottom:6px;
+}
+.tdf-val{font-size:16px;color:var(--ink);line-height:1.5;}
+
+/* Flow detail steps list */
 .fsl-item{
   display:flex;align-items:center;gap:12px;
-  padding:14px 0;border-bottom:1px solid var(--border);
+  padding:12px 20px;border-bottom:1px solid var(--border-light);
   min-height:52px;
 }
 .fsl-item:last-child{border-bottom:none;}
-.fsl-num{
+.fsl-dot{
   width:32px;height:32px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:700;flex-shrink:0;
 }
 .fsl-done{background:var(--green);color:#fff;}
 .fsl-active{background:var(--coral);color:#fff;}
-.fsl-pending{background:#F1F5F9;color:var(--ink4);}
-.fsl-name{flex:1;font-size:16px;font-weight:500;}
-.fsl-owner{font-size:14px;color:var(--ink4);text-align:right;}
-.sheet-detail-lbl{
-  font-size:13px;font-weight:700;text-transform:uppercase;
-  letter-spacing:0.08em;color:var(--ink4);
-  padding:0 20px;margin-bottom:10px;
-}
+.fsl-pending{background:var(--bg-subtle);color:var(--ink4);}
+.fsl-name{flex:1;font-size:16px;font-weight:400;color:var(--ink);}
+.fsl-name.active-step{font-weight:600;color:var(--ink);}
+.fsl-owner{font-size:14px;color:var(--ink4);}
+.fd-push-area{padding:16px 20px 8px;}
 
-/* Task detail */
-.ts-row{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px;}
-.ts-btn{
-  padding:10px 18px;border-radius:24px;
-  font-size:14px;font-weight:700;
-  border:1.5px solid var(--border);color:var(--ink4);
-  min-height:44px;
-}
-.ts-btn.active{border-color:var(--navy);background:var(--navy);color:#fff;}
-.tdf{padding:0 20px 14px;}
-.tdf-lbl{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink4);margin-bottom:6px;}
-.tdf-val{font-size:16px;color:var(--ink);}
-
-/* ════════════════════════════════
+/* ─────────────────────────────────────
    TOAST
-════════════════════════════════ */
-.toast{
+───────────────────────────────────── */
+#toast{
   position:fixed;z-index:600;
-  bottom:calc(var(--tab-h) + var(--safe-bottom) + 14px);
-  left:50%;transform:translateX(-50%) translateY(16px);
-  background:#1E293B;color:#fff;
-  border-radius:var(--rad);padding:14px 22px;
-  font-size:15px;font-weight:600;white-space:nowrap;
+  bottom:calc(var(--tabbar-h) + var(--safe-bottom) + 16px);
+  left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--ink2);color:#fff;
+  border-radius:var(--r-md);padding:13px 22px;
+  font-size:14px;font-weight:600;
+  max-width:calc(100vw - 40px);text-align:center;
+  white-space:normal;line-height:1.4;
   opacity:0;pointer-events:none;
   transition:opacity 0.2s,transform 0.2s;
-  max-width:calc(100vw - 40px);text-align:center;white-space:normal;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
 }
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.ok{background:#166534;}
+#toast.err{background:#991B1B;}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
+<!-- ══════════════════════════════════════
      LOGIN SCREEN
-════════════════════════════════════════ -->
+═══════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-logo">
     <div class="login-logo-icon">📱</div>
     <div class="login-brand">SociaDesk</div>
-    <div class="login-tagline">OneInsure Social Media</div>
+    <div class="login-tagline">OneInsure Social Media Team</div>
   </div>
   <form class="login-form" id="login-form" onsubmit="return false;">
     <div id="login-error" class="login-error"></div>
     <div class="login-field">
       <label class="login-label" for="login-email">Email</label>
       <input class="login-input" id="login-email" type="email"
-             placeholder="you@oneinsure.com" autocomplete="email"/>
+             placeholder="you@oneinsure.com" autocomplete="email" autocapitalize="none"/>
     </div>
     <div class="login-field">
       <label class="login-label" for="login-pw">Password</label>
@@ -742,34 +950,37 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
     </div>
     <button class="login-btn" id="login-btn" type="submit">Sign In</button>
   </form>
-  <div class="login-version">v3.0 · Mobile</div>
+  <div class="login-version">SociaDesk v3.1</div>
 </div>
 
-<!-- ═══════════════════════════════════════
+<!-- ══════════════════════════════════════
      APP SHELL
-════════════════════════════════════════ -->
+═══════════════════════════════════════ -->
 <div id="app">
 
-  <!-- Top Bar -->
+  <!-- TOP BAR -->
   <div class="topbar" id="topbar">
-    <div class="topbar-inner">
-      <button class="topbar-btn" id="topbar-back-btn" style="display:none;" onclick="handleTopBack()">&#8592;</button>
-      <div class="topbar-title" id="topbar-title">Today</div>
-      <button class="topbar-action-btn" id="topbar-action-btn" style="visibility:hidden;" onclick="handleTopAction()">+</button>
+    <div class="topbar-inner" id="topbar-inner">
+      <!-- Content injected by switchTab() -->
     </div>
   </div>
 
-  <!-- Panels -->
+  <!-- PANELS -->
   <div class="panels" id="panels">
 
     <!-- ── TODAY ── -->
     <div class="panel active" id="panel-today">
-      <div class="today-hero">
+      <div class="today-hero" id="today-hero">
         <div class="today-greeting" id="today-greeting">Good morning!</div>
-        <div class="today-date" id="today-date"></div>
+        <div class="today-date-lbl" id="today-date-lbl"></div>
+        <div class="stats-row" id="today-stats">
+          <div class="stat-pill"><div class="stat-pill-val" id="stat-flows">0</div><div class="stat-pill-lbl">Flows</div></div>
+          <div class="stat-pill"><div class="stat-pill-val" id="stat-tasks">0</div><div class="stat-pill-lbl">Open Tasks</div></div>
+          <div class="stat-pill"><div class="stat-pill-val" id="stat-myturn">0</div><div class="stat-pill-lbl">Your Turn</div></div>
+        </div>
       </div>
-      <div class="today-section">
-        <div class="section-label" style="padding:0 0 4px;">Content Flows</div>
+      <div class="today-body">
+        <div class="section-hdr">Content Flows</div>
         <div id="flows-list"><div class="loader"><div class="spinner"></div></div></div>
       </div>
       <div class="page-bottom"></div>
@@ -777,15 +988,15 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
 
     <!-- ── TASKS ── -->
     <div class="panel" id="panel-tasks">
-      <div class="page-pad">
-        <div class="filter-row" id="task-filters">
-          <button class="filter-chip active" onclick="setTaskFilter('all',this)">All</button>
-          <button class="filter-chip" onclick="setTaskFilter('todo',this)">To Do</button>
-          <button class="filter-chip" onclick="setTaskFilter('inprogress',this)">In Progress</button>
-          <button class="filter-chip" onclick="setTaskFilter('review',this)">Review</button>
-          <button class="filter-chip" onclick="setTaskFilter('blocked',this)">Blocked</button>
-          <button class="filter-chip" onclick="setTaskFilter('done',this)">Done</button>
-        </div>
+      <div class="filter-row" id="task-filter-row">
+        <button class="filter-chip active" onclick="setTaskFilter('all',this)">All</button>
+        <button class="filter-chip" onclick="setTaskFilter('todo',this)">To Do</button>
+        <button class="filter-chip" onclick="setTaskFilter('inprogress',this)">In Progress</button>
+        <button class="filter-chip" onclick="setTaskFilter('review',this)">Review</button>
+        <button class="filter-chip" onclick="setTaskFilter('blocked',this)">Blocked</button>
+        <button class="filter-chip" onclick="setTaskFilter('done',this)">Done</button>
+      </div>
+      <div class="tasks-body">
         <div id="tasks-list"><div class="loader"><div class="spinner"></div></div></div>
       </div>
       <div class="page-bottom"></div>
@@ -793,28 +1004,30 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
 
     <!-- ── CHAT ── -->
     <div class="panel" id="panel-chat">
-      <div class="chat-section">
-        <div class="chat-section-hdr">Channels</div>
-        <div id="channel-list-items"></div>
-      </div>
-      <div class="chat-section">
-        <div class="chat-section-hdr">Direct Messages</div>
-        <div id="dm-list-items"></div>
+      <div class="chat-list-body">
+        <div class="chat-section-card" id="channels-card">
+          <div class="chat-sec-hdr">Channels</div>
+          <div id="channel-list-items"></div>
+        </div>
+        <div class="chat-section-card">
+          <div class="chat-sec-hdr">Direct Messages</div>
+          <div id="dm-list-items"></div>
+        </div>
       </div>
       <div class="page-bottom"></div>
     </div>
 
     <!-- ── CALENDAR ── -->
     <div class="panel" id="panel-calendar">
-      <div class="page-pad">
-        <div class="filter-row" id="idea-filters">
-          <button class="filter-chip active" onclick="setIdeaFilter('all',this)">All</button>
-          <button class="filter-chip" onclick="setIdeaFilter('idea',this)">Ideas</button>
-          <button class="filter-chip" onclick="setIdeaFilter('approved',this)">Approved</button>
-          <button class="filter-chip" onclick="setIdeaFilter('inprod',this)">In Prod</button>
-          <button class="filter-chip" onclick="setIdeaFilter('scheduled',this)">Scheduled</button>
-          <button class="filter-chip" onclick="setIdeaFilter('posted',this)">Posted</button>
-        </div>
+      <div class="filter-row" id="idea-filter-row">
+        <button class="filter-chip active" onclick="setIdeaFilter('all',this)">All</button>
+        <button class="filter-chip" onclick="setIdeaFilter('idea',this)">Idea</button>
+        <button class="filter-chip" onclick="setIdeaFilter('approved',this)">Approved</button>
+        <button class="filter-chip" onclick="setIdeaFilter('inprod',this)">In Prod</button>
+        <button class="filter-chip" onclick="setIdeaFilter('scheduled',this)">Scheduled</button>
+        <button class="filter-chip" onclick="setIdeaFilter('posted',this)">Posted</button>
+      </div>
+      <div class="cal-body">
         <div id="ideas-list"><div class="loader"><div class="spinner"></div></div></div>
       </div>
       <div class="page-bottom"></div>
@@ -823,83 +1036,94 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
     <!-- ── ME ── -->
     <div class="panel" id="panel-me">
       <div class="profile-hero" id="profile-hero">
-        <div class="profile-av" id="profile-av">?</div>
-        <div class="profile-name" id="profile-name">Loading…</div>
+        <div class="profile-hero-ring"></div>
+        <div class="profile-av-large" id="profile-av">?</div>
+        <div class="profile-name-txt" id="profile-name">Loading…</div>
         <div class="profile-role-chip prc-member" id="profile-role">—</div>
-        <div class="profile-email" id="profile-email">—</div>
+        <div class="profile-email-txt" id="profile-email-txt">—</div>
       </div>
-      <div class="me-section">
-        <div class="me-section-title">Account</div>
-        <div class="me-list-item">
-          <div class="me-list-icon">🔔</div>
-          <div class="me-list-label">Notifications</div>
-          <div class="notif-toggle on" id="notif-toggle" onclick="toggleNotif()"></div>
+      <div class="me-cards">
+        <div class="me-card">
+          <div class="me-card-title">Account</div>
+          <div class="me-row">
+            <div class="me-row-icon">🔔</div>
+            <div class="me-row-label">Notifications</div>
+            <div class="notif-toggle on" id="notif-toggle" onclick="toggleNotif()"></div>
+          </div>
+          <div class="me-row">
+            <div class="me-row-icon">🏢</div>
+            <div class="me-row-label">Team</div>
+            <div class="me-row-val">OneInsure Social</div>
+          </div>
+          <div class="me-row">
+            <div class="me-row-icon">📱</div>
+            <div class="me-row-label">App Version</div>
+            <div class="me-row-val">3.1.0</div>
+          </div>
         </div>
-        <div class="me-list-item">
-          <div class="me-list-icon">🏢</div>
-          <div class="me-list-label">Team</div>
-          <div class="me-list-val">OneInsure Social</div>
-        </div>
-        <div class="me-list-item">
-          <div class="me-list-icon">📱</div>
-          <div class="me-list-label">App Version</div>
-          <div class="me-list-val">3.0.0</div>
+        <div class="me-card" id="me-team-card">
+          <div class="me-card-title">Team Members</div>
+          <div id="me-team-list"></div>
         </div>
       </div>
-      <div class="me-section" style="margin-top:12px;">
-        <div class="me-section-title">Team Members</div>
-        <div id="me-team-list"></div>
-      </div>
-      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
-      <div style="height:24px;"></div>
+      <button class="signout-btn" onclick="doLogout()">Sign Out</button>
+      <div style="height:32px;"></div>
     </div>
 
   </div><!-- /panels -->
 
-  <!-- Tab Bar -->
-  <div class="tabbar">
+  <!-- TAB BAR -->
+  <div class="tabbar" id="tabbar">
     <button class="tab active" id="tab-today" onclick="switchTab('today')">
       <div class="tab-icon">🏠</div>
       <div class="tab-label">Today</div>
-      <div class="tab-bar"></div>
+      <div class="tab-indicator"></div>
     </button>
     <button class="tab" id="tab-tasks" onclick="switchTab('tasks')">
       <div class="tab-icon">✅</div>
       <div class="tab-label">Tasks</div>
       <div class="tab-dot" id="tasks-dot"></div>
-      <div class="tab-bar"></div>
+      <div class="tab-indicator"></div>
     </button>
     <button class="tab" id="tab-chat" onclick="switchTab('chat')">
       <div class="tab-icon">💬</div>
       <div class="tab-label">Chat</div>
       <div class="tab-dot" id="chat-dot"></div>
-      <div class="tab-bar"></div>
+      <div class="tab-indicator"></div>
     </button>
     <button class="tab" id="tab-calendar" onclick="switchTab('calendar')">
       <div class="tab-icon">📅</div>
       <div class="tab-label">Calendar</div>
-      <div class="tab-bar"></div>
+      <div class="tab-indicator"></div>
     </button>
     <button class="tab" id="tab-me" onclick="switchTab('me')">
       <div class="tab-icon">👤</div>
       <div class="tab-label">Me</div>
-      <div class="tab-bar"></div>
+      <div class="tab-indicator"></div>
     </button>
   </div>
 
 </div><!-- /app -->
 
-<!-- ═══════════════════════════════════════
+<!-- ══════════════════════════════════════
      CHAT ROOM SCREEN
-════════════════════════════════════════ -->
+═══════════════════════════════════════ -->
 <div id="chat-room-screen">
   <div class="chat-topbar">
     <div class="chat-topbar-inner">
       <button class="chat-back-btn" onclick="closeChatRoom()">&#8592;</button>
-      <div class="chat-room-title" id="chat-room-title">Chat</div>
+      <div style="flex:1;min-width:0;">
+        <div class="chat-room-name" id="chat-room-title">Chat</div>
+        <div class="chat-room-subtitle" id="chat-room-subtitle"></div>
+      </div>
     </div>
   </div>
-  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-empty">
+      <div class="chat-empty-icon">💬</div>
+      Loading messages…
+    </div>
+  </div>
   <div class="chat-input-bar">
     <textarea class="chat-input" id="chat-input" placeholder="Message…" rows="1"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"
@@ -911,15 +1135,18 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
 <!-- FAB -->
 <button class="fab hidden" id="main-fab" onclick="handleFab()">+</button>
 
-<!-- ═══════════════════════════════════════
+<!-- ══════════════════════════════════════
      BOTTOM SHEETS
-════════════════════════════════════════ -->
+═══════════════════════════════════════ -->
 <div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
 
-<!-- New Task -->
+<!-- New Task Sheet -->
 <div class="sheet" id="sheet-new-task">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">New Task</div>
+  <div class="sheet-header">
+    <div class="sheet-title">New Task</div>
+    <div class="sheet-subtitle">Add to team task board</div>
+  </div>
   <div class="sheet-field">
     <label class="sheet-label">Title *</label>
     <input class="sheet-input" id="nt-title" type="text" placeholder="What needs to be done?"/>
@@ -942,18 +1169,21 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
   </div>
   <div class="sheet-field">
     <label class="sheet-label">Notes</label>
-    <textarea class="sheet-input sheet-textarea" id="nt-notes" placeholder="Additional notes…"></textarea>
+    <textarea class="sheet-input sheet-textarea" id="nt-notes" placeholder="Additional context…"></textarea>
   </div>
   <div class="sheet-actions">
     <button class="sheet-btn-cancel" onclick="closeSheet()">Cancel</button>
-    <button class="sheet-btn-save" id="nt-save-btn" onclick="saveNewTask()">Create Task</button>
+    <button class="sheet-btn-primary" id="nt-save-btn" onclick="saveNewTask()">Create Task</button>
   </div>
 </div>
 
-<!-- New Idea -->
+<!-- New Idea Sheet -->
 <div class="sheet" id="sheet-new-idea">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">Content Idea</div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="idea-sheet-title">Content Idea</div>
+    <div class="sheet-subtitle">Add to content calendar</div>
+  </div>
   <div class="sheet-field">
     <label class="sheet-label">Title *</label>
     <input class="sheet-input" id="ni-title" type="text" placeholder="Content idea title…"/>
@@ -983,21 +1213,23 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
   </div>
   <div class="sheet-field">
     <label class="sheet-label">Notes</label>
-    <textarea class="sheet-input sheet-textarea" id="ni-notes" placeholder="Details…"></textarea>
+    <textarea class="sheet-input sheet-textarea" id="ni-notes" placeholder="Details, brief, references…"></textarea>
   </div>
   <div class="sheet-actions">
     <button class="sheet-btn-cancel" onclick="closeSheet()">Cancel</button>
-    <button class="sheet-btn-save" id="ni-save-btn" onclick="saveNewIdea()">Save Idea</button>
+    <button class="sheet-btn-primary" id="ni-save-btn" onclick="saveNewIdea()">Save Idea</button>
   </div>
 </div>
 
-<!-- Task Detail -->
+<!-- Task Detail Sheet -->
 <div class="sheet" id="sheet-task-detail">
   <div class="sheet-handle"></div>
-  <div class="sheet-title" id="td-title">Task</div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="td-title">Task</div>
+  </div>
   <div class="tdf">
     <div class="tdf-lbl">Status</div>
-    <div class="ts-row" id="td-status-row"></div>
+    <div class="status-row" id="td-status-row"></div>
   </div>
   <div class="tdf">
     <div class="tdf-lbl">Priority</div>
@@ -1008,38 +1240,37 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
     <div class="tdf-val" id="td-assignee">—</div>
   </div>
   <div class="tdf">
-    <div class="tdf-lbl">Due</div>
+    <div class="tdf-lbl">Due Date</div>
     <div class="tdf-val" id="td-due">—</div>
   </div>
   <div class="tdf" id="td-notes-wrap" style="display:none;">
     <div class="tdf-lbl">Notes</div>
-    <div class="tdf-val" id="td-notes" style="line-height:1.55;"></div>
+    <div class="tdf-val" id="td-notes" style="line-height:1.6;"></div>
   </div>
   <div class="sheet-actions">
     <button class="sheet-btn-cancel" onclick="closeSheet()">Close</button>
-    <button class="sheet-btn-save" onclick="updateCurrentTaskStatus()">Save</button>
+    <button class="sheet-btn-primary" onclick="updateCurrentTaskStatus()">Save Changes</button>
   </div>
 </div>
 
-<!-- Flow Detail -->
+<!-- Flow Detail Sheet -->
 <div class="sheet" id="sheet-flow-detail">
   <div class="sheet-handle"></div>
-  <div class="sheet-title" id="fd-title">Flow</div>
-  <div style="padding:0 20px 16px;">
-    <div class="sheet-detail-lbl" style="padding:0;margin-bottom:10px;">Platforms</div>
-    <div class="plat-row" id="fd-plats" style="margin-bottom:20px;"></div>
-    <div class="sheet-detail-lbl" style="padding:0;margin-bottom:10px;">Steps</div>
-    <div id="fd-steps"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="fd-title">Flow</div>
+    <div class="plat-row" id="fd-plats" style="margin-top:10px;"></div>
   </div>
-  <div id="fd-push-area" style="padding:0 20px 20px;"></div>
+  <div id="fd-steps"></div>
+  <div class="fd-push-area" id="fd-push-area"></div>
+  <div style="height:8px;"></div>
 </div>
 
 <!-- Toast -->
-<div class="toast" id="toast"></div>
+<div id="toast"></div>
 
-<!-- ═══════════════════════════════════════
+<!-- ══════════════════════════════════════
      FIREBASE SDKs
-════════════════════════════════════════ -->
+═══════════════════════════════════════ -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -1047,9 +1278,9 @@ input,textarea,select{font-family:inherit;font-size:16px;-webkit-appearance:none
 <script>
 'use strict';
 
-/* ════════════════════════════
+/* ════════════════════════════════
    FIREBASE INIT
-════════════════════════════ */
+════════════════════════════════ */
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyB_nGni2FOnZpAUkG_AhQ_EtVDZj9oh3Xg",
   authDomain: "social-desk-d823c.firebaseapp.com",
@@ -1062,57 +1293,16 @@ firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-/* ════════════════════════════
-   CONSTANTS
-════════════════════════════ */
-const MEMBERS = [
-  {name:'Akshay',    role:'head',     av:'av-c'},
-  {name:'Chirag',    role:'manager',  av:'av-a'},
-  {name:'Anamika',   role:'manager',  av:'av-b'},
-  {name:'Shivam',    role:'member',   av:'av-d'},
-  {name:'Sandeep',   role:'member',   av:'av-e'},
-  {name:'Shantanu',  role:'member',   av:'av-a'},
-  {name:'Deepanshu', role:'member',   av:'av-c'},
-  {name:'Harsh',     role:'member',   av:'av-d'},
-  {name:'Pawan',     role:'member',   av:'av-b'},
-  {name:'Ria',       role:'member',   av:'av-b'},
-  {name:'Isha',      role:'member',   av:'av-e'},
-  {name:'Tamanna',   role:'member',   av:'av-a'},
-  {name:'Rochelle',  role:'approver', av:'av-f'},
-  {name:'Anirudh',   role:'approver', av:'av-g'},
-  {name:'Susant',    role:'approver', av:'av-h'},
-  {name:'Nasita',    role:'approver', av:'av-i'},
-];
-const EMAIL_TO_MEMBER = {
-  'akshay.raje@oneinsure.com':          {name:'Akshay',    role:'head',     av:'av-c'},
-  'chirag.bhoir@oneinsure.com':         {name:'Chirag',    role:'manager',  av:'av-a'},
-  'anamika.patil@oneinsure.com':        {name:'Anamika',   role:'manager',  av:'av-b'},
-  'shivam.kumar@oneinsure.com':         {name:'Shivam',    role:'member',   av:'av-d'},
-  'sandeep.gawade@oneinsure.com':       {name:'Sandeep',   role:'member',   av:'av-e'},
-  'shantanu.tiwari@oneinsure.com':      {name:'Shantanu',  role:'member',   av:'av-a'},
-  'deepanshu.sharma@oneinsure.com':     {name:'Deepanshu', role:'member',   av:'av-c'},
-  'harsh.das@oneinsure.com':            {name:'Harsh',     role:'member',   av:'av-d'},
-  'pawan.sonar@oneinsure.com':          {name:'Pawan',     role:'member',   av:'av-b'},
-  'ria.panchal@oneinsure.com':          {name:'Ria',       role:'member',   av:'av-b'},
-  'isha.upadhye@oneinsure.com':         {name:'Isha',      role:'member',   av:'av-e'},
-  'tamanna.shaikh@oneinsure.com':       {name:'Tamanna',   role:'member',   av:'av-a'},
-  'rochelle.mascarenhas@oneinsure.com': {name:'Rochelle',  role:'approver', av:'av-f'},
-  'anirudh.baardwaj@oneinsure.com':     {name:'Anirudh',   role:'approver', av:'av-g'},
-  'susant.padhi@oneinsure.com':         {name:'Susant',    role:'approver', av:'av-h'},
-  'nasita.londhe@oneinsure.com':        {name:'Nasita',    role:'approver', av:'av-i'},
-};
-const CHAT_ROOMS = [
-  {id:'general',    label:'General',    icon:'🌐', desc:'Team-wide conversation'},
-  {id:'editing',    label:'Editing',    icon:'✂️',  desc:'Editing & post production'},
-  {id:'ideas',      label:'Ideas',      icon:'💡', desc:'Creative brainstorming'},
-  {id:'compliance', label:'Compliance', icon:'⚖️', desc:'Compliance & approvals'},
-  {id:'tasks',      label:'Tasks',      icon:'✅', desc:'Task coordination'},
-  {id:'leads',      label:'Leads',      icon:'🎯', desc:'Leads & pipeline'},
-];
+/* ════════════════════════════════
+   DATA CONSTANTS
+════════════════════════════════ */
+const MEMBERS=[{name:'Akshay',role:'head',av:'av-c'},{name:'Chirag',role:'manager',av:'av-a'},{name:'Anamika',role:'manager',av:'av-b'},{name:'Shivam',role:'member',av:'av-d'},{name:'Sandeep',role:'member',av:'av-e'},{name:'Shantanu',role:'member',av:'av-a'},{name:'Deepanshu',role:'member',av:'av-c'},{name:'Harsh',role:'member',av:'av-d'},{name:'Pawan',role:'member',av:'av-b'},{name:'Ria',role:'member',av:'av-b'},{name:'Isha',role:'member',av:'av-e'},{name:'Tamanna',role:'member',av:'av-a'},{name:'Rochelle',role:'approver',av:'av-f'},{name:'Anirudh',role:'approver',av:'av-g'},{name:'Susant',role:'approver',av:'av-h'},{name:'Nasita',role:'approver',av:'av-i'}];
+const EMAIL_TO_MEMBER={'akshay.raje@oneinsure.com':{name:'Akshay',role:'head',av:'av-c'},'chirag.bhoir@oneinsure.com':{name:'Chirag',role:'manager',av:'av-a'},'anamika.patil@oneinsure.com':{name:'Anamika',role:'manager',av:'av-b'},'shivam.kumar@oneinsure.com':{name:'Shivam',role:'member',av:'av-d'},'sandeep.gawade@oneinsure.com':{name:'Sandeep',role:'member',av:'av-e'},'shantanu.tiwari@oneinsure.com':{name:'Shantanu',role:'member',av:'av-a'},'deepanshu.sharma@oneinsure.com':{name:'Deepanshu',role:'member',av:'av-c'},'harsh.das@oneinsure.com':{name:'Harsh',role:'member',av:'av-d'},'pawan.sonar@oneinsure.com':{name:'Pawan',role:'member',av:'av-b'},'ria.panchal@oneinsure.com':{name:'Ria',role:'member',av:'av-b'},'isha.upadhye@oneinsure.com':{name:'Isha',role:'member',av:'av-e'},'tamanna.shaikh@oneinsure.com':{name:'Tamanna',role:'member',av:'av-a'},'rochelle.mascarenhas@oneinsure.com':{name:'Rochelle',role:'approver',av:'av-f'},'anirudh.baardwaj@oneinsure.com':{name:'Anirudh',role:'approver',av:'av-g'},'susant.padhi@oneinsure.com':{name:'Susant',role:'approver',av:'av-h'},'nasita.londhe@oneinsure.com':{name:'Nasita',role:'approver',av:'av-i'}};
+const CHAT_ROOMS=[{id:'general',label:'General',icon:'🌐',desc:'Team announcements & chat'},{id:'editing',label:'Editing',icon:'✂️',desc:'Video & image editing'},{id:'ideas',label:'Ideas',icon:'💡',desc:'Brainstorming & concepts'},{id:'compliance',label:'Compliance',icon:'⚖️',desc:'Approvals & compliance'},{id:'tasks',label:'Tasks',icon:'✅',desc:'Task coordination'},{id:'leads',label:'Leads',icon:'🎯',desc:'Leads & pipeline'}];
 
-/* ════════════════════════════
+/* ════════════════════════════════
    APP STATE
-════════════════════════════ */
+════════════════════════════════ */
 let currentUser       = null;
 let currentMember     = null;
 let currentTab        = 'today';
@@ -1131,19 +1321,83 @@ let currentTaskDetail = null;
 let notifEnabled      = true;
 let editingIdeaId     = null;
 
-/* ════════════════════════════
-   SAFE JSON HELPER
-════════════════════════════ */
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
 function safeJSON(val, def) {
-  if (typeof val === 'string') {
-    try { return JSON.parse(val); } catch(e) { return def; }
-  }
-  return (val !== null && val !== undefined) ? val : def;
+  if (typeof val === 'string') { try { return JSON.parse(val); } catch(e) { return def; } }
+  return (val != null) ? val : def;
 }
 
-/* ════════════════════════════
+function getStepOwner(f, i) {
+  const sub = safeJSON(f.subAssignees, {});
+  return sub[i] || sub[String(i)] || (f.stepOwners || [])[i] || '';
+}
+
+function isMyTurn(f) {
+  if (!currentMember) return false;
+  const statuses = f.stepStatuses || [];
+  const cs = f.currentStep || 0;
+  return statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+function formatDate(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
+}
+
+function formatChatDate(d) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const yd    = new Date(today); yd.setDate(yd.getDate()-1);
+  const msg   = new Date(d);    msg.setHours(0,0,0,0);
+  if (+msg === +today) return 'Today';
+  if (+msg === +yd)    return 'Yesterday';
+  return d.toLocaleDateString('en-IN', {day:'numeric', month:'short'});
+}
+
+function platClass(p) {
+  if (!p) return 'pc-default';
+  const lc = p.toLowerCase();
+  if (lc.includes('instagram')) return 'pc-instagram';
+  if (lc.includes('facebook'))  return 'pc-facebook';
+  if (lc.includes('linkedin'))  return 'pc-linkedin';
+  if (lc.includes('twitter') || lc === 'x') return 'pc-twitter';
+  if (lc.includes('youtube'))   return 'pc-youtube';
+  if (lc.includes('reels'))     return 'pc-reels';
+  return 'pc-default';
+}
+
+function dmRoomId(a, b) { return 'dm_' + [a, b].sort().join('_'); }
+
+function autoResizeTA(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+let toastTimer = null;
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'show' + (type ? ' ' + type : '');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 3000);
+}
+
+/* ════════════════════════════════
    AUTH
-════════════════════════════ */
+════════════════════════════════ */
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser   = user;
@@ -1164,26 +1418,24 @@ document.getElementById('login-form').addEventListener('submit', async e => {
   const btn   = document.getElementById('login-btn');
   const errEl = document.getElementById('login-error');
   errEl.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Signing in…';
+  btn.disabled = true; btn.textContent = 'Signing in…';
   try {
     await auth.signInWithEmailAndPassword(email, pw);
   } catch(err) {
     errEl.style.display = 'block';
-    errEl.textContent = friendlyAuthError(err.code);
-    btn.disabled = false;
-    btn.textContent = 'Sign In';
+    errEl.textContent   = friendlyAuthError(err.code);
+    btn.disabled = false; btn.textContent = 'Sign In';
   }
 });
 
 function friendlyAuthError(code) {
   const map = {
-    'auth/user-not-found':       'No account found with this email.',
-    'auth/wrong-password':       'Incorrect password. Please try again.',
-    'auth/invalid-email':        'Please enter a valid email address.',
-    'auth/too-many-requests':    'Too many attempts. Please wait a moment.',
-    'auth/network-request-failed':'Network error. Check your connection.',
-    'auth/invalid-credential':   'Invalid email or password.',
+    'auth/user-not-found':         'No account found with this email.',
+    'auth/wrong-password':         'Incorrect password. Please try again.',
+    'auth/invalid-email':          'Please enter a valid email address.',
+    'auth/too-many-requests':      'Too many attempts. Please wait a moment.',
+    'auth/network-request-failed': 'Network error. Check your connection.',
+    'auth/invalid-credential':     'Invalid email or password.',
   };
   return map[code] || 'Sign in failed. Please try again.';
 }
@@ -1196,7 +1448,7 @@ function showLogin() {
 
 function showApp() {
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.display          = 'flex';
   initApp();
 }
 
@@ -1205,9 +1457,9 @@ async function doLogout() {
   await auth.signOut();
 }
 
-/* ════════════════════════════
+/* ════════════════════════════════
    APP INIT
-════════════════════════════ */
+════════════════════════════════ */
 function initApp() {
   setupGreeting();
   populateSelects();
@@ -1216,12 +1468,8 @@ function initApp() {
   setupProfile();
   startListeners();
   switchTab('today');
-  // default date inputs to today
   const t = todayStr();
-  ['nt-due','ni-date'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = t;
-  });
+  ['nt-due','ni-date'].forEach(id => { const el = document.getElementById(id); if (el) el.value = t; });
 }
 
 function stopListeners() {
@@ -1232,200 +1480,197 @@ function stopListeners() {
 }
 
 function startListeners() {
-  // Flows: stored in flows/active doc as { flows: [...], updatedAt }
   flowsUnsub = db.collection('flows').doc('active').onSnapshot(snap => {
-    if (snap.exists) {
-      allFlows = snap.data().flows || [];
-    } else {
-      allFlows = [];
-    }
+    allFlows = snap.exists ? (snap.data().flows || []) : [];
     renderFlows();
-  }, err => console.warn('flows listener error', err));
+    updateTodayStats();
+  }, err => console.warn('flows err', err));
 
-  // Tasks
   tasksUnsub = db.collection('tasks').orderBy('createdAt','desc').onSnapshot(snap => {
     allTasks = snap.docs.map(d => ({id:d.id, ...d.data()}));
     renderTasks();
     updateTaskBadge();
-  }, err => console.warn('tasks listener error', err));
+    updateTodayStats();
+  }, err => console.warn('tasks err', err));
 
-  // Ideas
   ideasUnsub = db.collection('config').doc('extended').onSnapshot(snap => {
     if (snap.exists) {
-      allIdeas = (snap.data().contentIdeas || [])
-        .slice()
-        .sort((a,b) => (a.date||'') > (b.date||'') ? 1 : -1);
-    } else {
-      allIdeas = [];
-    }
+      allIdeas = (snap.data().contentIdeas || []).slice().sort((a,b) => (a.date||'') > (b.date||'') ? 1 : -1);
+    } else { allIdeas = []; }
     renderIdeas();
-  }, err => console.warn('ideas listener error', err));
+  }, err => console.warn('ideas err', err));
 }
 
-/* ════════════════════════════
-   GREETING
-════════════════════════════ */
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-
+/* ════════════════════════════════
+   GREETING & STATS
+════════════════════════════════ */
 function setupGreeting() {
   const h = new Date().getHours();
   const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   const name = currentMember ? currentMember.name : '';
   document.getElementById('today-greeting').textContent = `${g}, ${name}!`;
-  document.getElementById('today-date').textContent =
-    new Date().toLocaleDateString('en-IN', {weekday:'long', month:'long', day:'numeric'});
+  document.getElementById('today-date-lbl').textContent =
+    new Date().toLocaleDateString('en-IN', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
 }
 
-/* ════════════════════════════
+function updateTodayStats() {
+  const activeFlows = allFlows.filter(f => {
+    const s = f.stepStatuses || [];
+    return s.length > 0 && !s.every(x => x === 'done');
+  }).length;
+  const openTasks = allTasks.filter(t => t.status !== 'done').length;
+  const myTurn    = allFlows.filter(f => isMyTurn(f)).length;
+  const flowEl = document.getElementById('stat-flows');
+  const taskEl = document.getElementById('stat-tasks');
+  const turnEl = document.getElementById('stat-myturn');
+  if (flowEl) flowEl.textContent = activeFlows;
+  if (taskEl) taskEl.textContent = openTasks;
+  if (turnEl) turnEl.textContent = myTurn;
+}
+
+/* ════════════════════════════════
    FLOWS / TODAY TAB
-════════════════════════════ */
-
-/**
- * Determine whose turn it is for a flow step.
- * Uses subAssignees (JSON string) as override over stepOwners.
- */
-function getStepOwner(f, stepIndex) {
-  const sub = safeJSON(f.subAssignees, {});
-  return sub[stepIndex] || sub[String(stepIndex)]
-      || (f.stepOwners || [])[stepIndex]
-      || '';
-}
-
-function isMyTurn(f) {
-  const cs = f.currentStep || 0;
-  const statuses = f.stepStatuses || [];
-  return statuses[cs] === 'active' && getStepOwner(f, cs) === (currentMember ? currentMember.name : '');
-}
-
-function platClass(p) {
-  if (!p) return 'pc-default';
-  const lc = p.toLowerCase();
-  if (lc.includes('instagram')) return 'pc-instagram';
-  if (lc.includes('facebook'))  return 'pc-facebook';
-  if (lc.includes('linkedin'))  return 'pc-linkedin';
-  if (lc.includes('twitter') || lc === 'x') return 'pc-twitter';
-  if (lc.includes('youtube'))   return 'pc-youtube';
-  if (lc.includes('reels'))     return 'pc-reels';
-  return 'pc-default';
-}
-
+════════════════════════════════ */
 function renderFlows() {
   const el = document.getElementById('flows-list');
   if (!el) return;
   if (!allFlows.length) {
     el.innerHTML = `<div class="empty-state">
       <div class="empty-icon">🎬</div>
-      <div class="empty-title">No flows today</div>
-      <div class="empty-sub">Content production flows will appear here when created.</div>
+      <div class="empty-title">No active flows</div>
+      <div class="empty-sub">Content production flows will appear here when created from the desktop app.</div>
     </div>`;
     return;
   }
-  el.innerHTML = allFlows.map(f => buildFlowCard(f)).join('');
+  // Sort: my-turn first, then active, then done
+  const sorted = [...allFlows].sort((a, b) => {
+    const am = isMyTurn(a) ? 0 : 1;
+    const bm = isMyTurn(b) ? 0 : 1;
+    return am - bm;
+  });
+  el.innerHTML = sorted.map(f => buildFlowCard(f)).join('');
 }
 
 function buildFlowCard(f) {
-  const cs        = parseInt(f.currentStep) || 0;
-  const statuses  = f.stepStatuses || [];
-  const stepNames = f.stepNames   || [];
-  const allDone   = statuses.length > 0 && statuses.every(s => s === 'done');
-  const mine      = isMyTurn(f);
-  const stepOwner = getStepOwner(f, cs);
-  const curName   = stepNames[cs] || `Step ${cs + 1}`;
+  const cs         = parseInt(f.currentStep) || 0;
+  const statuses   = f.stepStatuses || [];
+  const stepNames  = f.stepNames    || [];
+  const totalSteps = Math.max(statuses.length, stepNames.length, 1);
+  const allDone    = statuses.length > 0 && statuses.every(s => s === 'done');
+  const mine       = isMyTurn(f);
+  const stepOwner  = getStepOwner(f, cs);
+  const curName    = stepNames[cs] || `Step ${cs + 1}`;
 
-  // Platforms
+  // Platform chips
   const plats = (f.platforms || []).map(p =>
     `<span class="plat-chip ${platClass(p)}">${escHtml(p)}</span>`
   ).join('');
 
-  // Step dots
-  const totalSteps = statuses.length || stepNames.length || 1;
+  // Step dots (max 8 visible to avoid overflow)
+  const MAX_DOTS = 8;
+  const showTotal = Math.min(totalSteps, MAX_DOTS);
   let dotsHtml = '';
-  for (let i = 0; i < totalSteps; i++) {
+  for (let i = 0; i < showTotal; i++) {
     const st = statuses[i] || 'pending';
-    let dotCls = 'sdot-pending';
-    if (st === 'done') dotCls = 'sdot-done';
-    else if (st === 'active') dotCls = 'sdot-active';
-    dotsHtml += `<div class="sdot ${dotCls}">${i+1}</div>`;
-    if (i < totalSteps - 1) {
-      const lineCls = st === 'done' ? 'sdot-line-done' : 'sdot-line-pending';
-      dotsHtml += `<div class="sdot-line ${lineCls}"></div>`;
+    let cls = 'sdot-pending';
+    if (st === 'done')   cls = 'sdot-done';
+    if (st === 'active') cls = 'sdot-active';
+    dotsHtml += `<div class="sdot ${cls}">${i+1}</div>`;
+    if (i < showTotal - 1) {
+      dotsHtml += `<div class="sdot-line ${st === 'done' ? 'sdot-line-done' : 'sdot-line-pending'}"></div>`;
     }
+  }
+  if (totalSteps > MAX_DOTS) {
+    dotsHtml += `<div style="font-size:14px;color:var(--ink4);margin-left:6px;">+${totalSteps-MAX_DOTS}</div>`;
   }
 
   // Footer
-  let footerHtml = '';
+  let footHtml = '';
   if (allDone) {
-    footerHtml = `<div class="flow-done-banner">All steps complete</div>`;
+    footHtml = `<div class="flow-done-banner">🎉 All steps complete!</div>`;
+  } else if (mine) {
+    const isLast = cs >= totalSteps - 1;
+    footHtml = `<div class="flow-foot">
+      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
+      <button class="push-btn-full" onclick="doPushStep('${escHtml(f.id)}',event)">
+        ${isLast ? 'Mark Flow Complete' : 'Push Step →'}
+      </button>
+    </div>`;
   } else {
-    const isLast    = cs >= totalSteps - 1;
-    const btnLabel  = isLast ? 'Mark Done' : 'Push Step';
-    const disabled  = mine ? '' : 'disabled';
-    const btnCls    = mine ? 'push-btn my-turn-btn' : 'push-btn';
-    const infoText  = mine
-      ? `Step ${cs+1}: <span class="flow-step-name">${escHtml(curName)}</span>`
-      : `${escHtml(curName)} → <span class="flow-step-name">${escHtml(stepOwner || '—')}</span>`;
-    footerHtml = `<div class="flow-card-foot">
-      <div class="flow-step-info">${infoText}</div>
-      <button class="${btnCls}" ${disabled} onclick="doPushStep('${escHtml(f.id)}',event)">${btnLabel}</button>
+    const waiting = stepOwner || '—';
+    footHtml = `<div class="flow-foot">
+      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
+      <div class="flow-waiting">Waiting for <strong>${escHtml(waiting)}</strong></div>
     </div>`;
   }
 
-  const cardCls = mine ? 'flow-card my-turn' : 'flow-card';
-  const badge   = mine ? `<span class="your-turn-badge">Your Turn</span>` : '';
+  const cardCls  = mine ? 'flow-card my-turn' : 'flow-card';
+  const innerCls = mine ? 'flow-card-inner' : 'flow-card-inner no-tint';
+  const badge    = mine ? `<span class="your-turn-badge">🔥 Your Turn</span>` : '';
 
   return `<div class="${cardCls}" onclick="openFlowDetail('${escHtml(f.id)}')">
-    <div class="flow-card-head">
-      <div class="flow-card-title-row">
-        <div class="flow-card-title">${escHtml(f.title || 'Untitled Flow')}</div>
-        ${badge}
+    <div class="${innerCls}">
+      <div class="flow-head">
+        <div class="flow-title-row">
+          <div class="flow-title">${escHtml(f.title || 'Untitled Flow')}</div>
+          ${badge}
+        </div>
+        <div class="plat-row">${plats || '<span style="font-size:14px;color:var(--ink4);">No platforms</span>'}</div>
       </div>
-      <div class="plat-row">${plats}</div>
+      <div class="steps-track">${dotsHtml}</div>
     </div>
-    <div class="steps-row">${dotsHtml}</div>
-    ${footerHtml}
+    ${footHtml}
   </div>`;
 }
 
 async function doPushStep(flowId, e) {
   e.stopPropagation();
-  const btn = e.currentTarget;
-  btn.disabled = true;
+  const btn  = e.currentTarget;
   const orig = btn.textContent;
+  btn.disabled = true;
   btn.textContent = '…';
   try {
     const snap = await db.collection('flows').doc('active').get();
-    if (!snap.exists) { showToast('Flow data not found'); return; }
+    if (!snap.exists) { showToast('Flow data not found','err'); return; }
     const flows = snap.data().flows || [];
     const idx   = flows.findIndex(f => f.id === flowId);
-    if (idx === -1) { showToast('Flow not found'); return; }
+    if (idx === -1) { showToast('Flow not found','err'); return; }
 
     const f        = {...flows[idx]};
     const statuses = [...(f.stepStatuses || [])];
-    const cs       = f.currentStep || 0;
+    const cs       = parseInt(f.currentStep) || 0;
 
     statuses[cs] = 'done';
-
-    if (cs < statuses.length - 1) {
+    const isLast = cs >= statuses.length - 1;
+    if (!isLast) {
       statuses[cs + 1] = 'active';
       f.currentStep = cs + 1;
     } else {
-      // last step — mark flow as fully done
       f.stuck = false;
     }
-
     f.stepStatuses = statuses;
     flows[idx] = f;
 
     await db.collection('flows').doc('active').update({flows});
-    const isDone = statuses.every(s => s === 'done');
-    showToast(isDone ? 'Flow complete!' : 'Step pushed!');
+
+    // Satisfying done feedback
+    btn.textContent = 'Done ✓';
+    btn.style.background = 'var(--green)';
+    const isDone    = statuses.every(s => s === 'done');
+    const nextOwner = !isDone ? getStepOwner(f, cs + 1) : '';
+    showToast(
+      isDone ? '🎉 Flow complete!' : `✅ Step pushed! ${nextOwner || 'Next person'} is up next.`,
+      'ok'
+    );
+    setTimeout(() => {
+      btn.textContent      = orig;
+      btn.style.background = '';
+      btn.disabled         = false;
+    }, 1800);
   } catch(err) {
-    showToast('Error: ' + err.message);
-    btn.disabled = false;
-    btn.textContent = orig;
+    console.error(err);
+    showToast('Failed to push step', 'err');
+    btn.disabled = false; btn.textContent = orig;
   }
 }
 
@@ -1433,30 +1678,26 @@ function openFlowDetail(flowId) {
   const f = allFlows.find(x => x.id === flowId);
   if (!f) return;
 
-  const cs        = parseInt(f.currentStep) || 0;
-  const statuses  = f.stepStatuses || [];
-  const stepNames = f.stepNames   || [];
-  const allDone   = statuses.length > 0 && statuses.every(s => s === 'done');
+  const cs         = parseInt(f.currentStep) || 0;
+  const statuses   = f.stepStatuses || [];
+  const stepNames  = f.stepNames    || [];
   const totalSteps = Math.max(statuses.length, stepNames.length);
+  const allDone    = statuses.length > 0 && statuses.every(s => s === 'done');
 
   document.getElementById('fd-title').textContent = f.title || 'Flow';
-
-  const plats = (f.platforms || []).map(p =>
-    `<span class="plat-chip ${platClass(p)}">${escHtml(p)}</span>`
-  ).join('');
-  document.getElementById('fd-plats').innerHTML = plats;
+  document.getElementById('fd-plats').innerHTML = (f.platforms || [])
+    .map(p => `<span class="plat-chip ${platClass(p)}">${escHtml(p)}</span>`).join('');
 
   let stepsHtml = '';
   for (let i = 0; i < totalSteps; i++) {
     const st  = statuses[i] || 'pending';
     const own = getStepOwner(f, i);
-    let cls = 'fsl-pending';
-    let icon = i + 1;
+    let cls = 'fsl-pending'; let icon = i + 1;
     if (st === 'done')   { cls = 'fsl-done';   icon = '✓'; }
     if (st === 'active') { cls = 'fsl-active';  icon = i + 1; }
     stepsHtml += `<div class="fsl-item">
-      <div class="fsl-num ${cls}">${icon}</div>
-      <div class="fsl-name">${escHtml(stepNames[i] || `Step ${i+1}`)}</div>
+      <div class="fsl-dot ${cls}">${icon}</div>
+      <div class="fsl-name${st==='active'?' active-step':''}">${escHtml(stepNames[i] || `Step ${i+1}`)}</div>
       <div class="fsl-owner">${escHtml(own)}</div>
     </div>`;
   }
@@ -1464,60 +1705,55 @@ function openFlowDetail(flowId) {
 
   const pushArea = document.getElementById('fd-push-area');
   if (allDone) {
-    pushArea.innerHTML = `<div style="text-align:center;padding:12px;color:var(--green);font-size:17px;font-weight:700;">Flow Complete</div>`;
+    pushArea.innerHTML = `<div style="text-align:center;padding:16px 0;color:var(--green);font-size:18px;font-weight:600;">🎉 Flow Complete!</div>`;
   } else if (isMyTurn(f)) {
     const isLast = cs >= totalSteps - 1;
-    pushArea.innerHTML = `<button class="sheet-btn-save" style="width:100%;padding:16px;"
-      onclick="doPushStepFromDetail('${escHtml(f.id)}',this)">${isLast ? 'Mark Flow Done' : 'Push to Next Step'}</button>`;
+    pushArea.innerHTML = `<button class="push-btn-full" style="margin:0;"
+      onclick="doPushStepFromDetail('${escHtml(f.id)}',this)">
+      ${isLast ? 'Mark Flow Complete' : 'Push to Next Step →'}
+    </button>`;
   } else {
     const owner = getStepOwner(f, cs);
-    pushArea.innerHTML = `<div style="text-align:center;padding:12px;color:var(--ink4);font-size:15px;">
-      Waiting for <strong>${escHtml(owner || '—')}</strong> to push</div>`;
+    pushArea.innerHTML = `<div style="text-align:center;padding:12px 0;color:var(--ink4);font-size:16px;">
+      Waiting for <strong style="color:var(--ink2);">${escHtml(owner || '—')}</strong> to push</div>`;
   }
 
   openSheet('sheet-flow-detail');
 }
 
 async function doPushStepFromDetail(flowId, btn) {
-  btn.disabled = true;
-  btn.textContent = '…';
+  btn.disabled = true; btn.textContent = '…';
   try {
     const snap = await db.collection('flows').doc('active').get();
-    if (!snap.exists) { showToast('Flow data not found'); return; }
+    if (!snap.exists) return;
     const flows = snap.data().flows || [];
     const idx   = flows.findIndex(f => f.id === flowId);
-    if (idx === -1) { showToast('Flow not found'); return; }
-
+    if (idx === -1) return;
     const f        = {...flows[idx]};
     const statuses = [...(f.stepStatuses || [])];
-    const cs       = f.currentStep || 0;
-
-    statuses[cs] = 'done';
-    if (cs < statuses.length - 1) {
-      statuses[cs + 1] = 'active';
-      f.currentStep = cs + 1;
-    } else {
-      f.stuck = false;
-    }
+    const cs       = parseInt(f.currentStep) || 0;
+    statuses[cs]   = 'done';
+    if (cs < statuses.length - 1) { statuses[cs+1] = 'active'; f.currentStep = cs+1; }
     f.stepStatuses = statuses;
     flows[idx] = f;
-
     await db.collection('flows').doc('active').update({flows});
-    showToast(statuses.every(s => s === 'done') ? 'Flow complete!' : 'Step pushed!');
+    const isDone    = statuses.every(s => s === 'done');
+    const nextOwner = !isDone ? getStepOwner(f, cs+1) : '';
+    showToast(isDone ? '🎉 Flow complete!' : `✅ Done! ${nextOwner||'Next person'} is up next.`, 'ok');
     closeSheet();
   } catch(err) {
-    showToast('Error: ' + err.message);
-    btn.disabled = false;
-    btn.textContent = 'Push';
+    console.error(err);
+    showToast('Failed to push step', 'err');
+    btn.disabled = false; btn.textContent = 'Push Step →';
   }
 }
 
-/* ════════════════════════════
+/* ════════════════════════════════
    TASKS TAB
-════════════════════════════ */
+════════════════════════════════ */
 function setTaskFilter(f, el) {
   taskFilter = f;
-  document.querySelectorAll('#task-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#task-filter-row .filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   renderTasks();
 }
@@ -1536,7 +1772,7 @@ function renderTasks() {
     el.innerHTML = `<div class="empty-state">
       <div class="empty-icon">✅</div>
       <div class="empty-title">No tasks here</div>
-      <div class="empty-sub">Tap + to create a new task.</div>
+      <div class="empty-sub">Tap the + button to create a new task.</div>
     </div>`;
     return;
   }
@@ -1545,24 +1781,24 @@ function renderTasks() {
 
 function buildTaskCard(t) {
   const m        = MEMBERS.find(m => m.name === t.assignee) || {av:'av-a'};
-  const priClass = `pri-${t.priority || 'medium'}`;
-  const stClass  = `st-${t.status || 'todo'}`;
-  const spClass  = `sp-${(t.status || 'todo').replace(/\s/g,'')}`;
-  const spLabel  = {todo:'To Do',inprogress:'In Progress',review:'Review',done:'Done',blocked:'Blocked'}[t.status] || t.status || 'To Do';
+  const priCls   = `pri-${t.priority || 'medium'}`;
+  const stCls    = `st-${(t.status || 'todo').replace(/\s/g,'')}`;
+  const spCls    = `sp-${(t.status || 'todo').replace(/\s/g,'')}`;
+  const spLabel  = {todo:'To Do',inprogress:'In Progress',review:'Review',done:'Done',blocked:'Blocked'}[t.status] || capitalize(t.status) || 'To Do';
   const dueStr   = t.due ? formatDate(t.due) : '';
   const isOver   = t.due && t.due < todayStr() && t.status !== 'done';
-  const avInitial = (t.assignee || '?').charAt(0).toUpperCase();
+  const avInit   = (t.assignee || '?').charAt(0).toUpperCase();
   const priTagCls = `pri-tag-${t.priority || 'medium'}`;
 
-  return `<div class="task-card ${priClass} ${stClass}" onclick="openTaskDetail('${t.id}')">
+  return `<div class="task-card ${priCls} ${stCls}" onclick="openTaskDetail('${t.id}')">
     <div class="task-top">
       <div class="task-title">${escHtml(t.title || 'Untitled')}</div>
-      <span class="status-pill ${spClass}">${spLabel}</span>
+      <span class="status-pill ${spCls}">${spLabel}</span>
     </div>
     <div class="task-meta">
-      ${t.assignee ? `<div class="task-assignee"><div class="mini-av ${m.av}">${avInitial}</div>${escHtml(t.assignee)}</div>` : ''}
-      ${dueStr ? `<div class="task-due${isOver?' overdue':''}">📅 ${dueStr}</div>` : ''}
-      <span class="pri-tag ${priTagCls}">${t.priority || 'medium'}</span>
+      ${t.assignee ? `<div class="task-assignee"><div class="mini-av ${m.av}">${avInit}</div>${escHtml(t.assignee)}</div>` : ''}
+      ${dueStr ? `<span class="task-due${isOver?' overdue':''}">📅 ${dueStr}</span>` : ''}
+      <span class="pri-tag ${priTagCls}">${capitalize(t.priority || 'medium')}</span>
     </div>
   </div>`;
 }
@@ -1576,34 +1812,33 @@ function openTaskDetail(id) {
   document.getElementById('td-assignee').textContent = t.assignee || 'Unassigned';
   document.getElementById('td-due').textContent      = t.due ? formatDate(t.due) : 'No due date';
   if (t.notes) {
-    document.getElementById('td-notes').textContent       = t.notes;
+    document.getElementById('td-notes').textContent      = t.notes;
     document.getElementById('td-notes-wrap').style.display = 'block';
   } else {
     document.getElementById('td-notes-wrap').style.display = 'none';
   }
   const statuses = ['todo','inprogress','review','done','blocked'];
-  const labels   = {todo:'To Do', inprogress:'In Progress', review:'Review', done:'Done', blocked:'Blocked'};
-  document.getElementById('td-status-row').innerHTML = statuses.map(s =>
-    `<button class="ts-btn${t.status===s?' active':''}" onclick="setTaskDetailStatus('${s}',this)">${labels[s]}</button>`
-  ).join('');
+  const labels   = {todo:'To Do',inprogress:'In Progress',review:'Review',done:'Done',blocked:'Blocked'};
+  document.getElementById('td-status-row').innerHTML =
+    statuses.map(s => `<button class="s-btn${t.status===s?' active-st':''}" onclick="setTaskDetailStatus('${s}',this)">${labels[s]}</button>`).join('');
   openSheet('sheet-task-detail');
 }
 
 function setTaskDetailStatus(status, btn) {
   if (!currentTaskDetail) return;
   currentTaskDetail.status = status;
-  document.querySelectorAll('#td-status-row .ts-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll('#td-status-row .s-btn').forEach(b => b.classList.remove('active-st'));
+  btn.classList.add('active-st');
 }
 
 async function updateCurrentTaskStatus() {
   if (!currentTaskDetail) return;
   try {
     await db.collection('tasks').doc(currentTaskDetail.id).update({status: currentTaskDetail.status});
-    showToast('Task updated!');
+    showToast('Task updated!', 'ok');
     closeSheet();
   } catch(err) {
-    showToast('Error saving task');
+    showToast('Error saving task', 'err');
   }
 }
 
@@ -1615,73 +1850,65 @@ async function saveNewTask() {
   const notes    = document.getElementById('nt-notes').value.trim();
   if (!title) { showToast('Please enter a title'); return; }
   const btn = document.getElementById('nt-save-btn');
-  btn.disabled = true; btn.textContent = 'Saving…';
+  btn.disabled = true; btn.textContent = 'Creating…';
   try {
-    await db.collection('tasks').add({
-      title, assignee, priority, due, notes,
-      status: 'todo',
-      createdAt: Date.now(),
-    });
-    showToast('Task created!');
+    await db.collection('tasks').add({title, assignee, priority, due, notes, status:'todo', createdAt:Date.now()});
+    showToast('Task created!', 'ok');
     closeSheet();
     document.getElementById('nt-title').value = '';
     document.getElementById('nt-notes').value = '';
   } catch(err) {
-    showToast('Error: ' + err.message);
+    showToast('Error: ' + err.message, 'err');
   } finally {
     btn.disabled = false; btn.textContent = 'Create Task';
   }
 }
 
-/* ════════════════════════════
+/* ════════════════════════════════
    CHAT TAB
-════════════════════════════ */
+════════════════════════════════ */
 function renderChatList() {
-  // Channels
   const chEl = document.getElementById('channel-list-items');
   if (chEl) {
     chEl.innerHTML = CHAT_ROOMS.map(r => `
-      <div class="chat-list-item" onclick="openChatRoom('${r.id}','${r.label}','channel')">
-        <div class="ch-icon">${r.icon}</div>
-        <div style="flex:1;min-width:0;">
+      <div class="chat-list-row" onclick="openChatRoom('${r.id}','${escHtml(r.label)}','channel','${escHtml(r.desc)}')">
+        <div class="ch-icon-box">${r.icon}</div>
+        <div class="ch-text">
           <div class="ch-name">${r.label}</div>
-          <div class="ch-desc">${r.desc}</div>
+          <div class="ch-preview">${r.desc}</div>
         </div>
-        <div class="ch-arrow">›</div>
-      </div>
-    `).join('');
+        <div class="ch-chevron">›</div>
+      </div>`).join('');
   }
 
-  // DMs
   const dmEl = document.getElementById('dm-list-items');
   if (dmEl) {
     const others = MEMBERS.filter(m => m.name !== (currentMember ? currentMember.name : ''));
+    const ROLE_LABELS = {head:'Head of Social',manager:'Manager',member:'Team Member',approver:'Approver'};
     dmEl.innerHTML = others.map(m => {
-      const initial = m.name.charAt(0).toUpperCase();
-      const dmId    = dmRoomId(currentMember ? currentMember.name : '', m.name);
-      return `<div class="chat-list-item" onclick="openChatRoom('${dmId}','${m.name}','dm')">
-        <div class="dm-av ${m.av}">${initial}</div>
-        <div style="flex:1;min-width:0;">
-          <div class="dm-name">${m.name}</div>
-          <div class="dm-role-lbl">${m.role}</div>
+      const init  = m.name.charAt(0).toUpperCase();
+      const dmId  = dmRoomId(currentMember ? currentMember.name : '', m.name);
+      return `<div class="chat-list-row" onclick="openChatRoom('${dmId}','${escHtml(m.name)}','dm','${ROLE_LABELS[m.role]||m.role}')">
+        <div class="dm-av-icon ${m.av}">${init}</div>
+        <div class="ch-text">
+          <div class="ch-name">${m.name}</div>
+          <div class="dm-role-badge">${ROLE_LABELS[m.role] || m.role}</div>
         </div>
-        <div class="ch-arrow">›</div>
+        <div class="ch-chevron">›</div>
       </div>`;
     }).join('');
   }
 }
 
-function dmRoomId(a, b) {
-  return 'dm_' + [a, b].sort().join('_');
-}
-
-function openChatRoom(roomId, title, type) {
+function openChatRoom(roomId, title, type, subtitle) {
   chatRoomId = roomId;
   const prefix = type === 'channel' ? '# ' : '';
-  document.getElementById('chat-room-title').textContent = prefix + title;
+  document.getElementById('chat-room-title').textContent    = prefix + title;
+  document.getElementById('chat-room-subtitle').textContent = subtitle || '';
   const screen = document.getElementById('chat-room-screen');
   screen.classList.add('open');
-  document.getElementById('chat-messages').innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+  document.getElementById('chat-messages').innerHTML =
+    '<div class="chat-empty"><div class="chat-empty-icon">💬</div>Loading messages…</div>';
   document.getElementById('chat-input').value = '';
 
   if (chatUnsub) { chatUnsub(); chatUnsub = null; }
@@ -1693,11 +1920,9 @@ function openChatRoom(roomId, title, type) {
     .onSnapshot(snap => {
       renderMessages(snap.docs.map(d => d.data()));
     }, () => {
-      // Fallback: no index, sort client-side
       db.collection('chat').where('room','==',roomId).limit(100)
         .onSnapshot(snap => {
-          const msgs = snap.docs.map(d => d.data()).sort((a,b) => (a.loggedAt||0)-(b.loggedAt||0));
-          renderMessages(msgs);
+          renderMessages(snap.docs.map(d => d.data()).sort((a,b) => (a.loggedAt||0)-(b.loggedAt||0)));
         });
     });
 }
@@ -1711,27 +1936,26 @@ function closeChatRoom() {
 function renderMessages(msgs) {
   const el = document.getElementById('chat-messages');
   if (!msgs.length) {
-    el.innerHTML = '<div class="chat-empty">No messages yet. Say hello! 👋</div>';
+    el.innerHTML = `<div class="chat-empty"><div class="chat-empty-icon">👋</div>No messages yet. Say hello!</div>`;
     return;
   }
-  let html     = '';
-  let lastDate = '';
+  let html = ''; let lastDate = '';
   msgs.forEach(m => {
     const ts      = new Date(m.loggedAt || Date.now());
     const dateStr = ts.toDateString();
     if (dateStr !== lastDate) {
-      html    += `<div class="chat-date-divider">${formatChatDate(ts)}</div>`;
+      html    += `<div class="chat-date-divider"><span>${formatChatDate(ts)}</span></div>`;
       lastDate = dateStr;
     }
     const isMine  = m.sender === (currentMember ? currentMember.name : '');
     const member  = MEMBERS.find(x => x.name === m.sender) || {av:'av-a'};
     const initial = (m.sender || '?').charAt(0).toUpperCase();
-    const time    = ts.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+    const time    = ts.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true});
     html += `<div class="chat-msg${isMine?' mine':''}">
       <div class="msg-av ${member.av}">${initial}</div>
       <div class="msg-body">
-        ${!isMine ? `<div class="msg-sender">${escHtml(m.sender || '')}</div>` : ''}
-        <div class="msg-bubble">${escHtml(m.text || '')}</div>
+        ${!isMine ? `<div class="msg-sender-name">${escHtml(m.sender||'')}</div>` : ''}
+        <div class="msg-bubble">${escHtml(m.text||'')}</div>
         <div class="msg-time">${time}</div>
       </div>
     </div>`;
@@ -1745,8 +1969,7 @@ async function sendMessage() {
   const input = document.getElementById('chat-input');
   const text  = input.value.trim();
   if (!text) return;
-  input.value = '';
-  input.style.height = 'auto';
+  input.value = ''; input.style.height = 'auto';
   try {
     await db.collection('chat').add({
       room:     chatRoomId,
@@ -1756,26 +1979,17 @@ async function sendMessage() {
       loggedAt: Date.now(),
     });
   } catch(err) {
-    showToast('Failed to send');
+    showToast('Failed to send', 'err');
     input.value = text;
   }
 }
 
-function formatChatDate(d) {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const yd    = new Date(today); yd.setDate(yd.getDate() - 1);
-  const msg   = new Date(d);    msg.setHours(0,0,0,0);
-  if (+msg === +today) return 'Today';
-  if (+msg === +yd)    return 'Yesterday';
-  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
-}
-
-/* ════════════════════════════
+/* ════════════════════════════════
    CALENDAR / IDEAS TAB
-════════════════════════════ */
+════════════════════════════════ */
 function setIdeaFilter(f, el) {
   ideaFilter = f;
-  document.querySelectorAll('#idea-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#idea-filter-row .filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   renderIdeas();
 }
@@ -1788,7 +2002,7 @@ function renderIdeas() {
     el.innerHTML = `<div class="empty-state">
       <div class="empty-icon">💡</div>
       <div class="empty-title">No ideas yet</div>
-      <div class="empty-sub">Tap + to add a content idea.</div>
+      <div class="empty-sub">Tap + to add a content idea to the calendar.</div>
     </div>`;
     return;
   }
@@ -1798,11 +2012,11 @@ function renderIdeas() {
 function buildIdeaCard(idea) {
   const d     = idea.date ? new Date(idea.date + 'T00:00:00') : null;
   const day   = d ? d.getDate() : '—';
-  const month = d ? d.toLocaleString('en',{month:'short'}) : '';
+  const month = d ? d.toLocaleString('en', {month:'short'}) : '';
   const SC_MAP = {idea:'is-idea',approved:'is-approved',inprod:'is-inprod',scheduled:'is-scheduled',posted:'is-posted'};
   const SL_MAP = {idea:'Idea',approved:'Approved',inprod:'In Prod',scheduled:'Scheduled',posted:'Posted'};
   const sc = SC_MAP[idea.status] || 'is-idea';
-  const sl = SL_MAP[idea.status] || idea.status || 'Idea';
+  const sl = SL_MAP[idea.status] || capitalize(idea.status) || 'Idea';
   return `<div class="idea-card" onclick="openIdeaEdit('${idea.id}')">
     <div class="idea-date-blk">
       <div class="idea-day">${day}</div>
@@ -1813,7 +2027,7 @@ function buildIdeaCard(idea) {
       <div class="idea-meta">
         <span class="idea-status-pill ${sc}">${sl}</span>
         ${idea.platform ? `<span class="idea-plat-chip">${escHtml(idea.platform)}</span>` : ''}
-        ${idea.cat ? `<span class="idea-cat">${escHtml(idea.cat)}</span>` : ''}
+        ${idea.cat ? `<span class="idea-cat-lbl">${escHtml(idea.cat)}</span>` : ''}
       </div>
     </div>
   </div>`;
@@ -1827,34 +2041,29 @@ async function saveNewIdea() {
   const owner    = document.getElementById('ni-owner').value;
   const notes    = document.getElementById('ni-notes').value.trim();
   if (!title) { showToast('Please enter a title'); return; }
-
   const btn = document.getElementById('ni-save-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
-
   try {
     const snap  = await db.collection('config').doc('extended').get();
     const ideas = snap.exists ? (snap.data().contentIdeas || []) : [];
-
     if (editingIdeaId) {
       const idx = ideas.findIndex(x => x.id === editingIdeaId);
-      const updated = {...(idx > -1 ? ideas[idx] : {}), title, platform, cat, date, owner, notes};
-      if (idx > -1) ideas[idx] = updated; else ideas.push(updated);
+      const upd = {...(idx > -1 ? ideas[idx] : {}), title, platform, cat, date, owner, notes};
+      if (idx > -1) ideas[idx] = upd; else ideas.push(upd);
     } else {
-      ideas.push({id:'idea_'+Date.now(), title, platform, cat, date, owner, notes, status:'idea', form:''});
+      ideas.push({id:'idea_'+Date.now(), title, platform, cat, date, owner, notes, status:'idea'});
     }
-
     if (snap.exists) {
       await db.collection('config').doc('extended').update({contentIdeas: ideas});
     } else {
       await db.collection('config').doc('extended').set({contentIdeas: ideas});
     }
-
-    showToast(editingIdeaId ? 'Idea updated!' : 'Idea saved!');
+    showToast(editingIdeaId ? 'Idea updated!' : 'Idea saved!', 'ok');
     closeSheet();
     document.getElementById('ni-title').value = '';
     document.getElementById('ni-notes').value = '';
   } catch(err) {
-    showToast('Error: ' + err.message);
+    showToast('Error: ' + err.message, 'err');
   } finally {
     btn.disabled = false;
     btn.textContent = editingIdeaId ? 'Update Idea' : 'Save Idea';
@@ -1872,43 +2081,40 @@ function openIdeaEdit(ideaId) {
   document.getElementById('ni-date').value     = idea.date     || '';
   document.getElementById('ni-owner').value    = idea.owner    || '';
   document.getElementById('ni-notes').value    = idea.notes    || '';
-  const btn = document.getElementById('ni-save-btn');
-  btn.textContent = 'Update Idea';
-  // Change sheet title
-  const title = document.querySelector('#sheet-new-idea .sheet-title');
-  if (title) title.textContent = 'Edit Idea';
+  document.getElementById('ni-save-btn').textContent   = 'Update Idea';
+  document.getElementById('idea-sheet-title').textContent = 'Edit Idea';
   openSheet('sheet-new-idea');
 }
 
-/* ════════════════════════════
+/* ════════════════════════════════
    ME TAB
-════════════════════════════ */
+════════════════════════════════ */
 function setupProfile() {
   if (!currentMember) return;
   const initial = currentMember.name.charAt(0).toUpperCase();
   const avEl    = document.getElementById('profile-av');
-  avEl.className   = `profile-av ${currentMember.av}`;
+  avEl.className   = `profile-av-large ${currentMember.av}`;
   avEl.textContent = initial;
-  document.getElementById('profile-name').textContent  = currentMember.name;
-  document.getElementById('profile-email').textContent = currentUser ? currentUser.email : '';
-  const roleEl  = document.getElementById('profile-role');
-  const ROLE_LABELS  = {head:'Head of Social', manager:'Manager', member:'Team Member', approver:'Approver'};
-  const ROLE_CLASSES = {head:'prc-head', manager:'prc-manager', member:'prc-member', approver:'prc-approver'};
-  roleEl.textContent = ROLE_LABELS[currentMember.role]  || currentMember.role;
+  document.getElementById('profile-name').textContent    = currentMember.name;
+  document.getElementById('profile-email-txt').textContent = currentUser ? currentUser.email : '';
+  const roleEl     = document.getElementById('profile-role');
+  const ROLE_LABELS  = {head:'Head of Social',manager:'Manager',member:'Team Member',approver:'Approver'};
+  const ROLE_CLASSES = {head:'prc-head',manager:'prc-manager',member:'prc-member',approver:'prc-approver'};
+  roleEl.textContent = ROLE_LABELS[currentMember.role] || currentMember.role;
   roleEl.className   = `profile-role-chip ${ROLE_CLASSES[currentMember.role] || 'prc-member'}`;
 }
 
 function renderTeamList() {
   const el = document.getElementById('me-team-list');
   if (!el) return;
-  const ROLE_LABELS = {head:'Head', manager:'Manager', member:'Member', approver:'Approver'};
+  const ROLE_LABELS = {head:'Head',manager:'Manager',member:'Member',approver:'Approver'};
   el.innerHTML = MEMBERS.map(m => {
-    const initial = m.name.charAt(0).toUpperCase();
-    return `<div class="team-item">
-      <div class="team-av ${m.av}">${initial}</div>
+    const init = m.name.charAt(0).toUpperCase();
+    return `<div class="team-row">
+      <div class="team-av-sm ${m.av}">${init}</div>
       <div style="flex:1;min-width:0;">
-        <div class="team-name">${m.name}</div>
-        <div class="team-role">${ROLE_LABELS[m.role] || m.role}</div>
+        <div class="team-name-txt">${m.name}</div>
+        <div class="team-role-txt">${ROLE_LABELS[m.role] || m.role}</div>
       </div>
     </div>`;
   }).join('');
@@ -1920,19 +2126,36 @@ function toggleNotif() {
   showToast(notifEnabled ? 'Notifications on' : 'Notifications off');
 }
 
-/* ════════════════════════════
+/* ════════════════════════════════
    TAB NAVIGATION
-════════════════════════════ */
-const TAB_TITLES  = {today:'Today', tasks:'Tasks', chat:'Chat', calendar:'Calendar', me:'Profile'};
-const SHOW_ACTION = {tasks:true, calendar:true};
-const SHOW_FAB    = {tasks:true, calendar:true};
+════════════════════════════════ */
+function buildTopbar(tab) {
+  const inner = document.getElementById('topbar-inner');
+  if (!inner) return;
+  if (tab === 'today') {
+    const avClass = currentMember ? currentMember.av : 'av-a';
+    const avInit  = currentMember ? currentMember.name.charAt(0).toUpperCase() : '?';
+    inner.innerHTML = `
+      <div class="topbar-logo-mark">Socia<span>Desk</span></div>
+      <div class="topbar-av ${avClass}" id="topbar-av-btn">${avInit}</div>`;
+  } else if (tab === 'chat') {
+    inner.innerHTML = `
+      <div class="topbar-title-text">Chat</div>`;
+  } else {
+    const titles = {tasks:'Tasks',calendar:'Calendar',me:'Profile'};
+    const showAdd = tab === 'tasks' || tab === 'calendar';
+    inner.innerHTML = `
+      <div class="topbar-title-text">${titles[tab] || tab}</div>
+      ${showAdd ? `<button class="topbar-add-btn" onclick="handleFab()">+</button>` : ''}`;
+  }
+}
 
 function switchTab(tab) {
-  const old = document.getElementById(`panel-${currentTab}`);
-  if (old && currentTab !== tab) {
-    old.classList.remove('active');
-    old.classList.add('exit-left');
-    setTimeout(() => old.classList.remove('exit-left'), 350);
+  const prevPanel = document.getElementById(`panel-${currentTab}`);
+  if (prevPanel && currentTab !== tab) {
+    prevPanel.classList.remove('active');
+    prevPanel.classList.add('exit-left');
+    setTimeout(() => prevPanel.classList.remove('exit-left'), 320);
   }
   currentTab = tab;
 
@@ -1946,38 +2169,26 @@ function switchTab(tab) {
   const tabEl = document.getElementById(`tab-${tab}`);
   if (tabEl) tabEl.classList.add('active');
 
-  document.getElementById('topbar-title').textContent = TAB_TITLES[tab] || tab;
-
-  const actionBtn = document.getElementById('topbar-action-btn');
-  if (SHOW_ACTION[tab]) {
-    actionBtn.style.visibility = 'visible';
-    actionBtn.textContent = '+';
-  } else {
-    actionBtn.style.visibility = 'hidden';
-  }
+  buildTopbar(tab);
 
   const fab = document.getElementById('main-fab');
-  fab.classList.toggle('hidden', !SHOW_FAB[tab]);
+  if (fab) fab.classList.toggle('hidden', tab !== 'tasks' && tab !== 'calendar');
 }
 
-function handleTopBack()   { /* no back state in main tabs */ }
-function handleTopAction() {
-  if (currentTab === 'tasks')    openSheet('sheet-new-task');
-  if (currentTab === 'calendar') openSheet('sheet-new-idea');
-}
 function handleFab() {
   if (currentTab === 'tasks')    openSheet('sheet-new-task');
   if (currentTab === 'calendar') openSheet('sheet-new-idea');
 }
 
-/* ════════════════════════════
+/* ════════════════════════════════
    BOTTOM SHEETS
-════════════════════════════ */
+════════════════════════════════ */
 function openSheet(id) {
   closeSheet();
   activeSheet = id;
   document.getElementById('sheet-overlay').classList.add('open');
-  document.getElementById(id).classList.add('open');
+  const el = document.getElementById(id);
+  if (el) el.classList.add('open');
 }
 
 function closeSheet() {
@@ -1987,20 +2198,19 @@ function closeSheet() {
     activeSheet = null;
   }
   document.getElementById('sheet-overlay').classList.remove('open');
-
   // Reset idea sheet
   editingIdeaId = null;
-  const btn = document.getElementById('ni-save-btn');
-  if (btn) { btn.textContent = 'Save Idea'; btn.disabled = false; }
-  const ideaTitle = document.querySelector('#sheet-new-idea .sheet-title');
+  const saveBtn = document.getElementById('ni-save-btn');
+  if (saveBtn) { saveBtn.textContent = 'Save Idea'; saveBtn.disabled = false; }
+  const ideaTitle = document.getElementById('idea-sheet-title');
   if (ideaTitle) ideaTitle.textContent = 'Content Idea';
 }
 
-/* ════════════════════════════
-   HELPERS
-════════════════════════════ */
+/* ════════════════════════════════
+   SELECTS POPULATION
+════════════════════════════════ */
 function populateSelects() {
-  const opts = `<option value="">Select…</option>` +
+  const opts = `<option value="">Select member…</option>` +
     MEMBERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
   ['nt-assignee','ni-owner'].forEach(id => {
     const el = document.getElementById(id);
@@ -2008,68 +2218,28 @@ function populateSelects() {
   });
 }
 
-function formatDate(str) {
-  if (!str) return '';
-  const d = new Date(str + 'T00:00:00');
-  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
-}
-
-function capitalize(s) {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
-}
-
-function escHtml(str) {
-  return String(str || '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
-}
-
-function autoResizeTA(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-}
-
-let toastTimer = null;
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
-}
-
-/* ════════════════════════════
-   GESTURES
-════════════════════════════ */
-// Swipe-right from left edge → close chat room
-(function() {
+/* ════════════════════════════════
+   TOUCH GESTURES
+════════════════════════════════ */
+(function gestureInit() {
+  // Swipe right from left edge → close chat room
   let sx = 0;
   document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
   document.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - sx;
-    const screen = document.getElementById('chat-room-screen');
-    if (dx > 80 && sx < 48 && screen && screen.classList.contains('open')) {
-      closeChatRoom();
-    }
+    const dx  = e.changedTouches[0].clientX - sx;
+    const scr = document.getElementById('chat-room-screen');
+    if (dx > 72 && sx < 48 && scr && scr.classList.contains('open')) closeChatRoom();
   }, {passive:true});
-})();
 
-// Drag sheet down to dismiss
-(function() {
-  let startY = 0;
-  let sheetEl = null;
+  // Drag sheet down to dismiss
+  let startY = 0, sheetEl = null;
   document.addEventListener('touchstart', e => {
     const s = e.target.closest('.sheet');
-    sheetEl = s || null;
-    startY  = e.touches[0].clientY;
+    sheetEl = s || null; startY = e.touches[0].clientY;
   }, {passive:true});
   document.addEventListener('touchend', e => {
     if (!sheetEl) return;
-    const dy = e.changedTouches[0].clientY - startY;
-    if (dy > 90) closeSheet();
+    if (e.changedTouches[0].clientY - startY > 80) closeSheet();
     sheetEl = null;
   }, {passive:true});
 })();
