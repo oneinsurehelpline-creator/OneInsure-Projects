@@ -9874,37 +9874,53 @@ async function verifyMetaSetup() {
 async function syncFacebookPageVideos() {
   const { pageId, token } = META_CONFIG;
   if (!pageId || !token) return [];
-  const fields = 'id,title,description,length,created_time,permalink_url,updated_time,views,likes.summary(true).limit(0),comments.summary(true).limit(0)';
+  const fields = 'id,title,description,created_time,permalink_url,likes.summary(true).limit(0),comments.summary(true).limit(0)';
   let allVideos = [], after = null, page = 0;
   do {
     const cursor = after ? `&after=${after}` : '';
     const resp = await fetch(`${META_API}/${pageId}/videos?fields=${fields}&limit=25${cursor}&access_token=${token}`);
     const data = await resp.json();
     if (data.error) { console.warn('FB video sync error:', data.error.message); break; }
-    const batch = data.data || [];
-    allVideos = allVideos.concat(batch);
+    allVideos = allVideos.concat(data.data || []);
     after = data.paging?.cursors?.after;
     page++;
-  } while (after && page < 4); // max 100 videos
+  } while (after && page < 4);
 
-  return allVideos.map(v => ({
-    id:        'fb_' + v.id,
-    caption:   (v.title || v.description || 'Untitled').slice(0, 80),
-    mediaType: 'FB_VIDEO',
-    thumbnail: '',
-    permalink: v.permalink_url || '',
-    timestamp: v.created_time || '',
-    posted:    v.created_time ? new Date(v.created_time).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—',
-    views:     v.views || 0,
-    reach:     0,
-    impressions: 0,
-    likes:     v.likes?.summary?.total_count || 0,
-    comments:  v.comments?.summary?.total_count || 0,
-    shares:    0,
-    saved:     0,
-    engRate:   0,
-    source:    'facebook',
+  // Fetch video_insights per video to get actual view counts
+  const withViews = await Promise.all(allVideos.map(async v => {
+    let fbViewCount = 0;
+    try {
+      const ir = await fetch(`${META_API}/${v.id}/video_insights?metric=total_video_views&access_token=${token}`);
+      const id = await ir.json();
+      fbViewCount = id.data?.[0]?.values?.[0]?.value ?? id.data?.[0]?.value ?? 0;
+    } catch {}
+    return { ...v, fbViewCount };
   }));
+
+  return withViews.map(v => {
+    const fbV = v.fbViewCount || 0;
+    return {
+      id:         'fb_' + v.id,
+      caption:    (v.title || v.description || 'Untitled').slice(0, 80),
+      mediaType:  'FB_VIDEO',
+      thumbnail:  '',
+      permalink:  v.permalink_url || '',
+      timestamp:  v.created_time || '',
+      posted:     v.created_time ? new Date(v.created_time).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—',
+      views:      fbV,  // for sort compat
+      igViews:    0,
+      fbViews:    fbV,
+      totalViews: fbV,
+      reach:      0,
+      impressions: 0,
+      likes:      v.likes?.summary?.total_count || 0,
+      comments:   v.comments?.summary?.total_count || 0,
+      shares:     0,
+      saved:      0,
+      engRate:    0,
+      source:     'facebook',
+    };
+  });
 }
 
 // ── Main sync: endpoints 1 + 2 + 3 (Instagram) ───────────────────────────
@@ -9979,7 +9995,7 @@ async function syncMetaAll() {
       if (insightsAvailable) {
         const baseMetrics = 'reach,saved,shares,total_interactions';
         // Reels: try with plays first; if API rejects it, retry without so reach/saves/shares always work.
-        const firstMetrics = isReel ? 'reach,saved,shares,views,facebook_views,total_views,total_interactions' : baseMetrics;
+        const firstMetrics = isReel ? 'reach,saved,shares,views,total_views,total_interactions' : baseMetrics;
         try {
           let resp = await fetch(`${META_API}/${item.id}/insights?metric=${firstMetrics}&access_token=${META_CONFIG.token}`);
           let data = await resp.json();
@@ -10022,8 +10038,8 @@ async function syncMetaAll() {
       const saved       = ins.saved            || 0;
       const shares      = ins.shares           || 0;
       const igViews    = ins.views    || ins.plays || item.video_views || 0;
-      const fbViews    = ins.facebook_views || 0;
-      const totalViews = ins.total_views || (igViews + fbViews) || 0;
+      const totalViews = ins.total_views || igViews || 0;
+      const fbViews    = Math.max(0, totalViews - igViews); // total_views includes FB; remainder is FB
       const views      = igViews; // kept for sort-by compat
       const total      = ins.total_interactions || (likes + comments + saved + shares);
       const engRate    = reach > 0 ? (total / reach * 100) : 0;
