@@ -9963,16 +9963,25 @@ async function syncMetaAll() {
 
       // Fetch insights only if the probe confirmed they work
       if (insightsAvailable) {
-        // Reels support 'plays' for view count; images, carousels, and feed videos don't.
-        const metrics = isReel
-          ? 'reach,saved,shares,plays,total_interactions'
-          : 'reach,saved,shares,total_interactions';
+        // Always use the universal set so reach/saves/shares never break.
+        // plays is fetched separately below only for Reels.
+        const metrics = 'reach,saved,shares,total_interactions';
         try {
           const resp = await fetch(`${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`);
           const data = await resp.json();
           if (!data.error) {
             const ins = {};
             (data.data || []).forEach(m => { ins[m.name] = m.values?.[0]?.value ?? m.value ?? 0; });
+            // Fetch plays separately for Reels — isolated so a failure never touches other metrics.
+            if (isReel) {
+              try {
+                const rp = await fetch(`${META_API}/${item.id}/insights?metric=plays&access_token=${META_CONFIG.token}`);
+                const rd = await rp.json();
+                if (!rd.error && rd.data?.[0]) {
+                  ins.plays = rd.data[0].values?.[0]?.value ?? rd.data[0].value ?? 0;
+                }
+              } catch { /* plays unavailable — views stays 0 */ }
+            }
             return { ...item, ins };
           }
         } catch { /* fall through to Endpoint 3 */ }
