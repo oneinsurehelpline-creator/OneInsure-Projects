@@ -6280,7 +6280,7 @@ let _bulkSelected = new Set();
 function toggleBulkMode() {
   _bulkMode = !_bulkMode;
   _bulkSelected.clear();
-  document.getElementById('task-list-wrap')?.classList.toggle('bulk-mode', _bulkMode);
+  document.getElementById('task-list')?.classList.toggle('bulk-mode', _bulkMode);
   const bar = document.getElementById('bulk-bar');
   bar.classList.toggle('show', _bulkMode);
   document.getElementById('bulk-toggle-btn').textContent = _bulkMode ? '✕ Cancel Select' : '☑ Select';
