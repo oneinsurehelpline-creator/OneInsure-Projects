@@ -9975,7 +9975,7 @@ async function syncMetaAll() {
       if (insightsAvailable) {
         const baseMetrics = 'reach,saved,shares,total_interactions';
         // Reels: try with plays first; if API rejects it, retry without so reach/saves/shares always work.
-        const firstMetrics = isReel ? 'reach,saved,shares,plays,total_interactions' : baseMetrics;
+        const firstMetrics = isReel ? 'reach,saved,shares,views,total_interactions' : baseMetrics;
         try {
           let resp = await fetch(`${META_API}/${item.id}/insights?metric=${firstMetrics}&access_token=${META_CONFIG.token}`);
           let data = await resp.json();
@@ -10017,7 +10017,7 @@ async function syncMetaAll() {
       const impressions = ins.impressions      || 0;
       const saved       = ins.saved            || 0;
       const shares      = ins.shares           || 0;
-      const views       = item.video_views || ins.plays || ins.video_views || 0;
+      const views       = ins.views || ins.plays || item.video_views || 0;
       const total       = ins.total_interactions || (likes + comments + saved + shares);
       const engRate     = reach > 0 ? (total / reach * 100) : 0;
       const caption     = (item.caption || '').split('\n')[0].slice(0, 80) || 'Untitled';
