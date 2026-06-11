@@ -1738,7 +1738,9 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                   <option value="likes">Likes</option>
                   <option value="comments">Comments</option>
                   <option value="reach">Reach</option>
-                  <option value="views">Views</option>
+                  <option value="totalViews">Total Views</option>
+                  <option value="views">IG Views</option>
+                  <option value="fbViews">FB Views</option>
                   <option value="saved">Saves</option>
                   <option value="engRate">Eng. Rate</option>
                   <option value="timestamp">Date Posted</option>
@@ -1771,7 +1773,9 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                 <input type="date" id="reels-date-to" onchange="renderReelsTable()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
                 <span style="font-size:12px;font-weight:600;color:var(--ink2);">Sort By</span>
                 <select id="reels-sort-by" onchange="renderReelsTable()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
-                  <option value="views">Views</option>
+                  <option value="totalViews">Total Views</option>
+                  <option value="views">IG Views</option>
+                  <option value="fbViews">FB Views</option>
                   <option value="reach">Reach</option>
                   <option value="likes">Likes</option>
                   <option value="comments">Comments</option>
@@ -9975,7 +9979,7 @@ async function syncMetaAll() {
       if (insightsAvailable) {
         const baseMetrics = 'reach,saved,shares,total_interactions';
         // Reels: try with plays first; if API rejects it, retry without so reach/saves/shares always work.
-        const firstMetrics = isReel ? 'reach,saved,shares,views,total_interactions' : baseMetrics;
+        const firstMetrics = isReel ? 'reach,saved,shares,views,facebook_views,total_views,total_interactions' : baseMetrics;
         try {
           let resp = await fetch(`${META_API}/${item.id}/insights?metric=${firstMetrics}&access_token=${META_CONFIG.token}`);
           let data = await resp.json();
@@ -10017,11 +10021,14 @@ async function syncMetaAll() {
       const impressions = ins.impressions      || 0;
       const saved       = ins.saved            || 0;
       const shares      = ins.shares           || 0;
-      const views       = ins.views || ins.plays || item.video_views || 0;
-      const total       = ins.total_interactions || (likes + comments + saved + shares);
-      const engRate     = reach > 0 ? (total / reach * 100) : 0;
-      const caption     = (item.caption || '').split('\n')[0].slice(0, 80) || 'Untitled';
-      const posted      = item.timestamp
+      const igViews    = ins.views    || ins.plays || item.video_views || 0;
+      const fbViews    = ins.facebook_views || 0;
+      const totalViews = ins.total_views || (igViews + fbViews) || 0;
+      const views      = igViews; // kept for sort-by compat
+      const total      = ins.total_interactions || (likes + comments + saved + shares);
+      const engRate    = reach > 0 ? (total / reach * 100) : 0;
+      const caption    = (item.caption || '').split('\n')[0].slice(0, 80) || 'Untitled';
+      const posted     = item.timestamp
         ? new Date(item.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
         : '—';
       return {
@@ -10030,7 +10037,7 @@ async function syncMetaAll() {
         thumbnail: item.thumbnail_url || item.media_url || '',
         permalink: item.permalink || '',
         timestamp: item.timestamp || '',
-        posted, views, reach, impressions, likes, comments, shares, saved,
+        posted, views, igViews, fbViews, totalViews, reach, impressions, likes, comments, shares, saved,
         engRate: parseFloat(engRate.toFixed(2)),
         source: 'instagram',
       };
@@ -10201,7 +10208,8 @@ function renderIgTable() {
         <thead><tr>
           <th style="width:40px;"></th>
           <th style="min-width:180px;">Caption</th>
-          <th>Posted</th><th>Type</th><th>Reach</th><th>Views</th>
+          <th>Posted</th><th>Type</th><th>Reach</th>
+          <th>IG Views</th><th>FB Views</th><th>Total Views</th>
           <th>Likes</th><th>Comments</th><th>Shares</th><th>Saves</th>
           <th>Eng. Rate</th><th>Link</th>
         </tr></thead>
@@ -10211,7 +10219,9 @@ function renderIgTable() {
           <td style="white-space:nowrap;">${p.posted}</td>
           <td>${typeBadge(p.mediaType)}</td>
           <td>${fmtK(p.reach)}</td>
-          <td>${fmtK(p.views)}</td>
+          <td>${fmtK(p.igViews||p.views||0)}</td>
+          <td>${fmtK(p.fbViews||0)}</td>
+          <td style="font-weight:600;">${fmtK(p.totalViews||p.views||0)}</td>
           <td style="color:${p.likes>0?'var(--coral)':'var(--ink3)'};">${fmtK(p.likes)}</td>
           <td style="color:${p.comments>0?'var(--navy)':'var(--ink3)'};">${fmtK(p.comments)}</td>
           <td>${fmtK(p.shares)}</td>
@@ -10246,8 +10256,8 @@ function downloadIgReport() {
     if (dateTo   && d && d > dateTo)   return false;
     return true;
   });
-  const header = _csvRow(['Caption','Posted','Type','Reach','Views','Likes','Comments','Shares','Saves','Eng Rate%','Link']);
-  const rows = data.map(p => _csvRow([p.caption, p.posted, p.mediaType, p.reach, p.views, p.likes, p.comments, p.shares, p.saved, p.engRate, p.permalink]));
+  const header = _csvRow(['Caption','Posted','Type','Reach','IG Views','FB Views','Total Views','Likes','Comments','Shares','Saves','Eng Rate%','Link']);
+  const rows = data.map(p => _csvRow([p.caption, p.posted, p.mediaType, p.reach, p.igViews||p.views||0, p.fbViews||0, p.totalViews||p.views||0, p.likes, p.comments, p.shares, p.saved, p.engRate, p.permalink]));
   const csv = [header, ...rows].join('\n');
   const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], {type:'text/csv'})), download: `instagram-posts-${new Date().toISOString().slice(0,10)}.csv` });
   a.click();
@@ -10266,8 +10276,8 @@ function downloadReelsReport() {
     if (rdateTo   && d && d > rdateTo)   return false;
     return true;
   });
-  const header = _csvRow(['Caption','Posted','Type','Views','Reach','Likes','Comments','Shares','Saves','Eng Rate%','Link']);
-  const rows = data.map(r => _csvRow([r.caption, r.posted, r.type, r.views, r.reach, r.likes, r.comments, r.shares, r.saved, r.engRate, r.permalink]));
+  const header = _csvRow(['Caption','Posted','Type','IG Views','FB Views','Total Views','Reach','Likes','Comments','Shares','Saves','Eng Rate%','Link']);
+  const rows = data.map(r => _csvRow([r.caption, r.posted, r.type, r.igViews||r.views||0, r.fbViews||0, r.totalViews||r.views||0, r.reach, r.likes, r.comments, r.shares, r.saved, r.engRate, r.permalink]));
   const csv = [header, ...rows].join('\n');
   const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], {type:'text/csv'})), download: `reels-report-${new Date().toISOString().slice(0,10)}.csv` });
   a.click();
@@ -10372,15 +10382,18 @@ function renderReelsTable() {
       <table class="perf-table">
         <thead><tr>
           <th style="min-width:200px;">Video Name</th>
-          <th>Posted</th><th>Type</th><th>Views</th><th>Reach</th>
-          <th>Likes</th><th>Comments</th><th>Shares</th><th>Saves</th>
+          <th>Posted</th><th>Type</th>
+          <th>IG Views</th><th>FB Views</th><th>Total Views</th>
+          <th>Reach</th><th>Likes</th><th>Comments</th><th>Shares</th><th>Saves</th>
           <th>Eng. Rate</th><th>Preview</th>
         </tr></thead>
         <tbody>${data.map(r => `<tr>
           <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.caption}">${r.caption}</td>
           <td style="white-space:nowrap;">${r.posted}</td>
           <td>${typeBadge(r.type)}</td>
-          <td>${fmtK(r.views)}</td>
+          <td>${fmtK(r.igViews||r.views||0)}</td>
+          <td>${fmtK(r.fbViews||0)}</td>
+          <td style="font-weight:600;">${fmtK(r.totalViews||r.views||0)}</td>
           <td>${fmtK(r.reach)}</td>
           <td style="color:${r.likes>0?'var(--coral)':'var(--ink3)'};">${fmtK(r.likes)}</td>
           <td style="color:${r.comments>0?'var(--navy)':'var(--ink3)'};">${fmtK(r.comments)}</td>
