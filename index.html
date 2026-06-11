@@ -9931,43 +9931,65 @@ async function syncMetaAll() {
 
     if (statusEl) statusEl.textContent = `Fetching insights for ${allItems.length} posts…`;
 
+    // ── Probe: test insights on the first post to catch permission errors early ──
+    let insightsAvailable = false;
+    let insightError = '';
+    if (allItems.length) {
+      const probe = allItems[0];
+      const probeType = (probe.media_product_type || '').toUpperCase();
+      const probeIsReel = probeType === 'REELS' || probeType === 'REEL' || (probe.media_type||'').toUpperCase() === 'VIDEO';
+      const probeMetrics = probeIsReel ? 'reach,saved,shares,plays' : 'reach,impressions,saved,shares';
+      try {
+        const pr = await fetch(`${META_API}/${probe.id}/insights?metric=${probeMetrics}&access_token=${META_CONFIG.token}`);
+        const pd = await pr.json();
+        if (pd.error) {
+          insightError = pd.error.message || 'Unknown error';
+          if (statusEl) statusEl.textContent = `⚠️ Insights unavailable: ${insightError}`;
+        } else {
+          insightsAvailable = true;
+        }
+      } catch(e) {
+        insightError = e.message;
+        if (statusEl) statusEl.textContent = `⚠️ Insights probe failed: ${insightError}`;
+      }
+    }
+
     // Endpoint 2: insights per post; Endpoint 3 as fallback
     const enriched = await Promise.all(allItems.map(async item => {
-      // Instagram errors if you request an unsupported metric for a media type.
-      // Reels do NOT support impressions or video_views — use plays instead.
-      // Feed videos support impressions + video_views.
-      // Images/Carousels support impressions but not video_views/plays.
       const productType = (item.media_product_type || '').toUpperCase();
       const mediaType   = (item.media_type || '').toUpperCase();
-      const isReel      = productType === 'REELS' || productType === 'REEL';
+      const isReel      = productType === 'REELS' || productType === 'REEL' || (mediaType === 'VIDEO' && !productType);
       const isFeedVideo = mediaType === 'VIDEO' && !isReel;
 
-      const metrics = isReel
-        ? 'reach,saved,shares,plays,total_interactions'          // Reels: no impressions/video_views
-        : isFeedVideo
-          ? 'impressions,reach,saved,shares,video_views,total_interactions'
-          : 'impressions,reach,saved,shares,total_interactions'; // IMAGE / CAROUSEL
-
-      try {
-        // Endpoint 2: /{media-id}/insights
-        const resp = await fetch(`${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`);
-        const data = await resp.json();
-        if (data.error) throw new Error(data.error.message);
-        const ins = {};
-        (data.data || []).forEach(m => { ins[m.name] = m.values?.[0]?.value ?? m.value ?? 0; });
-        return { ...item, ins };
-      } catch {
-        // Endpoint 3 fallback: /{media-id} direct fields
+      // Fetch insights only if the probe confirmed they work
+      if (insightsAvailable) {
+        const metrics = isReel
+          ? 'reach,saved,shares,plays,total_interactions'
+          : isFeedVideo
+            ? 'impressions,reach,saved,shares,video_views,total_interactions'
+            : 'impressions,reach,saved,shares,total_interactions';
         try {
-          const fields = 'id,like_count,comments_count,video_views';
-          const r2 = await fetch(`${META_API}/${item.id}?fields=${fields}&access_token=${META_CONFIG.token}`);
-          const d2 = await r2.json();
-          return { ...item, ...d2, ins: {
-            reach: 0, impressions: 0, saved: 0, shares: 0,
-            plays: d2.video_views || 0, total_interactions: (d2.like_count||0) + (d2.comments_count||0),
-          }};
-        } catch { return { ...item, ins: {} }; }
+          const resp = await fetch(`${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`);
+          const data = await resp.json();
+          if (!data.error) {
+            const ins = {};
+            (data.data || []).forEach(m => { ins[m.name] = m.values?.[0]?.value ?? m.value ?? 0; });
+            return { ...item, ins };
+          }
+        } catch { /* fall through to Endpoint 3 */ }
       }
+
+      // Endpoint 3 fallback: /{media-id} with direct engagement fields
+      try {
+        const fields = 'id,like_count,comments_count,video_views';
+        const r2 = await fetch(`${META_API}/${item.id}?fields=${fields}&access_token=${META_CONFIG.token}`);
+        const d2 = await r2.json();
+        return { ...item, ...d2, ins: {
+          reach: 0, impressions: 0, saved: 0, shares: 0,
+          plays: d2.video_views || 0,
+          total_interactions: (d2.like_count||0) + (d2.comments_count||0),
+        }};
+      } catch { return { ...item, ins: {} }; }
     }));
 
     IG_ALL_DATA = enriched.map(item => {
