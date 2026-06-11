@@ -9771,7 +9771,7 @@ function switchIgTab(tab) {
 }
 
 // ── Sync all posts from Meta ─────────────────────────────
-const META_API = 'https://graph.facebook.com/v18.0';
+const META_API = 'https://graph.facebook.com/v22.0';
 
 // ── Endpoint 4: Verify Instagram account connection ───────────────────────
 async function verifyIgAccount() {
@@ -9938,7 +9938,7 @@ async function syncMetaAll() {
       const probe = allItems[0];
       const probeType = (probe.media_product_type || '').toUpperCase();
       const probeIsReel = probeType === 'REELS' || probeType === 'REEL' || (probe.media_type||'').toUpperCase() === 'VIDEO';
-      const probeMetrics = probeIsReel ? 'reach,saved,shares,plays' : 'reach,impressions,saved,shares';
+      const probeMetrics = probeIsReel ? 'reach,saved,shares,plays' : 'reach,saved,shares';
       try {
         const pr = await fetch(`${META_API}/${probe.id}/insights?metric=${probeMetrics}&access_token=${META_CONFIG.token}`);
         const pd = await pr.json();
@@ -9966,8 +9966,8 @@ async function syncMetaAll() {
         const metrics = isReel
           ? 'reach,saved,shares,plays,total_interactions'
           : isFeedVideo
-            ? 'impressions,reach,saved,shares,video_views,total_interactions'
-            : 'impressions,reach,saved,shares,total_interactions';
+            ? 'reach,saved,shares,video_views,total_interactions'
+            : 'reach,saved,shares,total_interactions';
         try {
           const resp = await fetch(`${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`);
           const data = await resp.json();
