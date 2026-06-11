@@ -9993,26 +9993,25 @@ async function syncMetaAll() {
 
       // Fetch insights only if the probe confirmed they work
       if (insightsAvailable) {
-        const baseMetrics = 'reach,saved,shares,total_interactions';
-        // Reels: try with plays first; if API rejects it, retry without so reach/saves/shares always work.
-        const firstMetrics = isReel ? 'reach,saved,shares,views,total_views,total_interactions' : baseMetrics;
+        const baseMetrics  = 'reach,saved,shares,total_interactions';
+        // Attempt order for Reels: full → views-only → base. Each retry keeps as many metrics as possible.
+        const attempts = isReel
+          ? ['reach,saved,shares,views,total_views,total_interactions',
+             'reach,saved,shares,views,total_interactions',
+             baseMetrics]
+          : [baseMetrics];
         try {
-          let resp = await fetch(`${META_API}/${item.id}/insights?metric=${firstMetrics}&access_token=${META_CONFIG.token}`);
-          let data = await resp.json();
-          if (data.error && isReel) {
-            // Surface the plays error once in status bar for diagnosis
-            if (statusEl && !statusEl._playsErrShown) {
-              statusEl._playsErrShown = true;
-              statusEl.textContent = `ℹ️ plays metric: ${data.error.message || data.error.type || 'rejected'} — retrying without plays`;
+          let ins = null;
+          for (const metrics of attempts) {
+            const resp = await fetch(`${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`);
+            const data = await resp.json();
+            if (!data.error) {
+              ins = {};
+              (data.data || []).forEach(m => { ins[m.name] = m.values?.[0]?.value ?? m.value ?? 0; });
+              break;
             }
-            resp = await fetch(`${META_API}/${item.id}/insights?metric=${baseMetrics}&access_token=${META_CONFIG.token}`);
-            data = await resp.json();
           }
-          if (!data.error) {
-            const ins = {};
-            (data.data || []).forEach(m => { ins[m.name] = m.values?.[0]?.value ?? m.value ?? 0; });
-            return { ...item, ins };
-          }
+          if (ins) return { ...item, ins };
         } catch { /* fall through to Endpoint 3 */ }
       }
 
