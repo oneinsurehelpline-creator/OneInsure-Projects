@@ -9933,16 +9933,24 @@ async function syncMetaAll() {
 
     // Endpoint 2: insights per post; Endpoint 3 as fallback
     const enriched = await Promise.all(allItems.map(async item => {
-      const isVideo = ['VIDEO','REEL','REELS'].includes(item.media_type || item.media_product_type);
-      // Instagram requires different metric sets per media type
-      // Images/Carousels support impressions; Reels use plays instead
-      const metrics = isVideo
-        ? 'reach,impressions,saved,shares,video_views,plays,total_interactions'
-        : 'reach,impressions,saved,shares,total_interactions';
+      // Instagram errors if you request an unsupported metric for a media type.
+      // Reels do NOT support impressions or video_views — use plays instead.
+      // Feed videos support impressions + video_views.
+      // Images/Carousels support impressions but not video_views/plays.
+      const productType = (item.media_product_type || '').toUpperCase();
+      const mediaType   = (item.media_type || '').toUpperCase();
+      const isReel      = productType === 'REELS' || productType === 'REEL';
+      const isFeedVideo = mediaType === 'VIDEO' && !isReel;
+
+      const metrics = isReel
+        ? 'reach,saved,shares,plays,total_interactions'          // Reels: no impressions/video_views
+        : isFeedVideo
+          ? 'impressions,reach,saved,shares,video_views,total_interactions'
+          : 'impressions,reach,saved,shares,total_interactions'; // IMAGE / CAROUSEL
+
       try {
         // Endpoint 2: /{media-id}/insights
-        const url = `${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`;
-        const resp = await fetch(url);
+        const resp = await fetch(`${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`);
         const data = await resp.json();
         if (data.error) throw new Error(data.error.message);
         const ins = {};
@@ -9951,13 +9959,12 @@ async function syncMetaAll() {
       } catch {
         // Endpoint 3 fallback: /{media-id} direct fields
         try {
-          const fb = 'id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count,video_views,play_count';
-          const r2 = await fetch(`${META_API}/${item.id}?fields=${fb}&access_token=${META_CONFIG.token}`);
+          const fields = 'id,like_count,comments_count,video_views';
+          const r2 = await fetch(`${META_API}/${item.id}?fields=${fields}&access_token=${META_CONFIG.token}`);
           const d2 = await r2.json();
           return { ...item, ...d2, ins: {
             reach: 0, impressions: 0, saved: 0, shares: 0,
-            total_interactions: (d2.like_count||0) + (d2.comments_count||0),
-            video_views: d2.video_views || 0, plays: d2.play_count || 0,
+            plays: d2.video_views || 0, total_interactions: (d2.like_count||0) + (d2.comments_count||0),
           }};
         } catch { return { ...item, ins: {} }; }
       }
@@ -9965,17 +9972,19 @@ async function syncMetaAll() {
 
     IG_ALL_DATA = enriched.map(item => {
       const ins         = item.ins || {};
-      const likes       = item.like_count     || 0;
+      const likes       = item.like_count      || 0;
       const comments    = item.comments_count  || 0;
       const reach       = ins.reach            || 0;
       const impressions = ins.impressions      || 0;
       const saved       = ins.saved            || 0;
       const shares      = ins.shares           || 0;
-      const views       = ins.video_views      || ins.plays || ins.views || item.video_views || item.play_count || 0;
+      const views       = ins.plays || ins.video_views || item.video_views || 0;
       const total       = ins.total_interactions || (likes + comments + saved + shares);
       const engRate     = reach > 0 ? (total / reach * 100) : 0;
       const caption     = (item.caption || '').split('\n')[0].slice(0, 80) || 'Untitled';
-      const posted      = item.timestamp ? new Date(item.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
+      const posted      = item.timestamp
+        ? new Date(item.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
+        : '—';
       return {
         id: item.id, caption,
         mediaType: item.media_product_type || item.media_type,
