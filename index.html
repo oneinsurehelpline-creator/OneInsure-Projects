@@ -908,10 +908,17 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .reaction-chip:hover{border-color:var(--blue);background:var(--blue-light);}
 .reaction-chip.mine{border-color:var(--blue);background:var(--blue-light);}
 .reaction-count{font-size:10px;font-weight:700;color:var(--ink3);}
-.chat-action-row{display:flex;gap:6px;opacity:0;transition:opacity 0.15s;margin-top:2px;}
+.chat-action-row{display:flex;gap:6px;opacity:0;transition:opacity 0.15s;margin-top:2px;align-items:center;}
 .chat-msg:hover .chat-action-row{opacity:1;}
 .chat-react-btn{font-size:11px;padding:2px 6px;background:none;border:1px solid var(--border);border-radius:10px;cursor:pointer;color:var(--ink3);}
 .chat-react-btn:hover{background:var(--cream2);}
+.chat-action-sep{width:1px;height:14px;background:var(--border);margin:0 2px;}
+.chat-edit-btn{font-size:11px;padding:2px 7px;background:none;border:1px solid var(--border);border-radius:10px;cursor:pointer;color:var(--ink3);}
+.chat-edit-btn:hover{background:var(--cream2);color:var(--ink);}
+.chat-del-btn{font-size:11px;padding:2px 7px;background:none;border:1px solid transparent;border-radius:10px;cursor:pointer;color:var(--ink3);}
+.chat-del-btn:hover{background:#fef2f2;border-color:#fecaca;color:var(--red);}
+.chat-edit-wrap{display:flex;gap:6px;margin-top:4px;align-items:center;}
+.chat-edit-input{flex:1;border:1px solid var(--navy);border-radius:10px;padding:5px 10px;font-size:13px;font-family:var(--ff-body);outline:none;}
 
 /* ── POST PERFORMANCE ── */
 .perf-table{width:100%;border-collapse:collapse;font-size:12px;}
@@ -1597,10 +1604,14 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
             <!-- Main chat area -->
             <div class="chat-main">
               <div class="chat-header">
-                <div>
+                <div style="flex:1;">
                   <div class="chat-header-title" id="chat-header-title">General</div>
                   <div class="chat-header-meta" id="chat-header-meta">Team-wide conversation</div>
                 </div>
+                <button id="clear-channel-btn" onclick="clearChannelMessages()" title="Clear all messages in this channel"
+                  style="display:none;background:none;border:1px solid var(--border);border-radius:var(--rad);padding:4px 10px;font-size:11px;color:var(--ink3);cursor:pointer;">
+                  🗑 Clear History
+                </button>
               </div>
               <div class="chat-messages" id="chat-messages">
                 <div class="empty" style="margin:auto;">
@@ -2482,9 +2493,12 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeBulkModal()">Cancel</button>
-      <button class="btn btn-coral" onclick="applyBulkActions()">Apply to Selected</button>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn" style="color:var(--red);border-color:var(--red);" onclick="bulkDeleteTasks()">🗑 Delete Selected</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeBulkModal()">Cancel</button>
+        <button class="btn btn-coral" onclick="applyBulkActions()">Apply to Selected</button>
+      </div>
     </div>
   </div>
 </div>
@@ -4367,10 +4381,10 @@ function taskCardHTML(t){
   const plats=Array.isArray(t.platforms)?t.platforms:[];
   const isSel = _bulkSelected.has(t.id);
   const bulkCheck = _bulkMode
-    ? `<input type="checkbox" class="bulk-check" ${isSel?'checked':''} onclick="event.stopPropagation();toggleTaskSelect(${t.id})" style="width:15px;height:15px;cursor:pointer;accent-color:var(--coral);flex-shrink:0;"/>`
+    ? `<input type="checkbox" class="bulk-check" ${isSel?'checked':''} onclick="event.stopPropagation();toggleTaskSelect('${t.id}')" style="width:15px;height:15px;cursor:pointer;accent-color:var(--coral);flex-shrink:0;"/>`
     : '';
   return `<div class="task-card${t.id===selectedId?' sel':''}${t.status==='blocked'?' blocked':''}${isSel?' sel':''}"
-    onclick="${_bulkMode?`toggleTaskSelect(${t.id})`:`openTask(${t.id})`}"
+    onclick="${_bulkMode?`toggleTaskSelect('${t.id}')`:`openTask('${t.id}')`}"
     style="${isSel?'border-color:var(--coral);border-width:2px;':''}"
   >
     <div class="tc-top">
@@ -6319,6 +6333,22 @@ async function applyBulkActions() {
   auditLog('bulk_action',`Bulk updated ${changed} tasks`,{status:newStatus||'—',assignee:newAssignee||'—',due:newDue||'—'});
 }
 
+async function bulkDeleteTasks() {
+  if (!_bulkSelected.size) { toast('Select at least one task first.','warn'); return; }
+  const count = _bulkSelected.size;
+  sdConfirm(`Delete ${count} task${count!==1?'s':''}? This cannot be undone.`, async () => {
+    closeBulkModal();
+    for (const id of _bulkSelected) {
+      TASKS.splice(TASKS.findIndex(t => t.id === id), 1);
+      await fbDeleteTask(id);
+    }
+    clearBulkSelection();
+    renderTasks();
+    toast(`Deleted ${count} task${count!==1?'s':''}`, 'ok');
+    auditLog('bulk_delete', `Bulk deleted ${count} tasks`, {});
+  });
+}
+
 // ═══════════════════════════════════════════
 // EMAIL NOTIFICATIONS (EmailJS)
 // ═══════════════════════════════════════════
@@ -8046,6 +8076,10 @@ function renderChat() {
     document.getElementById('chat-header-meta').textContent = rm?.desc ? `${rm.desc} · ${memberStr}` : memberStr;
   }
 
+  // Show clear history button only for head/manager in non-DM rooms
+  const clearBtn = document.getElementById('clear-channel-btn');
+  if (clearBtn) clearBtn.style.display = (!currentDM && (role==='head'||role==='manager')) ? 'block' : 'none';
+
   // Render DM list in sidebar
   renderDMList();
 
@@ -8329,6 +8363,9 @@ function renderChatMessages() {
         ${reactionHtml}
         <div class="chat-action-row">
           ${['👍','❤️','😂','🔥'].map(e=>`<button class="chat-react-btn" onclick="toggleReaction('${msg.id}','${e}')">${e}</button>`).join('')}
+          ${(isMine || role==='head' || role==='manager') ? `<div class="chat-action-sep"></div>` : ''}
+          ${isMine && msg.text ? `<button class="chat-edit-btn" onclick="startEditChatMsg('${msg.id}')">✏️ Edit</button>` : ''}
+          ${(isMine || role==='head' || role==='manager') ? `<button class="chat-del-btn" onclick="deleteChatMsg('${msg.id}')">🗑</button>` : ''}
         </div>
       </div>
     </div>`;
@@ -8347,6 +8384,67 @@ async function toggleReaction(msgId, emoji) {
   else reactions[emoji] = [...users, me];
   if (!reactions[emoji].length) delete reactions[emoji];
   await db.collection('chat').doc(msgId).update({ reactions });
+}
+
+async function deleteChatMsg(id) {
+  sdConfirm('Delete this message?', async () => {
+    if (fbReady && db) await db.collection('chat').doc(String(id)).delete();
+    const i = CHAT_MESSAGES.findIndex(m => m.id === id);
+    if (i !== -1) CHAT_MESSAGES.splice(i, 1);
+    renderChatMessages();
+  });
+}
+
+function startEditChatMsg(id) {
+  const msg = CHAT_MESSAGES.find(m => m.id === id);
+  if (!msg) return;
+  // Replace the bubble with an inline editor
+  const bubbleEls = document.querySelectorAll('.chat-msg');
+  bubbleEls.forEach(el => {
+    const btn = el.querySelector(`[onclick="startEditChatMsg('${id}')"]`);
+    if (!btn) return;
+    const bubble = el.querySelector('.chat-bubble');
+    if (!bubble) return;
+    const original = msg.text;
+    bubble.style.display = 'none';
+    const editWrap = document.createElement('div');
+    editWrap.className = 'chat-edit-wrap';
+    editWrap.innerHTML = `
+      <input class="chat-edit-input" id="edit-input-${id}" value="${original.replace(/"/g,'&quot;')}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saveEditChatMsg('${id}');}if(event.key==='Escape')cancelEditChatMsg('${id}')">
+      <button class="btn btn-sm btn-coral" style="padding:4px 10px;font-size:12px;" onclick="saveEditChatMsg('${id}')">Save</button>
+      <button class="btn btn-sm btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="cancelEditChatMsg('${id}')">Cancel</button>`;
+    bubble.parentNode.insertBefore(editWrap, bubble.nextSibling);
+    document.getElementById(`edit-input-${id}`)?.focus();
+  });
+}
+
+async function saveEditChatMsg(id) {
+  const inp = document.getElementById(`edit-input-${id}`);
+  if (!inp) return;
+  const newText = inp.value.trim();
+  if (!newText) return;
+  const msg = CHAT_MESSAGES.find(m => m.id === id);
+  if (msg) {
+    msg.text = newText;
+    if (fbReady && db) await db.collection('chat').doc(String(id)).update({ text: newText, edited: true });
+  }
+  renderChatMessages();
+}
+
+function cancelEditChatMsg(id) { renderChatMessages(); }
+
+async function clearChannelMessages() {
+  const roomId = document.getElementById('chat-header-title')?.textContent?.trim() || '';
+  sdConfirm(`Delete ALL messages in this channel? This cannot be undone.`, async () => {
+    if (!fbReady || !db) return;
+    const snap = await db.collection('chat').where('room','==',currentRoom).get();
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    CHAT_MESSAGES.length = 0;
+    renderChatMessages();
+    toast('Channel cleared.', 'ok');
+  });
 }
 
 async function sendChatMessage() {
