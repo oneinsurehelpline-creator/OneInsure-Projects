@@ -1847,7 +1847,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                   <input type="text" id="meta-ig-id" placeholder="e.g. 17841405518148380"/>
                 </div>
                 <div class="fg fc-full"><label>Facebook Page ID</label>
-                  <input type="text" id="meta-page-id" placeholder="e.g. 279320515860081"/>
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="text" id="meta-page-id" placeholder="e.g. 279320515860081" style="flex:1;"/>
+                    <button class="btn btn-sm btn-ghost" onclick="autoDetectFbPageId()" style="white-space:nowrap;font-size:12px;">🔍 Auto-detect</button>
+                  </div>
                 </div>
                 <div class="fg fc-full"><label>App ID</label>
                   <input type="text" id="meta-app-id" placeholder="e.g. 864139039527765"/>
@@ -1862,9 +1865,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                   <input type="number" id="meta-limit" value="33" min="1" max="50"/>
                 </div>
               </div>
-              <div style="margin-top:10px;">
-                <button class="btn btn-sm btn-ghost" onclick="refreshMetaToken()" style="font-size:12px;">🔄 Refresh Token (extend 60 days)</button>
-                <span id="meta-token-status" style="font-size:11px;color:var(--ink3);margin-left:8px;"></span>
+              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <button class="btn btn-sm btn-ghost" onclick="refreshMetaToken()" style="font-size:12px;">🔄 Refresh Token (60 days)</button>
+                <button class="btn btn-sm btn-ghost" onclick="verifyMetaSetup()" style="font-size:12px;">✓ Verify Connection</button>
+                <span id="meta-token-status" style="font-size:11px;color:var(--ink3);flex:1;"></span>
               </div>
             </div>
             <div class="modal-footer">
@@ -9767,86 +9771,239 @@ function switchIgTab(tab) {
 }
 
 // ── Sync all posts from Meta ─────────────────────────────
+const META_API = 'https://graph.facebook.com/v18.0';
+
+// ── Endpoint 4: Verify Instagram account connection ───────────────────────
+async function verifyIgAccount() {
+  const { igId, token } = META_CONFIG;
+  if (!igId || !token) return null;
+  const resp = await fetch(`${META_API}/${igId}?fields=id,username&access_token=${token}`);
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message);
+  return data; // { id, username }
+}
+
+// ── Endpoint 7: Verify Facebook Page connection ───────────────────────────
+async function verifyFbPage() {
+  const { pageId, token } = META_CONFIG;
+  if (!pageId || !token) return null;
+  const resp = await fetch(`${META_API}/${pageId}?fields=id,name,fan_count&access_token=${token}`);
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message);
+  return data; // { id, name, fan_count }
+}
+
+// ── Endpoint 5: Auto-detect Facebook Page ID from token ──────────────────
+async function autoDetectFbPageId() {
+  const token = document.getElementById('meta-token').value.trim();
+  if (!token) { toast('Enter your access token first.', 'warn'); return; }
+  const statusEl = document.getElementById('meta-token-status');
+  if (statusEl) statusEl.textContent = 'Detecting pages…';
+  try {
+    const resp = await fetch(`${META_API}/me/accounts?fields=id,name,access_token&access_token=${token}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    const pages = data.data || [];
+    if (!pages.length) { toast('No Facebook Pages found for this token.', 'warn'); return; }
+    if (pages.length === 1) {
+      document.getElementById('meta-page-id').value = pages[0].id;
+      if (statusEl) statusEl.textContent = `✓ Page: ${pages[0].name} (${pages[0].id})`;
+      toast(`Page detected: ${pages[0].name}`, 'ok');
+    } else {
+      // Multiple pages — show picker
+      const picked = pages[0]; // default to first; user can override
+      document.getElementById('meta-page-id').value = picked.id;
+      const names = pages.map(p => `${p.name} (${p.id})`).join(', ');
+      if (statusEl) statusEl.textContent = `Found ${pages.length} pages — selected: ${picked.name}. Others: ${names}`;
+      toast(`${pages.length} pages found. First selected. Check Setup to change.`, 'ok');
+    }
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Detection failed.';
+    toast('Page detection failed: ' + e.message, 'warn');
+  }
+}
+
+async function verifyMetaSetup() {
+  const statusEl = document.getElementById('meta-token-status');
+  // Use values currently in the form (not yet saved)
+  const tempCfg = {
+    igId:  document.getElementById('meta-ig-id').value.trim(),
+    pageId: document.getElementById('meta-page-id').value.trim(),
+    token: document.getElementById('meta-token').value.trim(),
+  };
+  if (!tempCfg.token) { toast('Enter access token first.', 'warn'); return; }
+  if (statusEl) statusEl.textContent = 'Verifying…';
+  const results = [];
+  if (tempCfg.igId) {
+    try {
+      const r = await fetch(`${META_API}/${tempCfg.igId}?fields=id,username&access_token=${tempCfg.token}`);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      results.push(`✓ Instagram: @${d.username}`);
+    } catch(e) { results.push(`✗ Instagram: ${e.message}`); }
+  }
+  if (tempCfg.pageId) {
+    try {
+      const r = await fetch(`${META_API}/${tempCfg.pageId}?fields=id,name,fan_count&access_token=${tempCfg.token}`);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      results.push(`✓ Page: ${d.name} (${(d.fan_count||0).toLocaleString()} fans)`);
+    } catch(e) { results.push(`✗ Page: ${e.message}`); }
+  }
+  if (!results.length) { toast('Enter IG ID or Page ID to verify.', 'warn'); return; }
+  if (statusEl) statusEl.textContent = results.join(' · ');
+  const allOk = results.every(r => r.startsWith('✓'));
+  toast(allOk ? 'Connection verified!' : 'Some checks failed — see status above.', allOk ? 'ok' : 'warn');
+}
+
+// ── Endpoint 6: Sync Facebook Page videos ────────────────────────────────
+async function syncFacebookPageVideos() {
+  const { pageId, token } = META_CONFIG;
+  if (!pageId || !token) return [];
+  const fields = 'id,title,description,length,created_time,permalink_url,updated_time,views,likes.summary(true).limit(0),comments.summary(true).limit(0)';
+  let allVideos = [], after = null, page = 0;
+  do {
+    const cursor = after ? `&after=${after}` : '';
+    const resp = await fetch(`${META_API}/${pageId}/videos?fields=${fields}&limit=25${cursor}&access_token=${token}`);
+    const data = await resp.json();
+    if (data.error) { console.warn('FB video sync error:', data.error.message); break; }
+    const batch = data.data || [];
+    allVideos = allVideos.concat(batch);
+    after = data.paging?.cursors?.after;
+    page++;
+  } while (after && page < 4); // max 100 videos
+
+  return allVideos.map(v => ({
+    id:        'fb_' + v.id,
+    caption:   (v.title || v.description || 'Untitled').slice(0, 80),
+    mediaType: 'FB_VIDEO',
+    thumbnail: '',
+    permalink: v.permalink_url || '',
+    timestamp: v.created_time || '',
+    posted:    v.created_time ? new Date(v.created_time).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—',
+    views:     v.views || 0,
+    reach:     0,
+    impressions: 0,
+    likes:     v.likes?.summary?.total_count || 0,
+    comments:  v.comments?.summary?.total_count || 0,
+    shares:    0,
+    saved:     0,
+    engRate:   0,
+    source:    'facebook',
+  }));
+}
+
+// ── Main sync: endpoints 1 + 2 + 3 (Instagram) ───────────────────────────
 async function syncMetaAll() {
   loadMetaConfig();
   if (!META_CONFIG.token || !META_CONFIG.igId) { openMetaConfig(); return; }
   const statusEl = document.getElementById('reels-sync-status');
-  const btn = document.getElementById('reels-sync-btn');
+  const btn      = document.getElementById('reels-sync-btn');
   if (statusEl) statusEl.textContent = 'Syncing…';
   if (btn) btn.disabled = true;
 
   try {
-    const fields = 'id,caption,media_type,media_url,thumbnail_url,timestamp,permalink';
-    const mediaUrl = `https://graph.facebook.com/v19.0/${META_CONFIG.igId}/media?fields=${fields}&limit=${META_CONFIG.limit}&access_token=${META_CONFIG.token}`;
-    const mediaResp = await fetch(mediaUrl);
-    const mediaData = await mediaResp.json();
-    if (mediaData.error) throw new Error(mediaData.error.message);
+    // Endpoint 4: verify account first
+    const acct = await verifyIgAccount().catch(() => null);
+    if (acct) { if (statusEl) statusEl.textContent = `Verified: @${acct.username} — fetching posts…`; }
 
-    const items = mediaData.data || [];
-    if (!items.length) {
+    // Endpoint 1: fetch Instagram media with engagement fields
+    const igFields = 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,media_product_type';
+    let allItems = [], after = null, page = 0;
+    do {
+      const cursor = after ? `&after=${after}` : '';
+      const resp = await fetch(`${META_API}/${META_CONFIG.igId}/media?fields=${igFields}&limit=25${cursor}&access_token=${META_CONFIG.token}`);
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error.message);
+      allItems = allItems.concat(data.data || []);
+      after = data.paging?.cursors?.after;
+      page++;
+    } while (after && page < Math.ceil(META_CONFIG.limit / 25));
+
+    allItems = allItems.slice(0, META_CONFIG.limit);
+
+    if (!allItems.length) {
       toast('No posts found on this account.', 'warn');
       if (statusEl) statusEl.textContent = 'No posts found.';
       if (btn) btn.disabled = false;
       return;
     }
 
-    // Fetch insights per post
-    const insightPromises = items.map(async item => {
+    if (statusEl) statusEl.textContent = `Fetching insights for ${allItems.length} posts…`;
+
+    // Endpoint 2: insights per post; Endpoint 3 as fallback
+    const enriched = await Promise.all(allItems.map(async item => {
       try {
-        const isVideo = item.media_type === 'VIDEO' || item.media_type === 'REEL';
-        const metricList = isVideo
-          ? 'impressions,reach,likes,comments,shares,saved,video_views,plays'
-          : 'impressions,reach,likes,comments,shares,saved';
-        const url = `https://graph.facebook.com/v19.0/${item.id}/insights?metric=${metricList}&access_token=${META_CONFIG.token}`;
+        // Endpoint 2: /{media-id}/insights
+        const url = `${META_API}/${item.id}/insights?metric=reach,saved,total_interactions,views&access_token=${META_CONFIG.token}`;
         const resp = await fetch(url);
         const data = await resp.json();
+        if (data.error) throw new Error(data.error.message);
         const ins = {};
         (data.data || []).forEach(m => { ins[m.name] = m.values?.[0]?.value ?? m.value ?? 0; });
-        return { ...item, insights: ins };
-      } catch(e) { return { ...item, insights: {} }; }
-    });
+        return { ...item, ins };
+      } catch {
+        // Endpoint 3 fallback: /{media-id} direct fields
+        try {
+          const fb = 'id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count,video_views,play_count';
+          const r2 = await fetch(`${META_API}/${item.id}?fields=${fb}&access_token=${META_CONFIG.token}`);
+          const d2 = await r2.json();
+          return { ...item, ...d2, ins: {
+            reach: 0, saved: 0, total_interactions: (d2.like_count||0) + (d2.comments_count||0),
+            views: d2.video_views || d2.play_count || 0,
+          }};
+        } catch { return { ...item, ins: {} }; }
+      }
+    }));
 
-    const results = await Promise.all(insightPromises);
-
-    IG_ALL_DATA = results.map(item => {
-      const ins       = item.insights;
-      const views     = ins.video_views || ins.plays || 0;
-      const reach     = ins.reach || 0;
-      const impressions = ins.impressions || 0;
-      const likes     = ins.likes || 0;
-      const comments  = ins.comments || 0;
-      const shares    = ins.shares || 0;
-      const saved     = ins.saved || 0;
-      const engRate   = reach > 0 ? ((likes + comments + shares + saved) / reach * 100) : 0;
-      const caption   = (item.caption || '').split('\n')[0].slice(0, 80) || 'Untitled';
-      const posted    = item.timestamp ? new Date(item.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
-      const mediaType = item.media_type; // IMAGE, VIDEO, REEL, CAROUSEL_ALBUM
+    IG_ALL_DATA = enriched.map(item => {
+      const ins      = item.ins || {};
+      const likes    = item.like_count    || ins.total_interactions || 0;
+      const comments = item.comments_count || 0;
+      const reach    = ins.reach          || 0;
+      const saved    = ins.saved          || 0;
+      const views    = ins.views          || item.video_views || item.play_count || 0;
+      const total    = ins.total_interactions || (likes + comments);
+      const engRate  = reach > 0 ? (total / reach * 100) : 0;
+      const caption  = (item.caption || '').split('\n')[0].slice(0, 80) || 'Untitled';
+      const posted   = item.timestamp ? new Date(item.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
       return {
-        id: item.id, caption, mediaType,
+        id: item.id, caption,
+        mediaType: item.media_product_type || item.media_type,
         thumbnail: item.thumbnail_url || item.media_url || '',
         permalink: item.permalink || '',
         timestamp: item.timestamp || '',
-        posted, views, reach, impressions, likes, comments, shares, saved,
+        posted, views, reach, impressions: 0, likes, comments, shares: 0, saved,
         engRate: parseFloat(engRate.toFixed(2)),
+        source: 'instagram',
       };
     });
 
-    // REELS_DATA = video/reel subset (backward compat)
-    REELS_DATA = IG_ALL_DATA.filter(p => p.mediaType === 'VIDEO' || p.mediaType === 'REEL').map(p => ({
-      ...p,
-      type: p.mediaType === 'REEL' ? 'Reel' : 'Video',
+    REELS_DATA = IG_ALL_DATA.filter(p => ['VIDEO','REEL','REELS'].includes(p.mediaType)).map(p => ({
+      ...p, type: p.mediaType === 'REEL' || p.mediaType === 'REELS' ? 'Reel' : 'Video',
     }));
+
+    // Endpoint 6: sync Facebook Page videos if pageId configured
+    if (META_CONFIG.pageId) {
+      if (statusEl) statusEl.textContent = 'Syncing Facebook Page videos…';
+      const fbVideos = await syncFacebookPageVideos().catch(() => []);
+      if (fbVideos.length) {
+        IG_ALL_DATA = [...IG_ALL_DATA, ...fbVideos];
+        REELS_DATA  = [...REELS_DATA, ...fbVideos];
+        toast(`Also synced ${fbVideos.length} Facebook video${fbVideos.length!==1?'s':''}!`, 'ok');
+      }
+    }
 
     localStorage.setItem('sd_ig_all_data',  JSON.stringify(IG_ALL_DATA));
     localStorage.setItem('sd_reels_data',   JSON.stringify(REELS_DATA));
     const syncedAt = new Date().toLocaleString('en-IN');
     localStorage.setItem('sd_reels_synced', syncedAt);
-    if (statusEl) statusEl.textContent = 'Last synced: ' + syncedAt;
+    if (statusEl) statusEl.textContent = `Last synced: ${syncedAt}` + (acct ? ` · @${acct.username}` : '');
     if (btn) btn.disabled = false;
 
     renderIgAllPanel();
     renderReelsPanel();
-    toast(`Synced ${IG_ALL_DATA.length} post${IG_ALL_DATA.length !== 1 ? 's' : ''} from Instagram!`, 'ok');
+    toast(`Synced ${IG_ALL_DATA.length} post${IG_ALL_DATA.length !== 1 ? 's' : ''} from Meta!`, 'ok');
   } catch(e) {
     console.error('Meta sync error:', e);
     if (statusEl) statusEl.textContent = 'Sync failed — check token & ID.';
