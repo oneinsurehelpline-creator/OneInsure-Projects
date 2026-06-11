@@ -644,6 +644,13 @@ a{text-decoration:none;color:inherit;}
   font-size:16px;color:var(--ink4);
 }
 .chat-empty-icon{font-size:48px;margin-bottom:16px;}
+.msg-actions{display:flex;gap:6px;margin-top:4px;padding:0 4px;}
+.msg-action-btn{background:none;border:1px solid rgba(0,0,0,0.12);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--ink3);cursor:pointer;}
+.msg-action-btn.del{border-color:transparent;}
+.msg-action-btn.del:active{background:#fef2f2;color:#dc2626;}
+.msg-edit-input{width:100%;border:1.5px solid var(--navy);border-radius:14px;padding:8px 12px;font-size:15px;font-family:inherit;outline:none;margin-top:4px;box-sizing:border-box;}
+.chat-clear-btn{background:none;border:none;color:rgba(255,255,255,0.5);font-size:13px;padding:0 4px;cursor:pointer;white-space:nowrap;}
+.chat-clear-btn:active{color:#fff;}
 
 .chat-input-bar{
   flex-shrink:0;
@@ -1116,6 +1123,7 @@ a{text-decoration:none;color:inherit;}
         <div class="chat-room-name" id="chat-room-title">Chat</div>
         <div class="chat-room-subtitle" id="chat-room-subtitle"></div>
       </div>
+      <button id="mobile-clear-chat-btn" class="chat-clear-btn" onclick="clearMobileChatRoom()" style="display:none;">🗑</button>
     </div>
   </div>
   <div class="chat-messages" id="chat-messages">
@@ -1247,9 +1255,12 @@ a{text-decoration:none;color:inherit;}
     <div class="tdf-lbl">Notes</div>
     <div class="tdf-val" id="td-notes" style="line-height:1.6;"></div>
   </div>
-  <div class="sheet-actions">
-    <button class="sheet-btn-cancel" onclick="closeSheet()">Close</button>
-    <button class="sheet-btn-primary" onclick="updateCurrentTaskStatus()">Save Changes</button>
+  <div class="sheet-actions" style="flex-direction:column;gap:8px;">
+    <div style="display:flex;gap:8px;">
+      <button class="sheet-btn-cancel" onclick="closeSheet()">Close</button>
+      <button class="sheet-btn-primary" onclick="updateCurrentTaskStatus()">Save Changes</button>
+    </div>
+    <button id="td-delete-btn" onclick="deleteCurrentTask()" style="display:none;width:100%;padding:12px;background:none;border:1.5px solid #fca5a5;border-radius:12px;color:#dc2626;font-size:15px;font-weight:600;cursor:pointer;">🗑 Delete Task</button>
   </div>
 </div>
 
@@ -1821,6 +1832,9 @@ function openTaskDetail(id) {
   const labels   = {todo:'To Do',inprogress:'In Progress',review:'Review',done:'Done',blocked:'Blocked'};
   document.getElementById('td-status-row').innerHTML =
     statuses.map(s => `<button class="s-btn${t.status===s?' active-st':''}" onclick="setTaskDetailStatus('${s}',this)">${labels[s]}</button>`).join('');
+  const isManager = currentMember && (currentMember.role === 'head' || currentMember.role === 'manager');
+  const delBtn = document.getElementById('td-delete-btn');
+  if (delBtn) delBtn.style.display = isManager ? 'block' : 'none';
   openSheet('sheet-task-detail');
 }
 
@@ -1905,6 +1919,9 @@ function openChatRoom(roomId, title, type, subtitle) {
   const prefix = type === 'channel' ? '# ' : '';
   document.getElementById('chat-room-title').textContent    = prefix + title;
   document.getElementById('chat-room-subtitle').textContent = subtitle || '';
+  const isManager = currentMember && (currentMember.role === 'head' || currentMember.role === 'manager');
+  const clearBtn = document.getElementById('mobile-clear-chat-btn');
+  if (clearBtn) clearBtn.style.display = isManager ? 'block' : 'none';
   const screen = document.getElementById('chat-room-screen');
   screen.classList.add('open');
   document.getElementById('chat-messages').innerHTML =
@@ -1918,11 +1935,11 @@ function openChatRoom(roomId, title, type, subtitle) {
     .orderBy('loggedAt','asc')
     .limit(100)
     .onSnapshot(snap => {
-      renderMessages(snap.docs.map(d => d.data()));
+      renderMessages(snap.docs.map(d => ({id: d.id, ...d.data()})));
     }, () => {
       db.collection('chat').where('room','==',roomId).limit(100)
         .onSnapshot(snap => {
-          renderMessages(snap.docs.map(d => d.data()).sort((a,b) => (a.loggedAt||0)-(b.loggedAt||0)));
+          renderMessages(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => (a.loggedAt||0)-(b.loggedAt||0)));
         });
     });
 }
@@ -1951,12 +1968,18 @@ function renderMessages(msgs) {
     const member  = MEMBERS.find(x => x.name === m.sender) || {av:'av-a'};
     const initial = (m.sender || '?').charAt(0).toUpperCase();
     const time    = ts.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true});
-    html += `<div class="chat-msg${isMine?' mine':''}">
+    const canDelete = isMine || (currentMember && (currentMember.role==='head'||currentMember.role==='manager'));
+    const actionBtns = (isMine || canDelete) ? `<div class="msg-actions">
+      ${isMine && m.text ? `<button class="msg-action-btn" onclick="startMobileEditMsg('${m.id}')">✏️ Edit</button>` : ''}
+      ${canDelete ? `<button class="msg-action-btn del" onclick="deleteMobileMsg('${m.id}')">🗑</button>` : ''}
+    </div>` : '';
+    html += `<div class="chat-msg${isMine?' mine':''}" id="cmsg-${m.id}">
       <div class="msg-av ${member.av}">${initial}</div>
       <div class="msg-body">
         ${!isMine ? `<div class="msg-sender-name">${escHtml(m.sender||'')}</div>` : ''}
-        <div class="msg-bubble">${escHtml(m.text||'')}</div>
-        <div class="msg-time">${time}</div>
+        <div class="msg-bubble" id="mbubble-${m.id}">${escHtml(m.text||'')}</div>
+        <div class="msg-time">${time}${m.edited?' · edited':''}</div>
+        ${actionBtns}
       </div>
     </div>`;
   });
@@ -1982,6 +2005,71 @@ async function sendMessage() {
     showToast('Failed to send', 'err');
     input.value = text;
   }
+}
+
+async function deleteMobileMsg(id) {
+  if (!confirm('Delete this message?')) return;
+  try {
+    await db.collection('chat').doc(String(id)).delete();
+    showToast('Message deleted', 'ok');
+  } catch(e) { showToast('Error deleting message', 'err'); }
+}
+
+function startMobileEditMsg(id) {
+  const bubble = document.getElementById(`mbubble-${id}`);
+  if (!bubble) return;
+  const current = bubble.textContent;
+  bubble.style.display = 'none';
+  const wrap = document.createElement('div');
+  wrap.id = `medit-wrap-${id}`;
+  wrap.innerHTML = `<input class="msg-edit-input" id="medit-${id}" value="${current.replace(/"/g,'&quot;')}"
+    onkeydown="if(event.key==='Enter'){saveMobileEditMsg('${id}');}if(event.key==='Escape'){cancelMobileEdit('${id}');}">
+    <div style="display:flex;gap:8px;margin-top:6px;">
+      <button class="sheet-btn-primary" style="flex:1;padding:8px;" onclick="saveMobileEditMsg('${id}')">Save</button>
+      <button class="sheet-btn-cancel" style="flex:1;padding:8px;" onclick="cancelMobileEdit('${id}')">Cancel</button>
+    </div>`;
+  bubble.parentNode.insertBefore(wrap, bubble.nextSibling);
+  document.getElementById(`medit-${id}`)?.focus();
+}
+
+async function saveMobileEditMsg(id) {
+  const inp = document.getElementById(`medit-${id}`);
+  if (!inp) return;
+  const newText = inp.value.trim();
+  if (!newText) return;
+  try {
+    await db.collection('chat').doc(String(id)).update({ text: newText, edited: true });
+    showToast('Message updated', 'ok');
+  } catch(e) { showToast('Error saving edit', 'err'); }
+}
+
+function cancelMobileEdit(id) {
+  const wrap = document.getElementById(`medit-wrap-${id}`);
+  const bubble = document.getElementById(`mbubble-${id}`);
+  if (wrap) wrap.remove();
+  if (bubble) bubble.style.display = '';
+}
+
+async function clearMobileChatRoom() {
+  if (!chatRoomId) return;
+  if (!confirm('Delete ALL messages in this channel? Cannot be undone.')) return;
+  try {
+    const snap = await db.collection('chat').where('room','==',chatRoomId).get();
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    showToast('Channel cleared', 'ok');
+  } catch(e) { showToast('Error clearing channel', 'err'); }
+}
+
+async function deleteCurrentTask() {
+  if (!currentTaskDetail) return;
+  if (!confirm(`Delete "${currentTaskDetail.title}"? Cannot be undone.`)) return;
+  try {
+    await db.collection('tasks').doc(String(currentTaskDetail.id)).delete();
+    showToast('Task deleted', 'ok');
+    closeSheet();
+  } catch(e) { showToast('Error deleting task', 'err'); }
 }
 
 /* ════════════════════════════════
