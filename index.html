@@ -1734,7 +1734,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                   <option value="likes">Likes</option>
                   <option value="comments">Comments</option>
                   <option value="reach">Reach</option>
-                  <option value="impressions">Impressions</option>
+                  <option value="views">Views</option>
                   <option value="saved">Saves</option>
                   <option value="engRate">Eng. Rate</option>
                   <option value="timestamp">Date Posted</option>
@@ -10177,7 +10177,7 @@ function renderIgTable() {
         <thead><tr>
           <th style="width:40px;"></th>
           <th style="min-width:180px;">Caption</th>
-          <th>Posted</th><th>Type</th><th>Reach</th><th>Impressions</th>
+          <th>Posted</th><th>Type</th><th>Reach</th><th>Views</th>
           <th>Likes</th><th>Comments</th><th>Shares</th><th>Saves</th>
           <th>Eng. Rate</th><th>Link</th>
         </tr></thead>
@@ -10187,7 +10187,7 @@ function renderIgTable() {
           <td style="white-space:nowrap;">${p.posted}</td>
           <td>${typeBadge(p.mediaType)}</td>
           <td>${fmtK(p.reach)}</td>
-          <td>${fmtK(p.impressions)}</td>
+          <td>${fmtK(p.views)}</td>
           <td style="color:${p.likes>0?'var(--coral)':'var(--ink3)'};">${fmtK(p.likes)}</td>
           <td style="color:${p.comments>0?'var(--navy)':'var(--ink3)'};">${fmtK(p.comments)}</td>
           <td>${fmtK(p.shares)}</td>
