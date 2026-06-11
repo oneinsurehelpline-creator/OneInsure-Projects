@@ -6336,7 +6336,7 @@ async function applyBulkActions() {
 async function bulkDeleteTasks() {
   if (!_bulkSelected.size) { toast('Select at least one task first.','warn'); return; }
   const count = _bulkSelected.size;
-  sdConfirm(`Delete ${count} task${count!==1?'s':''}? This cannot be undone.`, async () => {
+  sdConfirm('Delete Tasks', `Delete ${count} task${count!==1?'s':''}? This cannot be undone.`, async () => {
     closeBulkModal();
     for (const id of _bulkSelected) {
       TASKS.splice(TASKS.findIndex(t => t.id === id), 1);
@@ -8387,7 +8387,7 @@ async function toggleReaction(msgId, emoji) {
 }
 
 async function deleteChatMsg(id) {
-  sdConfirm('Delete this message?', async () => {
+  sdConfirm('Delete Message', 'Delete this message? This cannot be undone.', async () => {
     if (fbReady && db) await db.collection('chat').doc(String(id)).delete();
     const i = CHAT_MESSAGES.findIndex(m => m.id === id);
     if (i !== -1) CHAT_MESSAGES.splice(i, 1);
@@ -8435,7 +8435,7 @@ function cancelEditChatMsg(id) { renderChatMessages(); }
 
 async function clearChannelMessages() {
   const roomId = document.getElementById('chat-header-title')?.textContent?.trim() || '';
-  sdConfirm(`Delete ALL messages in this channel? This cannot be undone.`, async () => {
+  sdConfirm('Clear Channel', 'Delete ALL messages in this channel? This cannot be undone.', async () => {
     if (!fbReady || !db) return;
     const snap = await db.collection('chat').where('room','==',currentRoom).get();
     const batch = db.batch();
