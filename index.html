@@ -9963,9 +9963,10 @@ async function syncMetaAll() {
 
       // Fetch insights only if the probe confirmed they work
       if (insightsAvailable) {
-        // Use the same metrics for all types — avoids per-type errors.
-        // video_views (plays) come from the media endpoint (video_views field above).
-        const metrics = 'reach,saved,shares,total_interactions';
+        // Reels support 'plays' for view count; images, carousels, and feed videos don't.
+        const metrics = isReel
+          ? 'reach,saved,shares,plays,total_interactions'
+          : 'reach,saved,shares,total_interactions';
         try {
           const resp = await fetch(`${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`);
           const data = await resp.json();
