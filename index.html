@@ -1729,6 +1729,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                 <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;"><input type="checkbox" id="ig-filter-video" onchange="renderIgTable()" checked style="accent-color:var(--navy);"> Video/Reel</label>
               </div>
               <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
+                <span style="font-size:12px;font-weight:600;color:var(--ink2);">From</span>
+                <input type="date" id="ig-date-from" onchange="renderIgTable()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
+                <span style="font-size:12px;font-weight:600;color:var(--ink2);">To</span>
+                <input type="date" id="ig-date-to" onchange="renderIgTable()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
                 <span style="font-size:12px;font-weight:600;color:var(--ink2);">Sort By</span>
                 <select id="ig-sort-by" onchange="renderIgTable()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
                   <option value="likes">Likes</option>
@@ -1743,6 +1747,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                   <option value="desc">Descending</option>
                   <option value="asc">Ascending</option>
                 </select>
+                <button onclick="downloadIgReport()" style="font-size:12px;padding:6px 14px;background:var(--navy);color:#fff;border:none;border-radius:var(--rad);cursor:pointer;font-weight:600;font-family:var(--ff-body);">⬇ Export CSV</button>
                 <span id="ig-count" style="font-size:12px;color:var(--ink3);"></span>
               </div>
             </div>
@@ -1760,6 +1765,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                 <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="reels-filter-reel" onchange="renderReelsTable()" checked style="accent-color:var(--navy);"> Reel</label>
               </div>
               <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
+                <span style="font-size:12px;font-weight:600;color:var(--ink2);">From</span>
+                <input type="date" id="reels-date-from" onchange="renderReelsTable()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
+                <span style="font-size:12px;font-weight:600;color:var(--ink2);">To</span>
+                <input type="date" id="reels-date-to" onchange="renderReelsTable()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
                 <span style="font-size:12px;font-weight:600;color:var(--ink2);">Sort By</span>
                 <select id="reels-sort-by" onchange="renderReelsTable()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
                   <option value="views">Views</option>
@@ -1775,6 +1784,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                   <option value="desc">Descending</option>
                   <option value="asc">Ascending</option>
                 </select>
+                <button onclick="downloadReelsReport()" style="font-size:12px;padding:6px 14px;background:var(--navy);color:#fff;border:none;border-radius:var(--rad);cursor:pointer;font-weight:600;font-family:var(--ff-body);">⬇ Export CSV</button>
                 <span id="reels-count" style="font-size:12px;color:var(--ink3);"></span>
               </div>
             </div>
@@ -9963,25 +9973,20 @@ async function syncMetaAll() {
 
       // Fetch insights only if the probe confirmed they work
       if (insightsAvailable) {
-        // Always use the universal set so reach/saves/shares never break.
-        // plays is fetched separately below only for Reels.
-        const metrics = 'reach,saved,shares,total_interactions';
+        const baseMetrics = 'reach,saved,shares,total_interactions';
+        // Reels: try with plays first; if that fails, retry without so reach/saves/shares always work.
+        const firstMetrics = isReel ? 'reach,saved,shares,plays,total_interactions' : baseMetrics;
         try {
-          const resp = await fetch(`${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`);
-          const data = await resp.json();
+          let resp = await fetch(`${META_API}/${item.id}/insights?metric=${firstMetrics}&period=lifetime&access_token=${META_CONFIG.token}`);
+          let data = await resp.json();
+          if (data.error && isReel) {
+            // plays caused failure — retry with base metrics only
+            resp = await fetch(`${META_API}/${item.id}/insights?metric=${baseMetrics}&period=lifetime&access_token=${META_CONFIG.token}`);
+            data = await resp.json();
+          }
           if (!data.error) {
             const ins = {};
             (data.data || []).forEach(m => { ins[m.name] = m.values?.[0]?.value ?? m.value ?? 0; });
-            // Fetch plays separately for Reels — isolated so a failure never touches other metrics.
-            if (isReel) {
-              try {
-                const rp = await fetch(`${META_API}/${item.id}/insights?metric=plays&access_token=${META_CONFIG.token}`);
-                const rd = await rp.json();
-                if (!rd.error && rd.data?.[0]) {
-                  ins.plays = rd.data[0].values?.[0]?.value ?? rd.data[0].value ?? 0;
-                }
-              } catch { /* plays unavailable — views stays 0 */ }
-            }
             return { ...item, ins };
           }
         } catch { /* fall through to Endpoint 3 */ }
@@ -10149,12 +10154,17 @@ function renderIgTable() {
   const showVideo    = document.getElementById('ig-filter-video')?.checked    ?? true;
   const sortBy       = document.getElementById('ig-sort-by')?.value || 'likes';
   const sortOrder    = document.getElementById('ig-sort-order')?.value || 'desc';
+  const dateFrom     = document.getElementById('ig-date-from')?.value || '';
+  const dateTo       = document.getElementById('ig-date-to')?.value || '';
 
   let data = IG_ALL_DATA.filter(p => {
     const t = p.mediaType;
     if (t === 'IMAGE' && !showImage) return false;
     if (t === 'CAROUSEL_ALBUM' && !showCarousel) return false;
     if ((t === 'VIDEO' || t === 'REEL') && !showVideo) return false;
+    const d = (p.timestamp || '').slice(0, 10);
+    if (dateFrom && d && d < dateFrom) return false;
+    if (dateTo   && d && d > dateTo)   return false;
     return true;
   });
   data.sort((a,b) => {
@@ -10207,6 +10217,57 @@ function renderIgTable() {
         </tr>`).join('')}</tbody>
       </table>
     </div>`;
+}
+
+function _csvRow(vals) {
+  return vals.map(v => {
+    const s = String(v == null ? '' : v).replace(/"/g, '""');
+    return /[",\n]/.test(s) ? `"${s}"` : s;
+  }).join(',');
+}
+
+function downloadIgReport() {
+  const dateFrom = document.getElementById('ig-date-from')?.value || '';
+  const dateTo   = document.getElementById('ig-date-to')?.value || '';
+  const showImage    = document.getElementById('ig-filter-image')?.checked ?? true;
+  const showCarousel = document.getElementById('ig-filter-carousel')?.checked ?? true;
+  const showVideo    = document.getElementById('ig-filter-video')?.checked ?? true;
+  const data = IG_ALL_DATA.filter(p => {
+    const t = p.mediaType;
+    if (t === 'IMAGE' && !showImage) return false;
+    if (t === 'CAROUSEL_ALBUM' && !showCarousel) return false;
+    if ((t === 'VIDEO' || t === 'REEL') && !showVideo) return false;
+    const d = (p.timestamp || '').slice(0, 10);
+    if (dateFrom && d && d < dateFrom) return false;
+    if (dateTo   && d && d > dateTo)   return false;
+    return true;
+  });
+  const header = _csvRow(['Caption','Posted','Type','Reach','Views','Likes','Comments','Shares','Saves','Eng Rate%','Link']);
+  const rows = data.map(p => _csvRow([p.caption, p.posted, p.mediaType, p.reach, p.views, p.likes, p.comments, p.shares, p.saved, p.engRate, p.permalink]));
+  const csv = [header, ...rows].join('\n');
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], {type:'text/csv'})), download: `instagram-posts-${new Date().toISOString().slice(0,10)}.csv` });
+  a.click();
+  toast(`Exported ${data.length} posts`, 'ok');
+}
+
+function downloadReelsReport() {
+  const rdateFrom = document.getElementById('reels-date-from')?.value || '';
+  const rdateTo   = document.getElementById('reels-date-to')?.value || '';
+  const showVideo = document.getElementById('reels-filter-video')?.checked ?? true;
+  const showReel  = document.getElementById('reels-filter-reel')?.checked  ?? true;
+  const data = REELS_DATA.filter(r => {
+    if (!((r.type === 'Video' && showVideo) || (r.type === 'Reel' && showReel))) return false;
+    const d = (r.timestamp || '').slice(0, 10);
+    if (rdateFrom && d && d < rdateFrom) return false;
+    if (rdateTo   && d && d > rdateTo)   return false;
+    return true;
+  });
+  const header = _csvRow(['Caption','Posted','Type','Views','Reach','Likes','Comments','Shares','Saves','Eng Rate%','Link']);
+  const rows = data.map(r => _csvRow([r.caption, r.posted, r.type, r.views, r.reach, r.likes, r.comments, r.shares, r.saved, r.engRate, r.permalink]));
+  const csv = [header, ...rows].join('\n');
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], {type:'text/csv'})), download: `reels-report-${new Date().toISOString().slice(0,10)}.csv` });
+  a.click();
+  toast(`Exported ${data.length} videos`, 'ok');
 }
 
 // ── Reels panel (original) ───────────────────────────────
@@ -10278,11 +10339,19 @@ function renderReelsTable() {
     if (countEl) countEl.textContent = '';
     return;
   }
-  const showVideo = document.getElementById('reels-filter-video')?.checked ?? true;
-  const showReel  = document.getElementById('reels-filter-reel')?.checked  ?? true;
-  const sortBy    = document.getElementById('reels-sort-by')?.value || 'views';
-  const sortOrder = document.getElementById('reels-sort-order')?.value || 'desc';
-  let data = REELS_DATA.filter(r => (r.type === 'Video' && showVideo) || (r.type === 'Reel' && showReel));
+  const showVideo  = document.getElementById('reels-filter-video')?.checked ?? true;
+  const showReel   = document.getElementById('reels-filter-reel')?.checked  ?? true;
+  const sortBy     = document.getElementById('reels-sort-by')?.value || 'views';
+  const sortOrder  = document.getElementById('reels-sort-order')?.value || 'desc';
+  const rdateFrom  = document.getElementById('reels-date-from')?.value || '';
+  const rdateTo    = document.getElementById('reels-date-to')?.value || '';
+  let data = REELS_DATA.filter(r => {
+    if (!((r.type === 'Video' && showVideo) || (r.type === 'Reel' && showReel))) return false;
+    const d = (r.timestamp || '').slice(0, 10);
+    if (rdateFrom && d && d < rdateFrom) return false;
+    if (rdateTo   && d && d > rdateTo)   return false;
+    return true;
+  });
   data.sort((a,b) => {
     const av = sortBy === 'timestamp' ? (a.timestamp||'') : (a[sortBy]||0);
     const bv = sortBy === 'timestamp' ? (b.timestamp||'') : (b[sortBy]||0);
