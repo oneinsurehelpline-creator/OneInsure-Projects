@@ -9908,7 +9908,7 @@ async function syncMetaAll() {
     if (acct) { if (statusEl) statusEl.textContent = `Verified: @${acct.username} — fetching posts…`; }
 
     // Endpoint 1: fetch Instagram media with engagement fields
-    const igFields = 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,media_product_type';
+    const igFields = 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,media_product_type,video_views';
     let allItems = [], after = null, page = 0;
     do {
       const cursor = after ? `&after=${after}` : '';
@@ -9938,7 +9938,7 @@ async function syncMetaAll() {
       const probe = allItems[0];
       const probeType = (probe.media_product_type || '').toUpperCase();
       const probeIsReel = probeType === 'REELS' || probeType === 'REEL' || (probe.media_type||'').toUpperCase() === 'VIDEO';
-      const probeMetrics = probeIsReel ? 'reach,saved,shares,plays' : 'reach,saved,shares';
+      const probeMetrics = 'reach,saved,shares,total_interactions';
       try {
         const pr = await fetch(`${META_API}/${probe.id}/insights?metric=${probeMetrics}&access_token=${META_CONFIG.token}`);
         const pd = await pr.json();
@@ -9963,11 +9963,9 @@ async function syncMetaAll() {
 
       // Fetch insights only if the probe confirmed they work
       if (insightsAvailable) {
-        const metrics = isReel
-          ? 'reach,saved,shares,plays,total_interactions'
-          : isFeedVideo
-            ? 'reach,saved,shares,video_views,total_interactions'
-            : 'reach,saved,shares,total_interactions';
+        // Use the same metrics for all types — avoids per-type errors.
+        // video_views (plays) come from the media endpoint (video_views field above).
+        const metrics = 'reach,saved,shares,total_interactions';
         try {
           const resp = await fetch(`${META_API}/${item.id}/insights?metric=${metrics}&access_token=${META_CONFIG.token}`);
           const data = await resp.json();
@@ -10000,7 +9998,7 @@ async function syncMetaAll() {
       const impressions = ins.impressions      || 0;
       const saved       = ins.saved            || 0;
       const shares      = ins.shares           || 0;
-      const views       = ins.plays || ins.video_views || item.video_views || 0;
+      const views       = item.video_views || ins.plays || ins.video_views || 0;
       const total       = ins.total_interactions || (likes + comments + saved + shares);
       const engRate     = reach > 0 ? (total / reach * 100) : 0;
       const caption     = (item.caption || '').split('\n')[0].slice(0, 80) || 'Untitled';
