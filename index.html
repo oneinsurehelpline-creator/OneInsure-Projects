@@ -9974,14 +9974,18 @@ async function syncMetaAll() {
       // Fetch insights only if the probe confirmed they work
       if (insightsAvailable) {
         const baseMetrics = 'reach,saved,shares,total_interactions';
-        // Reels: try with plays first; if that fails, retry without so reach/saves/shares always work.
+        // Reels: try with plays first; if API rejects it, retry without so reach/saves/shares always work.
         const firstMetrics = isReel ? 'reach,saved,shares,plays,total_interactions' : baseMetrics;
         try {
-          let resp = await fetch(`${META_API}/${item.id}/insights?metric=${firstMetrics}&period=lifetime&access_token=${META_CONFIG.token}`);
+          let resp = await fetch(`${META_API}/${item.id}/insights?metric=${firstMetrics}&access_token=${META_CONFIG.token}`);
           let data = await resp.json();
           if (data.error && isReel) {
-            // plays caused failure — retry with base metrics only
-            resp = await fetch(`${META_API}/${item.id}/insights?metric=${baseMetrics}&period=lifetime&access_token=${META_CONFIG.token}`);
+            // Surface the plays error once in status bar for diagnosis
+            if (statusEl && !statusEl._playsErrShown) {
+              statusEl._playsErrShown = true;
+              statusEl.textContent = `ℹ️ plays metric: ${data.error.message || data.error.type || 'rejected'} — retrying without plays`;
+            }
+            resp = await fetch(`${META_API}/${item.id}/insights?metric=${baseMetrics}&access_token=${META_CONFIG.token}`);
             data = await resp.json();
           }
           if (!data.error) {
