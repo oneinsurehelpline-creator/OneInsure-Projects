@@ -598,12 +598,30 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .chat-dm-btn:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.92);}
 .chat-dm-btn.active{background:linear-gradient(135deg,rgba(0,176,255,0.25),rgba(64,224,208,0.15));color:#fff;font-weight:600;border-left:3px solid #00B0FF;padding-left:7px;}
 .chat-dm-unread{margin-left:auto;background:var(--coral);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center;}
-/* Channel room buttons (new icon+name style) */
-.room-icon{font-size:14px;flex-shrink:0;width:18px;text-align:center;}
-.room-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Channel room buttons — WhatsApp-style */
+.chat-room-btn{width:100%;text-align:left;padding:8px 12px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:var(--ff-body);color:rgba(255,255,255,0.55);transition:all 0.13s;display:flex;align-items:center;gap:8px;}
+.chat-room-btn:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);}
+.chat-room-btn.active{background:rgba(255,255,255,0.14);color:var(--white);}
+.chat-room-btn.active .room-dot{background:#4ade80;}
+.room-icon{font-size:15px;flex-shrink:0;width:20px;text-align:center;}
+.room-body{flex:1;min-width:0;}
+.room-top{display:flex;align-items:center;gap:4px;}
+.room-name{flex:1;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.room-preview{font-size:11px;color:rgba(255,255,255,0.32);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.room-unread{background:#25D366;color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;flex-shrink:0;line-height:15px;}
+.chat-room-btn.has-unread .room-name{font-weight:700;color:#fff;}
+.chat-room-btn.has-unread .room-preview{color:rgba(255,255,255,0.6);}
+.chat-room-btn.active .room-name{font-weight:600;}
 .room-count{font-size:10px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:1px 6px;border-radius:10px;flex-shrink:0;}
 .chat-manage-btn{opacity:0.6;font-size:12px!important;}
 .chat-manage-btn:hover{opacity:1;}
+/* New Group button in sidebar */
+.chat-new-group-btn{width:100%;text-align:left;padding:7px 12px;border-radius:8px;border:1.5px dashed rgba(255,255,255,0.18);background:transparent;cursor:pointer;font-family:var(--ff-body);color:rgba(255,255,255,0.4);font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;margin-top:6px;transition:all 0.13s;}
+.chat-new-group-btn:hover{border-color:rgba(255,255,255,0.4);color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.06);}
+/* New-group modal */
+.ng-emoji-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.ng-emoji{padding:4px 8px;border-radius:8px;border:1.5px solid var(--border2);background:var(--cream2);cursor:pointer;font-size:16px;transition:all 0.12s;}
+.ng-emoji.selected{border-color:var(--navy);background:var(--blue-light);}
 /* Channel Manager Modal */
 .cm-modal{width:560px;max-width:95vw;}
 .cm-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;}
@@ -2324,6 +2342,43 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 </div>
 
 <!-- CHANNEL MANAGER MODAL -->
+<!-- NEW GROUP MODAL -->
+<div class="overlay" id="new-group-modal" style="display:none;" onclick="if(event.target===this)closeNewGroup()">
+  <div class="modal" style="width:480px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-hdr">
+      <span class="modal-title">👥 Create New Group</span>
+      <button class="close-x" onclick="closeNewGroup()">×</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--ink2);display:block;margin-bottom:6px;">Icon</label>
+          <div id="ng-chosen-emoji" style="width:44px;height:44px;border-radius:12px;background:var(--cream2);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;" onclick="toggleNgEmojiPicker()">💬</div>
+          <div id="ng-emoji-picker" style="display:none;position:absolute;z-index:100;background:var(--white);border:1px solid var(--border2);border-radius:12px;padding:10px;box-shadow:0 8px 30px rgba(0,0,0,0.12);margin-top:4px;">
+            <div class="ng-emoji-grid">${['💬','🔥','💡','📢','🎯','✅','⚡','🚀','🎨','📊','🤝','📱','🌐','💰','🛡','⚖️','🎬','🌟','🏆','📝'].map(e=>`<span class="ng-emoji" onclick="selectNgEmoji('${e}')">${e}</span>`).join('')}</div>
+          </div>
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:12px;font-weight:600;color:var(--ink2);display:block;margin-bottom:6px;">Group Name <span style="color:var(--coral);">*</span></label>
+          <input id="ng-name" type="text" maxlength="30" placeholder="e.g. Design Team" style="width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:13px;font-family:var(--ff-body);box-sizing:border-box;">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink2);display:block;margin-bottom:6px;">Description <span style="font-weight:400;color:var(--ink3);">(optional)</span></label>
+        <input id="ng-desc" type="text" maxlength="80" placeholder="What's this group for?" style="width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:13px;font-family:var(--ff-body);box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink2);display:block;margin-bottom:8px;">Add Members</label>
+        <div id="ng-member-list" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:4px;border-top:1px solid var(--border);">
+        <button class="btn btn-sm btn-ghost" onclick="closeNewGroup()">Cancel</button>
+        <button class="btn btn-sm btn-coral" onclick="createNewGroup()">Create Group</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="channel-manager-modal" style="display:none;" onclick="if(event.target===this)closeChannelManager()">
   <div class="modal cm-modal">
     <div class="modal-hdr">
@@ -3441,6 +3496,7 @@ function initApp() {
   loadEmailConfig(); // load email notification config
   initPWA();         // PWA service worker + install prompt
   loadChannelMembers(); // load channel membership from Firestore
+  loadCustomChannels(); // load user-created groups
   migrateOldFlows(); // one-time migration from date-keyed to flows/active
   // Chat initialises lazily when user opens chat panel
   if (isFriday()) {
@@ -7781,6 +7837,24 @@ let currentRoom = 'general';
 let chatUnsubscribe = null;
 let CHANNEL_MEMBERS = {}; // roomId → [name, name, …]  (loaded from Firestore)
 let chatChannelUnsub = null;
+let CHANNEL_UNREAD = {};  // roomId → unread count
+let CHANNEL_LAST   = {};  // roomId → { sender, text, loggedAt }
+let _channelTrackers = {}; // roomId → unsubscribe fn
+let CUSTOM_CHANNELS = []; // user-created groups (loaded from Firestore)
+
+function _getLastRead(roomId) {
+  try { return JSON.parse(localStorage.getItem('sd_last_read') || '{}')[roomId] || 0; } catch { return 0; }
+}
+function _setLastRead(roomId, ts) {
+  try {
+    const m = JSON.parse(localStorage.getItem('sd_last_read') || '{}');
+    m[roomId] = ts || Date.now();
+    localStorage.setItem('sd_last_read', JSON.stringify(m));
+  } catch {}
+}
+function getAllRooms() {
+  return [...CHAT_ROOMS, ...CUSTOM_CHANNELS];
+}
 
 const CHAT_ROOMS = [
   { id: 'general',    label: 'General',    icon: '🌐', desc: 'Team-wide conversation' },
@@ -7865,6 +7939,76 @@ function trackDMRecent(otherUser) {
   const recent = JSON.parse(localStorage.getItem(key) || '[]');
   const updated = [otherUser, ...recent.filter(n => n !== otherUser)].slice(0, 10);
   localStorage.setItem(key, JSON.stringify(updated));
+}
+
+// ── Background unread trackers (one listener per accessible channel) ──
+function initAllChannelTrackers() {
+  if (!fbReady || !db) return;
+  getAllRooms().filter(r => canAccessChannel(r.id)).forEach(r => {
+    if (_channelTrackers[r.id]) return; // already watching
+    _channelTrackers[r.id] = db.collection('chat')
+      .where('room', '==', r.id)
+      .orderBy('loggedAt', 'desc')
+      .limit(10)
+      .onSnapshot(snap => {
+        if (!snap.size) return;
+        const msgs = snap.docs.map(d => ({...d.data(), id: d.id}));
+        const latest = msgs[0];
+        CHANNEL_LAST[r.id] = { sender: latest.sender || '', text: latest.text || (latest.type === 'poll' ? '📊 Poll' : latest.type === 'image' ? '🖼 Image' : ''), loggedAt: latest.loggedAt || 0 };
+        // Count unread: messages newer than last read, not from self
+        if (currentRoom !== r.id || currentDM) {
+          const lastRead = _getLastRead(r.id);
+          const n = msgs.filter(m => (m.loggedAt||0) > lastRead && m.sender !== loggedInMember?.name).length;
+          if (n > 0) CHANNEL_UNREAD[r.id] = n;
+        }
+        renderChannelList();
+      }, () => {});
+  });
+}
+
+function renderChannelList() {
+  const el = document.getElementById('chat-rooms');
+  if (!el) return;
+  const isManager = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
+  const accessible = getAllRooms().filter(r => canAccessChannel(r.id));
+  // Sort: active room stays first, then by most recent message, pinned General stays unless has activity
+  const sorted = [...accessible].sort((a, b) => {
+    if (a.id === currentRoom) return -1;
+    if (b.id === currentRoom) return 1;
+    const ua = CHANNEL_UNREAD[a.id] || 0, ub = CHANNEL_UNREAD[b.id] || 0;
+    if (ua !== ub) return ub - ua; // unread rooms bubble up
+    const ta = CHANNEL_LAST[a.id]?.loggedAt || 0, tb = CHANNEL_LAST[b.id]?.loggedAt || 0;
+    return tb - ta;
+  });
+  el.innerHTML = sorted.map(r => {
+    const isActive = r.id === currentRoom && !currentDM;
+    const unread   = CHANNEL_UNREAD[r.id] || 0;
+    const last     = CHANNEL_LAST[r.id];
+    const preview  = last ? `${last.sender !== loggedInMember?.name ? last.sender + ': ' : ''}${last.text || ''}`.slice(0, 38) : r.desc || '';
+    return `<button class="chat-room-btn${isActive?' active':''}${unread?' has-unread':''}" onclick="switchRoom('${r.id}')">
+      <span class="room-icon">${r.icon}</span>
+      <div class="room-body">
+        <div class="room-top">
+          <span class="room-name">${r.label}</span>
+          ${unread ? `<span class="room-unread">${unread > 99 ? '99+' : unread}</span>` : ''}
+        </div>
+        ${preview ? `<div class="room-preview">${preview}</div>` : ''}
+      </div>
+    </button>`;
+  }).join('');
+  el.innerHTML += `<button class="chat-new-group-btn" onclick="openNewGroup()">＋ New Group</button>`;
+  if (isManager) {
+    el.innerHTML += `<button class="chat-room-btn chat-manage-btn" onclick="openChannelManager()" style="margin-top:4px;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;"><span class="room-icon">⚙️</span><div class="room-body"><div class="room-top"><span class="room-name">Manage Channels</span></div></div></button>`;
+  }
+}
+
+// Load custom groups from Firestore
+async function loadCustomChannels() {
+  if (!fbReady || !db) return;
+  try {
+    const snap = await db.collection('customChannels').get();
+    CUSTOM_CHANNELS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) { console.warn('loadCustomChannels:', e); }
 }
 
 // Load channel membership from Firestore (or use defaults)
@@ -8020,6 +8164,8 @@ function chatAttachFile(event) {
 function initChat() {
   if (!fbReady || !db) { renderChatMessages(); return; }
   if (chatUnsubscribe) chatUnsubscribe();
+  // Start background unread trackers for all channels (idempotent)
+  initAllChannelTrackers();
   const chatRoom = currentDM ? currentDM.roomId : currentRoom;
   // Order by loggedAt (plain number) — avoids Firestore composite index requirement
   // sentAt is a server timestamp which needs an index; loggedAt is set client-side
@@ -8030,6 +8176,13 @@ function initChat() {
     .onSnapshot(snap => {
       CHAT_MESSAGES = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderChatMessages();
+      // Mark current room as read
+      if (!currentDM && CHAT_MESSAGES.length) {
+        const lastMsg = CHAT_MESSAGES[CHAT_MESSAGES.length - 1];
+        CHANNEL_UNREAD[currentRoom] = 0;
+        _setLastRead(currentRoom, lastMsg.loggedAt || 0);
+        renderChannelList();
+      }
       const badge = document.getElementById('badge-chat');
       if (currentPanel !== 'chat' && CHAT_MESSAGES.length) {
         const last = CHAT_MESSAGES[CHAT_MESSAGES.length - 1];
@@ -8060,22 +8213,7 @@ function renderChat() {
     currentRoom = accessibleRooms[0]?.id || 'general';
   }
 
-  document.getElementById('chat-rooms').innerHTML = accessibleRooms.map(r => {
-    const memberCount = r.id === 'general' ? MEMBERS.length : (getChannelMembers(r.id).length || 0);
-    return `<button class="chat-room-btn${r.id===currentRoom?' active':''}" onclick="switchRoom('${r.id}')">
-      <span class="room-icon">${r.icon}</span>
-      <span class="room-name">${r.label}</span>
-      ${memberCount && r.id !== 'general' ? `<span class="room-count">${memberCount}</span>` : ''}
-    </button>`;
-  }).join('');
-
-  // Head/manager gets a "+ Manage Channels" button at the bottom of the list
-  if (isManager) {
-    document.getElementById('chat-rooms').innerHTML +=
-      `<button class="chat-room-btn chat-manage-btn" onclick="openChannelManager()" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;">
-        <span class="room-icon">⚙️</span><span class="room-name">Manage Channels</span>
-      </button>`;
-  }
+  renderChannelList();
 
   // Update header
   if (currentDM) {
@@ -8131,8 +8269,12 @@ function renderChat() {
 
 function switchRoom(roomId) {
   if (!canAccessChannel(roomId)) { toast("You're not a member of this channel.", 'warn'); return; }
-  currentDM = null; // leave any DM
+  currentDM = null;
   currentRoom = roomId;
+  // Mark as read
+  CHANNEL_UNREAD[roomId] = 0;
+  const last = CHANNEL_LAST[roomId];
+  if (last?.loggedAt) _setLastRead(roomId, last.loggedAt);
   renderChat();
 }
 
@@ -8206,6 +8348,61 @@ async function saveCmChanges() {
   closeChannelManager();
   renderChat();
   toast('Channel members updated!', 'ok');
+}
+
+// ── New Group ──
+let _ngSelected = new Set();
+let _ngEmoji = '💬';
+
+function openNewGroup() {
+  _ngSelected = new Set();
+  _ngEmoji = '💬';
+  document.getElementById('ng-name').value = '';
+  document.getElementById('ng-desc').value = '';
+  document.getElementById('ng-chosen-emoji').textContent = _ngEmoji;
+  document.getElementById('ng-emoji-picker').style.display = 'none';
+  // Render member list
+  document.getElementById('ng-member-list').innerHTML = MEMBERS
+    .filter(m => m.name !== loggedInMember?.name)
+    .map(m => `<div class="cm-member-row${_ngSelected.has(m.name)?' selected':''}" onclick="toggleNgMember('${m.name}',this)">
+      <div class="av av-sm ${AV[m.name]||'av-a'}" style="width:28px;height:28px;font-size:10px;">${ini(m.name)}</div>
+      <div class="cm-member-info"><div class="cm-member-name">${m.name}</div><div class="cm-member-role">${m.role}</div></div>
+      <div class="cm-check">${_ngSelected.has(m.name)?'✓':''}</div>
+    </div>`).join('');
+  document.getElementById('new-group-modal').style.display = 'flex';
+}
+function closeNewGroup() { document.getElementById('new-group-modal').style.display = 'none'; }
+function toggleNgEmojiPicker() {
+  const p = document.getElementById('ng-emoji-picker');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+function selectNgEmoji(e) {
+  _ngEmoji = e;
+  document.getElementById('ng-chosen-emoji').textContent = e;
+  document.getElementById('ng-emoji-picker').style.display = 'none';
+}
+function toggleNgMember(name, row) {
+  if (_ngSelected.has(name)) { _ngSelected.delete(name); row.classList.remove('selected'); row.querySelector('.cm-check').textContent = ''; }
+  else { _ngSelected.add(name); row.classList.add('selected'); row.querySelector('.cm-check').textContent = '✓'; }
+}
+async function createNewGroup() {
+  const name = document.getElementById('ng-name').value.trim();
+  if (!name) { toast('Please enter a group name.', 'warn'); return; }
+  const id = 'grp_' + name.toLowerCase().replace(/[^a-z0-9]/g,'_').slice(0,20) + '_' + Date.now().toString(36);
+  const members = [..._ngSelected, loggedInMember?.name].filter(Boolean);
+  const channel = { id, label: name, icon: _ngEmoji, desc: document.getElementById('ng-desc').value.trim(), createdBy: loggedInMember?.name || '', custom: true };
+  try {
+    if (fbReady && db) {
+      await db.collection('customChannels').doc(id).set(channel);
+      await db.collection('channelMembers').doc(id).set({ members });
+    }
+    CUSTOM_CHANNELS.push(channel);
+    CHANNEL_MEMBERS[id] = members;
+    closeNewGroup();
+    renderChannelList();
+    initAllChannelTrackers(); // start watching new channel
+    toast(`Group "${name}" created!`, 'ok');
+  } catch(e) { toast('Failed to create group: ' + e.message, 'warn'); }
 }
 
 // ── Image compression before chat upload ──
