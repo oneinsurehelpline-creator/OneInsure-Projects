@@ -606,6 +606,42 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .chat-msg:not(.mine) .chat-file-link{background:var(--cream2);border-color:var(--border);color:var(--ink);}
 .chat-msg:not(.mine) .chat-file-link:hover{background:var(--cream3);}
 .chat-msg.mine .chat-file-link:hover{background:rgba(255,255,255,0.25);}
+/* ── APPROVER DEEP-LINK MODAL ── */
+#dl-approver-overlay{position:fixed;inset:0;z-index:99999;background:#0f1923;overflow-y:auto;display:none;}
+.dl-wrap{max-width:680px;margin:0 auto;padding:40px 24px 60px;}
+.dl-brand{font-size:13px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:32px;}
+.dl-flow-title{font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:10px;line-height:1.2;}
+.dl-step-label{font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:16px;}
+.dl-plat-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:28px;}
+.dl-files{background:rgba(255,255,255,0.05);border-radius:14px;padding:18px 20px;margin-bottom:28px;}
+.dl-files-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.35);margin-bottom:12px;}
+.dl-file-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+.dl-file-row:last-child{border-bottom:none;}
+.dl-file-icon{font-size:18px;flex-shrink:0;}
+.dl-file-name{flex:1;font-size:13px;color:#fff;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dl-file-step{font-size:11px;color:rgba(255,255,255,0.35);}
+.dl-file-preview{padding:5px 12px;border-radius:7px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer;transition:all 0.13s;font-family:var(--ff-body);}
+.dl-file-preview:hover{background:rgba(255,255,255,0.1);color:#fff;}
+.dl-actions{display:flex;gap:12px;margin-bottom:20px;}
+.dl-btn-approve{flex:1;padding:18px 20px;border-radius:14px;border:none;cursor:pointer;font-size:17px;font-weight:700;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-family:var(--ff-body);transition:opacity 0.15s;letter-spacing:0.01em;}
+.dl-btn-approve:hover{opacity:0.88;}
+.dl-btn-reject{flex:1;padding:18px 20px;border-radius:14px;border:2px solid rgba(239,68,68,0.5);cursor:pointer;font-size:17px;font-weight:700;background:rgba(239,68,68,0.1);color:#ef4444;font-family:var(--ff-body);transition:all 0.15s;}
+.dl-btn-reject:hover{background:rgba(239,68,68,0.2);border-color:#ef4444;}
+.dl-reject-panel{display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:18px 20px;margin-bottom:20px;}
+.dl-reject-panel textarea{width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-family:var(--ff-body);font-size:14px;padding:12px;resize:none;min-height:90px;margin:10px 0;}
+.dl-reject-panel textarea::placeholder{color:rgba(255,255,255,0.3);}
+.dl-reject-panel textarea:focus{outline:none;border-color:rgba(255,255,255,0.4);}
+.dl-reject-char{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px;}
+.dl-reject-char.ok{color:#4ade80;}
+.dl-btn-submit-reject{width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;font-size:15px;font-weight:700;background:#ef4444;color:#fff;font-family:var(--ff-body);transition:opacity 0.15s;}
+.dl-btn-submit-reject:disabled{opacity:0.4;cursor:not-allowed;}
+.dl-confirm{text-align:center;padding:40px 20px;}
+.dl-confirm-icon{font-size:72px;margin-bottom:16px;}
+.dl-confirm-title{font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;}
+.dl-confirm-sub{font-size:15px;color:rgba(255,255,255,0.5);line-height:1.6;}
+.dl-open-full{display:block;text-align:center;margin-top:32px;font-size:13px;color:rgba(255,255,255,0.35);cursor:pointer;text-decoration:none;}
+.dl-open-full:hover{color:rgba(255,255,255,0.7);}
+.dl-no-files{font-size:13px;color:rgba(255,255,255,0.3);font-style:italic;}
 /* ── DIRECT MESSAGES ── */
 .chat-dm-section{padding:10px 14px 8px;border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;}
 .chat-dm-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.28);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
@@ -3045,6 +3081,21 @@ async function doForgotPassword() {
 
 if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
 
+// ── Deep-link params (approver email link) ──
+const _dlParams = (() => {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const flow     = p.get('flow');
+    const approver = decodeURIComponent(p.get('approver') || '').toLowerCase();
+    if (flow && approver && EMAIL_TO_MEMBER[approver]) {
+      const m = EMAIL_TO_MEMBER[approver];
+      // Allow head role too (Akshay is in APPROVERS but has role 'head')
+      if (m.role === 'approver' || m.role === 'head') return { flow, approver };
+    }
+  } catch(e) {}
+  return null;
+})();
+
 // Restore auth session on page load — keeps user logged in across refreshes
 function hideSplash() {
   const splash = document.getElementById('app-loading');
@@ -3064,6 +3115,7 @@ function hideSplash() {
   // Set a timeout — if Firebase takes >5s on slow mobile, show login screen anyway
   const splashTimeout = setTimeout(() => {
     hideSplash();
+    if (_dlParams) return; // deep-link anonymous sign-in still in progress
     document.getElementById('login-screen').classList.remove('hidden');
   }, 5000);
 
@@ -3071,11 +3123,30 @@ function hideSplash() {
     clearTimeout(splashTimeout);
     hideSplash();
 
+    // ── Deep-link anonymous path ──
+    if (!user && _dlParams) {
+      _auth.signInAnonymously().catch(() => {
+        document.getElementById('login-screen').classList.remove('hidden');
+      });
+      return;
+    }
+
     if (!user) {
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('app').style.display = 'none';
       return;
     }
+
+    // Anonymous user from deep-link
+    if (user.isAnonymous && _dlParams) {
+      if (fbReady) return;
+      auth = _auth; db = _db; currentUser = user; fbReady = true;
+      const m = EMAIL_TO_MEMBER[_dlParams.approver];
+      loggedInMember = { ...m, email: _dlParams.approver };
+      showApproverDeepLinkModal(_dlParams.flow, _dlParams.approver);
+      return;
+    }
+
     const email = user.email?.toLowerCase();
     const member = EMAIL_TO_MEMBER[email];
     if (!member) {
@@ -9285,8 +9356,7 @@ async function sendApproverOneClickEmail(flowId, stepIdx, approverName) {
   const stepName = steps[stepIdx]?.name || 'Approval Step';
   const approveToken = genApprovalToken(flowId, stepIdx, 'approve');
   const rejectToken  = genApprovalToken(flowId, stepIdx, 'reject');
-  // In a real deployment these URLs would point to a cloud function that processes the token
-  // For now we include the tokens so a developer can set up the handler
+  const deepLink = `https://social-desk-d823c.web.app/?flow=${encodeURIComponent(flowId)}&approver=${encodeURIComponent(email)}`;
   const body = `Hi ${approverName},
 
 A content approval is waiting for your review.
@@ -9295,18 +9365,215 @@ Flow: ${f.title}
 Step: ${stepName}
 Platforms: ${(f.platforms||[]).join(', ')}
 
-To approve or reject, log in to SociaDesk and open Today's Flows.
-
-Quick-action tokens (for developer integration):
-✓ APPROVE token: ${approveToken}
-✗ REJECT token:  ${rejectToken}
-
-These tokens can be processed by your backend to approve/reject without login.
+Click to review (no login required):
+${deepLink}
 
 — SociaDesk`;
   await sendEmailNotification(email, approverName,
     `[SociaDesk] Approval needed: ${f.title} — ${stepName}`, body, f.title, stepName);
   toast(`Approval email sent to ${approverName}!`,'ok');
+}
+
+// ═══════════════════════════════════════════
+// APPROVER DEEP-LINK MODAL
+// ═══════════════════════════════════════════
+async function showApproverDeepLinkModal(flowId, approverEmail) {
+  const overlay = document.getElementById('dl-approver-overlay');
+  const content = document.getElementById('dl-approver-content');
+  overlay.style.display = 'block';
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').style.display = 'none';
+
+  content.innerHTML = `<div class="dl-brand">SociaDesk</div><div style="color:rgba(255,255,255,0.4);font-size:14px;">Loading approval request…</div>`;
+
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) { _dlShowError(content, 'Flow data not found.'); return; }
+    const raw = (snap.data().flows || []).find(f => f.id === flowId);
+    if (!raw) { _dlShowError(content, 'This flow no longer exists or has already been actioned.'); return; }
+    const f = deserializeFlowFromFirestore(raw);
+    const cs = parseInt(f.currentStep) || 0;
+    const stepNames = f.stepNames || [];
+    const stepName = stepNames[cs] || `Step ${cs + 1}`;
+    const member = EMAIL_TO_MEMBER[approverEmail];
+    const approverName = member?.name || approverEmail;
+
+    // Check this approver is still in routees
+    const isRouted = (f.approvalRoutees || []).includes(approverName);
+    const isDone = (f.stepStatuses || [])[cs] === 'done' || f.completedAt;
+
+    if (isDone) {
+      content.innerHTML = _dlConfirmHTML('✅', 'Already actioned', 'This step has already been approved or the flow is complete.', '', approverEmail);
+      return;
+    }
+    if (!isRouted) {
+      _dlShowError(content, `You (${approverName}) are not the assigned approver for the current step of this flow.`);
+      return;
+    }
+
+    // Build all files across all steps
+    const allFiles = (f.driveFiles || []).flatMap((files, i) =>
+      (files || []).map(file => ({ ...file, stepName: stepNames[i] || `Step ${i + 1}` }))
+    );
+
+    const platChipsHtml = (f.platforms || []).map(p => {
+      const cls = { Instagram:'ig', Facebook:'fb', LinkedIn:'li', 'Twitter/X':'tw', YouTube:'yt', Reels:'reels' }[p] || '';
+      return `<span class="plat-chip ${cls ? 'pc-'+cls : ''}" style="font-size:12px;">${p}</span>`;
+    }).join('');
+
+    const filesHtml = allFiles.length ? allFiles.map(file => `
+      <div class="dl-file-row">
+        <span class="dl-file-icon">${getDriveIcon(file.mimeType)}</span>
+        <span class="dl-file-name">${file.name}</span>
+        <span class="dl-file-step">${file.stepName}</span>
+        <button class="dl-file-preview" onclick="window.open('${(file.url||'').replace(/'/g,"\\'")}','_blank')">👁 Preview</button>
+      </div>`) .join('') : `<div class="dl-no-files">No files attached to this flow yet.</div>`;
+
+    content.innerHTML = `
+      <div class="dl-brand">SociaDesk · Approval Request</div>
+      <div class="dl-flow-title">${f.title || 'Untitled Flow'}</div>
+      <div class="dl-step-label">Approval step: <strong style="color:rgba(255,255,255,0.7);">${stepName}</strong> · Requested for <strong style="color:rgba(255,255,255,0.7);">${approverName}</strong></div>
+      <div class="dl-plat-row">${platChipsHtml}</div>
+      <div class="dl-files">
+        <div class="dl-files-title">📁 Attached Files</div>
+        ${filesHtml}
+      </div>
+      <div id="dl-reject-panel" class="dl-reject-panel">
+        <div style="font-size:14px;font-weight:600;color:#ef4444;margin-bottom:4px;">❌ Reason for Rejection</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:8px;">Please explain what needs to be changed (minimum 10 characters).</div>
+        <textarea id="dl-reject-reason" placeholder="e.g. Caption needs to be revised, incorrect hashtags used…" oninput="_dlRejectInput()"></textarea>
+        <div class="dl-reject-char" id="dl-reject-char">0 / 10 min characters</div>
+        <button class="dl-btn-submit-reject" id="dl-reject-submit" disabled onclick="_dlSubmitReject('${flowId}','${approverEmail}','${approverName}')">
+          Submit Rejection
+        </button>
+      </div>
+      <div class="dl-actions" id="dl-action-btns">
+        <button class="dl-btn-approve" onclick="_dlApprove('${flowId}','${approverEmail}','${approverName}')">✅ Approve</button>
+        <button class="dl-btn-reject" onclick="_dlShowRejectPanel()">❌ Reject</button>
+      </div>
+      <a class="dl-open-full" onclick="_dlOpenFullApp()">Open full app →</a>`;
+  } catch(err) {
+    console.error(err);
+    _dlShowError(content, 'Failed to load flow data. Please try again.');
+  }
+}
+
+function _dlShowError(content, msg) {
+  content.innerHTML = `<div class="dl-brand">SociaDesk</div>
+    <div style="color:#ef4444;font-size:16px;font-weight:600;margin-bottom:8px;">⚠ Unable to load</div>
+    <div style="color:rgba(255,255,255,0.5);font-size:14px;">${msg}</div>
+    <a class="dl-open-full" style="margin-top:24px;" onclick="_dlOpenFullApp()">Open full app →</a>`;
+}
+
+function _dlShowRejectPanel() {
+  document.getElementById('dl-reject-panel').style.display = 'block';
+  document.getElementById('dl-action-btns').style.display = 'none';
+  document.getElementById('dl-reject-reason').focus();
+}
+
+function _dlRejectInput() {
+  const ta  = document.getElementById('dl-reject-reason');
+  const btn = document.getElementById('dl-reject-submit');
+  const lbl = document.getElementById('dl-reject-char');
+  const len = (ta?.value || '').trim().length;
+  if (lbl) { lbl.textContent = `${len} character${len !== 1 ? 's' : ''} ${len < 10 ? `(${10 - len} more needed)` : '✓'}`; lbl.className = `dl-reject-char${len >= 10 ? ' ok' : ''}`; }
+  if (btn) btn.disabled = len < 10;
+}
+
+async function _dlApprove(flowId, approverEmail, approverName) {
+  const btn = document.querySelector('.dl-btn-approve');
+  if (btn) { btn.disabled = true; btn.textContent = 'Approving…'; }
+  try {
+    const snap  = await db.collection('flows').doc('active').get();
+    const flows = snap.data().flows || [];
+    const idx   = flows.findIndex(f => f.id === flowId);
+    if (idx === -1) throw new Error('Flow not found');
+    const f = deserializeFlowFromFirestore({ ...flows[idx] });
+    if (!(f.approvalRoutees || []).includes(approverName)) throw new Error('Not the routed approver');
+    if (!f.stepTimings) f.stepTimings = (f.stepStatuses || []).map(() => ({ startedAt: null, completedAt: null }));
+    const cs = parseInt(f.currentStep) || 0;
+    f.stepTimings[cs] = { ...(f.stepTimings[cs] || {}), completedAt: Date.now() };
+    f.stepStatuses[cs] = 'done';
+    if (cs < (f.stepStatuses.length - 1)) {
+      f.currentStep = cs + 1;
+      f.stepStatuses[cs + 1] = 'active';
+      f.stepTimings[cs + 1] = { startedAt: Date.now(), completedAt: null };
+    } else {
+      f.completedAt = Date.now();
+    }
+    delete f.approvalRoutees;
+    flows[idx] = serializeFlowForFirestore(f);
+    await db.collection('flows').doc('active').update({ flows });
+    document.getElementById('dl-approver-content').innerHTML =
+      _dlConfirmHTML('✅', 'Approved!', `You approved <strong style="color:#fff;">${f.title || 'this flow'}</strong>. The next step has been notified.`, '', approverEmail);
+  } catch(err) {
+    console.error(err);
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Approve'; }
+    alert('Failed to approve. Please try again or open the full app.');
+  }
+}
+
+async function _dlSubmitReject(flowId, approverEmail, approverName) {
+  const reason = document.getElementById('dl-reject-reason')?.value.trim() || '';
+  if (reason.length < 10) return;
+  const btn = document.getElementById('dl-reject-submit');
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+  try {
+    const snap  = await db.collection('flows').doc('active').get();
+    const flows = snap.data().flows || [];
+    const idx   = flows.findIndex(f => f.id === flowId);
+    if (idx === -1) throw new Error('Flow not found');
+    const f = deserializeFlowFromFirestore({ ...flows[idx] });
+    if (!(f.approvalRoutees || []).includes(approverName)) throw new Error('Not the routed approver');
+    const cs = parseInt(f.currentStep) || 0;
+    const targetIdx = Math.max(0, cs - 1);
+    const stepNames = f.stepNames || [];
+    f.stepStatuses = (f.stepStatuses || []).map((s, i) => {
+      if (i < targetIdx) return 'done';
+      if (i === targetIdx) return 'active';
+      return 'pending';
+    });
+    f.currentStep = targetIdx;
+    if (!f.rejectionNotes) f.rejectionNotes = {};
+    f.rejectionNotes[targetIdx] = {
+      comment:  reason,
+      fromStep: stepNames[cs] || `Step ${cs + 1}`,
+      by:       approverName,
+      at:       new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    };
+    delete f.approvalRoutees;
+    flows[idx] = serializeFlowForFirestore(f);
+    await db.collection('flows').doc('active').update({ flows });
+    document.getElementById('dl-approver-content').innerHTML =
+      _dlConfirmHTML('❌', 'Rejected', `You rejected <strong style="color:#fff;">${f.title || 'this flow'}</strong> and it has been sent back for revisions.`, `Your reason: <em>${reason}</em>`, approverEmail);
+  } catch(err) {
+    console.error(err);
+    if (btn) { btn.disabled = false; btn.textContent = 'Submit Rejection'; }
+    alert('Failed to submit rejection. Please try again or open the full app.');
+  }
+}
+
+function _dlConfirmHTML(icon, title, sub, extra, approverEmail) {
+  return `<div class="dl-brand">SociaDesk</div>
+    <div class="dl-confirm">
+      <div class="dl-confirm-icon">${icon}</div>
+      <div class="dl-confirm-title">${title}</div>
+      <div class="dl-confirm-sub">${sub}${extra ? `<br><br>${extra}` : ''}</div>
+    </div>
+    <a class="dl-open-full" onclick="_dlOpenFullApp()">Open full app →</a>`;
+}
+
+function _dlOpenFullApp() {
+  // Sign out anonymous user and show normal login / app
+  document.getElementById('dl-approver-overlay').style.display = 'none';
+  if (auth && currentUser?.isAnonymous) {
+    auth.signOut().then(() => {
+      // If a real user was previously logged in, onAuthStateChanged will re-auth them
+      document.getElementById('login-screen').classList.remove('hidden');
+    });
+  } else {
+    document.getElementById('login-screen').classList.remove('hidden');
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -10998,6 +11265,13 @@ document.addEventListener('keydown', e => {
       <span>↑↓ navigate</span><span>↵ open</span><span>Esc close</span>
     </div>
   </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     APPROVER DEEP-LINK OVERLAY
+════════════════════════════════════ -->
+<div id="dl-approver-overlay">
+  <div class="dl-wrap" id="dl-approver-content"></div>
 </div>
 
 </body>
