@@ -147,7 +147,13 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .plat-re{background:#FFF3E0;color:#E65100;}
 
 /* ── TODAY'S FLOWS ── */
-.flow-board{display:flex;flex-direction:column;gap:20px;}
+.flow-board{display:flex;flex-direction:column;gap:28px;}
+.flow-title-row{display:flex;align-items:center;gap:6px;}
+.flow-rename-btn{background:none;border:none;cursor:pointer;color:rgba(0,0,0,0.25);font-size:12px;padding:2px 4px;border-radius:4px;line-height:1;flex-shrink:0;transition:color 0.13s;}
+.flow-rename-btn:hover{color:var(--ink3);}
+.flow-target-date{font-size:11px;color:var(--ink3);display:inline-flex;align-items:center;gap:3px;cursor:pointer;border-radius:5px;padding:1px 5px;border:1px dashed transparent;transition:border-color 0.13s;}
+.flow-target-date:hover{border-color:var(--border);}
+.flow-target-date.overdue{color:var(--red);font-weight:600;}
 .flow-tab-bar{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--cream);}
 .flow-tab-btn{flex:1;padding:8px 14px;background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink3);transition:background 0.15s,color 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .flow-tab-btn.active{background:var(--white);color:var(--ink);box-shadow:inset 0 -2px 0 var(--blue);}
@@ -524,15 +530,18 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 /* ── CHAT ── */
 /* ── CHAT PANEL ── */
 .chat-panel{display:flex;height:calc(100vh - 60px);gap:0;background:var(--cream);border-radius:var(--radl);overflow:hidden;border:1px solid var(--border);}
-.chat-sidebar{width:200px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;padding:0;}
-.chat-sidebar-top{padding:16px 14px 10px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.chat-sidebar{width:200px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;padding:0;overflow:hidden;}
+.chat-sidebar-top{padding:16px 14px 10px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
 .chat-sidebar-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.4);margin-bottom:10px;}
 .chat-room-btn{width:100%;text-align:left;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;border:none;background:transparent;cursor:pointer;font-family:var(--ff-body);color:rgba(255,255,255,0.55);transition:all 0.13s;display:flex;align-items:center;gap:8px;}
 .chat-room-btn:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);}
 .chat-room-btn.active{background:rgba(255,255,255,0.14);color:var(--white);font-weight:600;}
 .chat-room-btn .room-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.25);flex-shrink:0;}
 .chat-room-btn.active .room-dot{background:#4ade80;}
-.chat-sidebar-members{padding:12px 14px;border-top:1px solid rgba(255,255,255,0.08);margin-top:auto;}
+.chat-sidebar-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.12) transparent;}
+.chat-sidebar-scroll::-webkit-scrollbar{width:4px;}
+.chat-sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:4px;}
+.chat-sidebar-members{padding:12px 14px;border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
 .chat-sidebar-members-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.3);margin-bottom:8px;}
 .chat-online-member{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:12px;color:rgba(255,255,255,0.6);}
 .chat-online-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0;}
@@ -1619,16 +1628,18 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
           <div class="chat-panel">
             <!-- Sidebar: channels + online members -->
             <div class="chat-sidebar">
-              <div class="chat-sidebar-top">
-                <div class="chat-sidebar-title">Channels</div>
-                <div id="chat-rooms" style="display:flex;flex-direction:column;gap:2px;"></div>
-              </div>
-              <div class="chat-dm-section">
-                <div class="chat-dm-title">Direct Messages</div>
-                <div id="chat-dm-list"></div>
-                <button class="chat-dm-btn" onclick="openNewDM()" style="margin-top:4px;opacity:0.6;font-size:11px;">
-                  <span style="font-size:13px;">✏️</span> New Message
-                </button>
+              <div class="chat-sidebar-scroll">
+                <div class="chat-sidebar-top">
+                  <div class="chat-sidebar-title">Channels</div>
+                  <div id="chat-rooms" style="display:flex;flex-direction:column;gap:2px;"></div>
+                </div>
+                <div class="chat-dm-section">
+                  <div class="chat-dm-title">Direct Messages</div>
+                  <div id="chat-dm-list"></div>
+                  <button class="chat-dm-btn" onclick="openNewDM()" style="margin-top:4px;opacity:0.6;font-size:11px;">
+                    <span style="font-size:13px;">✏️</span> New Message
+                  </button>
+                </div>
               </div>
               <div class="chat-sidebar-members">
                 <div class="chat-sidebar-members-title">Online</div>
@@ -4223,20 +4234,22 @@ function flowCardHTML(f) {
           </label>
         </div>
       </div>`;
-  } else if (status !== 'done') {
-    // Viewer — show all files read-only
+  } else {
+    // Viewer role on active flow, OR any role on a completed flow — show all files read-only
     const allFiles = (f.driveFiles || []).flatMap((files, i) =>
       (files||[]).map(file => ({ ...file, stepName: tmplSteps[i]?.name || `Step ${i+1}` }))
     );
     if (allFiles.length) {
       allFiles.forEach(file => { _mvFileRegistry[file.id || file.url] = file; });
       driveSection = `<div class="drive-section">
-        <div class="drive-section-title">📁 Files attached</div>
+        <div class="drive-section-title">📁 ${status === 'done' ? 'Files from this flow' : 'Files attached'}</div>
         ${allFiles.map(file=>`<div class="drive-file-row">
           <span class="drive-file-icon">${getDriveIcon(file.mimeType)}</span>
           <span class="drive-file-name" onclick="openMvFile('${file.id||file.url}','${f.id}',null)">${file.name}</span>
-          <span class="drive-file-meta">${file.stepName}</span>
-          <button class="drive-btn" onclick="openMvFile('${file.id||file.url}','${f.id}',null)">👁 Preview</button>
+          <span class="drive-file-meta">${file.stepName}${file.addedBy ? ' · ' + file.addedBy : ''}</span>
+          <div class="drive-file-actions">
+            <button class="drive-btn" onclick="openMvFile('${file.id||file.url}','${f.id}',null)">👁 Preview</button>
+          </div>
         </div>`).join('')}
       </div>`;
     }
@@ -4285,11 +4298,20 @@ function flowCardHTML(f) {
     <div class="flow-header" style="background:${_accentTint};">
       <div class="flow-num">#${TODAY_FLOWS.indexOf(f)+1}</div>
       <div class="flow-info">
-        <div class="flow-title">${f.title}</div>
+        <div class="flow-title-row">
+          <div class="flow-title">${f.title}</div>
+          <button class="flow-rename-btn" onclick="renameFlow('${f.id}')" title="Rename flow">✏️</button>
+        </div>
         <div class="flow-meta">
           <span class="flow-status-pill ${statusCls}">${statusLabel}</span>
           <div class="platform-row">${platChips(f.platforms)}</div>
           ${f.startedAt ? `<span class="flow-tat">⏱ ${formatElapsed(f.startedAt)}</span>` : ''}
+          ${(() => {
+            const td = f.targetDate;
+            if (!td) return `<span class="flow-target-date" onclick="setFlowTargetDate('${f.id}',this)" title="Set target date">📅 Set date</span>`;
+            const isOverdue = status !== 'done' && td < new Date().toISOString().slice(0,10);
+            return `<span class="flow-target-date${isOverdue?' overdue':''}" onclick="setFlowTargetDate('${f.id}',this)" title="Change target date">📅 ${td}${isOverdue?' ⚠':''}</span>`;
+          })()}
         </div>
       </div>
       ${isManager?`<button style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:18px;padding:4px 8px;" onclick="deleteFlow('${f.id}')" title="Delete this flow">🗑</button>`:''}
@@ -4401,6 +4423,40 @@ async function deleteFlow(flowId) {
     await fbSaveFlows(); renderToday();
     toast('Flow deleted.', '');
   });
+}
+
+async function renameFlow(flowId) {
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  const newName = prompt('Rename flow:', f.title || '');
+  if (newName === null) return; // cancelled
+  const trimmed = newName.trim();
+  if (!trimmed) { toast('Name cannot be empty.', 'warn'); return; }
+  f.title = trimmed;
+  await fbSaveFlows();
+  renderToday();
+  toast('Flow renamed.', 'ok');
+}
+
+async function setFlowTargetDate(flowId, triggerEl) {
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  // Inject a temporary date-input next to the trigger
+  const inp = document.createElement('input');
+  inp.type = 'date';
+  inp.value = f.targetDate || '';
+  inp.style.cssText = 'position:absolute;opacity:0;pointer-events:none;';
+  (triggerEl || document.body).appendChild(inp);
+  inp.focus();
+  inp.showPicker?.();
+  inp.addEventListener('change', async () => {
+    f.targetDate = inp.value || null;
+    inp.remove();
+    await fbSaveFlows();
+    renderToday();
+    toast(f.targetDate ? `Target date set: ${f.targetDate}` : 'Target date cleared.', 'ok');
+  });
+  inp.addEventListener('blur', () => setTimeout(() => inp.remove(), 200));
 }
 
 function openFlowStep(flowId, stepIdx) {
