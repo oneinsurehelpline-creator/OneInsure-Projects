@@ -387,19 +387,24 @@ a{text-decoration:none;color:inherit;}
 ───────────────────────────────────── */
 .flow-card{
   background:var(--card);border-radius:var(--r-lg);
-  box-shadow:var(--shadow);overflow:hidden;
-  margin-bottom:8px;
-  border-left:3px solid transparent;
+  box-shadow:0 3px 14px rgba(0,0,0,0.08);overflow:hidden;
+  margin-bottom:0;
+  border:1px solid rgba(0,0,0,0.08);
+  border-left:8px solid transparent;
+  border-top:4px solid transparent;
   transition:border-color 0.2s,box-shadow 0.2s;
   cursor:pointer;
 }
-.flow-card:active{box-shadow:var(--shadow-md);}
+.flow-card-wrap{padding-bottom:36px;position:relative;}
+.flow-card-wrap::after{content:'';position:absolute;bottom:18px;left:8%;width:84%;height:1px;background:var(--border);}
+.flow-card:active{box-shadow:0 6px 22px rgba(0,0,0,0.13);}
 .flow-card.my-turn{
   border-left-color:var(--coral);
+  border-top-color:var(--coral);
   background:var(--white);
-  box-shadow:var(--shadow-md);
+  box-shadow:0 4px 18px rgba(0,0,0,0.11);
 }
-.flow-card-inner{background:var(--coral-tint);}
+.flow-card-inner{background:transparent;}
 .flow-card-inner.no-tint{background:transparent;}
 
 .flow-head{padding:16px 16px 12px;}
@@ -1964,7 +1969,7 @@ function buildFlowCard(f, cardIdx) {
 
   // Accent color
   const _accentColor = FLOW_CARD_COLORS[(cardIdx || 0) % FLOW_CARD_COLORS.length];
-  const _accentTint  = _accentColor + '14';
+  const _accentTint  = _accentColor + '2a';
 
   // Target date chip
   let targetChip = '';
@@ -2041,12 +2046,11 @@ function buildFlowCard(f, cardIdx) {
     </div>`;
   }
 
-  const innerBg = mine ? `background:${_accentTint};` : `background:${_accentTint};`;
-  const badge   = mine ? `<span class="your-turn-badge">🔥 Your Turn</span>` : '';
+  const badge     = mine ? `<span class="your-turn-badge">🔥 Your Turn</span>` : '';
   const renameBtn = `<button class="flow-rename-btn" onclick="renameMobFlow('${escHtml(f.id)}');event.stopPropagation();" title="Rename">✏️</button>`;
 
-  return `<div class="flow-card" style="border-left-color:${_accentColor};" onclick="openFlowDetail('${escHtml(f.id)}')">
-    <div class="flow-card-inner" style="${innerBg}">
+  return `<div class="flow-card-wrap"><div class="flow-card" style="border-left-color:${_accentColor};border-top-color:${_accentColor};" onclick="openFlowDetail('${escHtml(f.id)}')">
+    <div class="flow-card-inner" style="background:${_accentTint};">
       <div class="flow-head">
         <div class="flow-title-row">
           <div class="flow-title">${escHtml(f.title || 'Untitled Flow')}${renameBtn}</div>
@@ -2060,7 +2064,7 @@ function buildFlowCard(f, cardIdx) {
       <div class="steps-track">${dotsHtml}</div>
     </div>
     ${footHtml}
-  </div>`;
+  </div></div>`;
 }
 
 async function doPushStep(flowId, e) {
