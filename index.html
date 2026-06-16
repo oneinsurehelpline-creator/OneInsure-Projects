@@ -3496,6 +3496,9 @@ function startListeners() {
       setTimeout(() => {
         if (currentPanel === 'today') renderToday();
         document.getElementById('badge-today').textContent = TODAY_FLOWS.length;
+        // Start background chat trackers after flows load so loggedInMember is set
+        initAllChannelTrackers();
+        initAllDMTrackers();
       }, 800);
     }, err => {
       console.error('Flows listener error:', err);
@@ -8280,8 +8283,8 @@ function initAllChannelTrackers() {
           const prevCount = CHANNEL_UNREAD[r.id] || 0;
           if (newMsgs.length > 0) {
             CHANNEL_UNREAD[r.id] = newMsgs.length;
-            // Notify if there are genuinely new messages since last check
-            if (newMsgs.length > prevCount && latest.sender !== loggedInMember?.name) {
+            // Only toast/ping for messages arriving while app is open (prevCount>0 = not initial load)
+            if (prevCount > 0 && newMsgs.length > prevCount && latest.sender !== loggedInMember?.name) {
               chatToast(latest.sender, r.id, CHANNEL_LAST[r.id].text, false);
               pushNotif({ title: `💬 ${latest.sender} in #${r.label}`, body: CHANNEL_LAST[r.id].text || '(attachment)', icon: '💬', type: 'chat', tag: 'chat-' + r.id, silent: false });
             }
@@ -8315,11 +8318,11 @@ function initAllDMTrackers() {
           const prevCount = DM_UNREAD[roomId] || 0;
           if (newMsgs.length > 0) {
             DM_UNREAD[roomId] = newMsgs.length;
-            // Surface in recent DMs so it's visible in the sidebar
+            // Always surface in DM sidebar so unread DMs are visible
             trackDMRecent(m.name);
             renderDMList();
-            // Notify if genuinely new
-            if (newMsgs.length > prevCount) {
+            // Only toast/ping when a new message arrives while app is open (not on initial load)
+            if (prevCount > 0 && newMsgs.length > prevCount) {
               chatToast(latest.sender, m.name, latest.text || '', true);
               pushNotif({ title: `💬 DM from ${latest.sender}`, body: (latest.text || '(attachment)').substring(0,80), icon: '💬', type: 'chat', tag: 'dm-' + roomId, silent: false });
             }
