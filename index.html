@@ -529,6 +529,24 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .reject-form textarea{resize:vertical;min-height:52px;}
 .rejection-note{padding:6px 10px;background:var(--red-light);border-radius:var(--rad);border:1px solid #F7C1C1;font-size:11px;color:var(--red);margin-top:4px;}
 
+/* ── CHAT NOTIFICATION TOAST ── */
+#chat-notif-toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:var(--navy);color:#fff;
+  border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.28);
+  padding:14px 16px;width:300px;cursor:pointer;
+  display:flex;align-items:flex-start;gap:10px;
+  transform:translateY(120%);opacity:0;
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1),opacity 0.25s;
+  border-left:4px solid var(--coral);
+}
+#chat-notif-toast.show{transform:translateY(0);opacity:1;}
+.cnt-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.cnt-body{flex:1;min-width:0;}
+.cnt-title{font-size:12px;font-weight:700;color:rgba(255,255,255,0.55);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cnt-msg{font-size:14px;font-weight:500;color:#fff;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.cnt-close{flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.4);font-size:16px;cursor:pointer;padding:0;line-height:1;margin-top:1px;}
+.cnt-close:hover{color:#fff;}
 /* ── CHAT ── */
 /* ── CHAT PANEL ── */
 .chat-panel{display:flex;height:calc(100vh - 60px);gap:0;background:var(--cream);border-radius:var(--radl);overflow:hidden;border:1px solid var(--border);}
@@ -2469,6 +2487,14 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 </div>
 
 <div class="toast-area" id="toast-area"></div>
+<div id="chat-notif-toast" onclick="_chatToastClick()" role="alert">
+  <div class="cnt-icon" id="cnt-icon">💬</div>
+  <div class="cnt-body">
+    <div class="cnt-title" id="cnt-title"></div>
+    <div class="cnt-msg" id="cnt-msg"></div>
+  </div>
+  <button class="cnt-close" onclick="event.stopPropagation();_chatToastDismiss()" title="Dismiss">×</button>
+</div>
 
 <!-- CONTENT IDEA MODAL -->
 <div class="overlay" id="idea-modal" onclick="if(event.target===this)closeIdeaModal()">
@@ -8102,6 +8128,8 @@ function openDM(otherUser) {
   };
   currentRoom = null;
   delete DM_UNREAD[currentDM.roomId];
+  _setLastRead(currentDM.roomId, Date.now());
+  updateChatNavBadge();
   renderChat();
   initChat();
 }
@@ -8161,6 +8189,76 @@ function trackDMRecent(otherUser) {
   localStorage.setItem(key, JSON.stringify(updated));
 }
 
+// ── Chat notification helpers ──
+let _chatToastTimer = null;
+let _chatToastNav   = null; // { type:'channel'|'dm', id:string }
+
+function chatToast(sender, roomLabelOrUser, text, isDM) {
+  // Don't show if currently reading this exact room
+  if (currentPanel === 'chat') {
+    if (!isDM && currentRoom === roomLabelOrUser) return;
+    if (isDM && currentDM?.otherUser === roomLabelOrUser) return;
+  }
+  const icon  = isDM ? '💬' : '📢';
+  const title = isDM ? `DM from ${sender}` : `${sender} in #${roomLabelOrUser}`;
+  const preview = (text || '').replace(/<[^>]*>/g, '').substring(0, 80);
+
+  document.getElementById('cnt-icon').textContent  = icon;
+  document.getElementById('cnt-title').textContent = title;
+  document.getElementById('cnt-msg').textContent   = preview || '(attachment)';
+  _chatToastNav = { type: isDM ? 'dm' : 'channel', id: roomLabelOrUser };
+
+  const el = document.getElementById('chat-notif-toast');
+  el.classList.add('show');
+  playMsgPing();
+
+  if (_chatToastTimer) clearTimeout(_chatToastTimer);
+  _chatToastTimer = setTimeout(_chatToastDismiss, 5000);
+}
+
+function _chatToastDismiss() {
+  document.getElementById('chat-notif-toast').classList.remove('show');
+  if (_chatToastTimer) { clearTimeout(_chatToastTimer); _chatToastTimer = null; }
+}
+
+function _chatToastClick() {
+  _chatToastDismiss();
+  if (!_chatToastNav) return;
+  go('chat');
+  setTimeout(() => {
+    if (_chatToastNav.type === 'dm') openDM(_chatToastNav.id);
+    else { currentRoom = _chatToastNav.id; currentDM = null; renderChat(); initChat(); }
+  }, 150);
+}
+
+function playMsgPing() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880,  ctx.currentTime);
+    o.frequency.setValueAtTime(1100, ctx.currentTime + 0.08);
+    g.gain.setValueAtTime(0.25, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+function updateChatNavBadge() {
+  const badge = document.getElementById('badge-chat');
+  if (!badge) return;
+  const total = Object.values(CHANNEL_UNREAD).reduce((s, n) => s + (n||0), 0)
+              + Object.values(DM_UNREAD).reduce((s, n) => s + (n||0), 0);
+  if (total > 0 && currentPanel !== 'chat') {
+    badge.style.display = '';
+    badge.textContent = total > 99 ? '99+' : total;
+  } else {
+    badge.style.display = 'none';
+    badge.textContent = '';
+  }
+}
+
 // ── Background unread trackers (one listener per accessible channel) ──
 function initAllChannelTrackers() {
   if (!fbReady || !db) return;
@@ -8178,10 +8276,56 @@ function initAllChannelTrackers() {
         // Count unread: messages newer than last read, not from self
         if (currentRoom !== r.id || currentDM) {
           const lastRead = _getLastRead(r.id);
-          const n = msgs.filter(m => (m.loggedAt||0) > lastRead && m.sender !== loggedInMember?.name).length;
-          if (n > 0) CHANNEL_UNREAD[r.id] = n;
+          const newMsgs = msgs.filter(m => (m.loggedAt||0) > lastRead && m.sender !== loggedInMember?.name);
+          const prevCount = CHANNEL_UNREAD[r.id] || 0;
+          if (newMsgs.length > 0) {
+            CHANNEL_UNREAD[r.id] = newMsgs.length;
+            // Notify if there are genuinely new messages since last check
+            if (newMsgs.length > prevCount && latest.sender !== loggedInMember?.name) {
+              chatToast(latest.sender, r.id, CHANNEL_LAST[r.id].text, false);
+              pushNotif({ title: `💬 ${latest.sender} in #${r.label}`, body: CHANNEL_LAST[r.id].text || '(attachment)', icon: '💬', type: 'chat', tag: 'chat-' + r.id, silent: false });
+            }
+          }
         }
         renderChannelList();
+        updateChatNavBadge();
+      }, () => {});
+  });
+}
+
+// ── Background DM trackers — listen to ALL possible DMs with current user ──
+function initAllDMTrackers() {
+  if (!fbReady || !db || !loggedInMember) return;
+  MEMBERS.filter(m => m.name !== loggedInMember.name).forEach(m => {
+    const roomId = getDMRoomId(loggedInMember.name, m.name);
+    if (_channelTrackers[roomId]) return; // already watching
+    _channelTrackers[roomId] = db.collection('chat')
+      .where('room', '==', roomId)
+      .orderBy('loggedAt', 'desc')
+      .limit(5)
+      .onSnapshot(snap => {
+        if (!snap.size) return;
+        const msgs = snap.docs.map(d => ({...d.data(), id: d.id}));
+        const latest = msgs[0];
+        if (!latest || latest.sender === loggedInMember.name) return;
+        // Only count as unread if NOT currently viewing this DM
+        if (currentDM?.roomId !== roomId) {
+          const lastRead = _getLastRead(roomId);
+          const newMsgs = msgs.filter(x => (x.loggedAt||0) > lastRead && x.sender !== loggedInMember.name);
+          const prevCount = DM_UNREAD[roomId] || 0;
+          if (newMsgs.length > 0) {
+            DM_UNREAD[roomId] = newMsgs.length;
+            // Surface in recent DMs so it's visible in the sidebar
+            trackDMRecent(m.name);
+            renderDMList();
+            // Notify if genuinely new
+            if (newMsgs.length > prevCount) {
+              chatToast(latest.sender, m.name, latest.text || '', true);
+              pushNotif({ title: `💬 DM from ${latest.sender}`, body: (latest.text || '(attachment)').substring(0,80), icon: '💬', type: 'chat', tag: 'dm-' + roomId, silent: false });
+            }
+          }
+        }
+        updateChatNavBadge();
       }, () => {});
   });
 }
@@ -8384,8 +8528,9 @@ function chatAttachFile(event) {
 function initChat() {
   if (!fbReady || !db) { renderChatMessages(); return; }
   if (chatUnsubscribe) chatUnsubscribe();
-  // Start background unread trackers for all channels (idempotent)
+  // Start background unread trackers for all channels + DMs (idempotent)
   initAllChannelTrackers();
+  initAllDMTrackers();
   const chatRoom = currentDM ? currentDM.roomId : currentRoom;
   // Order by loggedAt (plain number) — avoids Firestore composite index requirement
   // sentAt is a server timestamp which needs an index; loggedAt is set client-side
@@ -8403,13 +8548,7 @@ function initChat() {
         _setLastRead(currentRoom, lastMsg.loggedAt || 0);
         renderChannelList();
       }
-      const badge = document.getElementById('badge-chat');
-      if (currentPanel !== 'chat' && CHAT_MESSAGES.length) {
-        const last = CHAT_MESSAGES[CHAT_MESSAGES.length - 1];
-        if (last && last.sender !== loggedInMember?.name) {
-          badge.style.display = ''; badge.textContent = '!';
-        }
-      }
+      updateChatNavBadge();
     }, err => {
       console.error('Chat listener error:', err);
       if (err.code === 'failed-precondition') {
@@ -8477,7 +8616,7 @@ function renderChat() {
   tagSel.innerHTML = `<option value="">📌 Tag flow/task…</option>` +
     TODAY_FLOWS.map(f => `<option value="flow:${f.id}">Flow: ${f.title}</option>`).join('') +
     TASKS.map(t => `<option value="task:${t.id}">Task: ${t.title}</option>`).join('');
-  document.getElementById('badge-chat').style.display = 'none';
+  updateChatNavBadge();
 
   // Show/hide message input for channels user is in
   const inputWrapper = document.querySelector('.chat-input-wrapper');
