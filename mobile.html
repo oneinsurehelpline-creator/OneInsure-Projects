@@ -281,6 +281,53 @@ a{text-decoration:none;color:inherit;}
   background:var(--navy);color:#fff;border-color:var(--navy);
   font-weight:600;
 }
+.mob-flow-tab-bar{display:flex;gap:8px;margin-bottom:12px;}
+.mob-flow-tab{
+  flex:1;padding:8px 0;border-radius:var(--r-pill);
+  background:var(--white);border:1.5px solid var(--border);
+  font-size:13px;font-weight:600;color:var(--ink3);cursor:pointer;
+  transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.mob-flow-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.mob-flow-tab-badge{
+  min-width:18px;height:18px;border-radius:9px;
+  background:rgba(255,255,255,0.25);color:#fff;
+  font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;
+}
+.mob-flow-tab:not(.active) .mob-flow-tab-badge{background:var(--border);color:var(--ink3);}
+.mob-flow-tab-badge.done{background:rgba(16,185,129,0.2);color:#059669;}
+.mob-flow-tab.active .mob-flow-tab-badge.done{background:rgba(255,255,255,0.25);color:#fff;}
+.flow-target-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12px;padding:2px 8px;border-radius:var(--r-pill);
+  background:var(--border);color:var(--ink3);margin-left:4px;
+}
+.flow-target-chip.overdue{background:#fee2e2;color:#dc2626;}
+.flow-rename-btn{
+  background:none;border:none;font-size:14px;cursor:pointer;
+  color:var(--ink4);padding:2px 4px;margin-left:2px;
+  border-radius:4px;transition:background 0.15s;
+}
+.flow-rename-btn:active{background:var(--border);}
+.flow-drive-section{padding:12px 16px;border-top:1px solid var(--border);}
+.flow-drive-title{font-size:12px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.flow-drive-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
+.flow-drive-item:last-child{border-bottom:none;}
+.flow-drive-name{flex:1;font-size:14px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.flow-drive-meta{font-size:11px;color:var(--ink4);}
+.flow-drive-preview-btn{flex-shrink:0;padding:4px 10px;border-radius:var(--r-pill);background:var(--navy);color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;}
+/* Deep-link approver modal */
+.dl-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.10);padding:24px;margin-bottom:16px;}
+.dl-flow-title{font-size:22px;font-weight:700;color:#1a1a2e;margin-bottom:8px;line-height:1.3;}
+.dl-step-name{font-size:14px;color:#666;margin-bottom:12px;}
+.dl-plat-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.dl-section-hdr{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#888;margin:16px 0 8px;}
+.dl-approve-btn{width:100%;padding:16px;border-radius:12px;background:#10b981;color:#fff;font-size:18px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;}
+.dl-reject-btn{width:100%;padding:16px;border-radius:12px;background:#ef4444;color:#fff;font-size:18px;font-weight:700;border:none;cursor:pointer;}
+.dl-reject-reason{width:100%;margin-top:12px;padding:12px;border-radius:10px;border:1.5px solid #e5e7eb;font-size:15px;font-family:inherit;resize:vertical;min-height:80px;box-sizing:border-box;}
+.dl-reject-reason:focus{outline:none;border-color:#6366f1;}
+.dl-confirm-btn{width:100%;padding:14px;border-radius:12px;background:#ef4444;color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;margin-top:10px;}
+.dl-open-app{display:block;text-align:center;margin-top:20px;font-size:14px;color:#6366f1;text-decoration:none;font-weight:600;}
 
 /* Cards base */
 .card{
@@ -988,7 +1035,12 @@ a{text-decoration:none;color:inherit;}
       </div>
       <div class="today-body">
         <div class="section-hdr">Content Flows</div>
+        <div class="mob-flow-tab-bar">
+          <button class="mob-flow-tab active" id="mob-ftab-active" onclick="setMobFlowTab('active')">Active <span class="mob-flow-tab-badge" id="mob-ftab-active-count">0</span></button>
+          <button class="mob-flow-tab" id="mob-ftab-done" onclick="setMobFlowTab('completed')">Completed <span class="mob-flow-tab-badge done" id="mob-ftab-done-count">0</span></button>
+        </div>
         <div id="flows-list"><div class="loader"><div class="spinner"></div></div></div>
+        <div id="flows-done-list" style="display:none;"></div>
       </div>
       <div class="page-bottom"></div>
     </div>
@@ -1291,6 +1343,15 @@ a{text-decoration:none;color:inherit;}
   </div>
 </div>
 
+<!-- Approver Deep-Link Modal -->
+<div id="mob-dl-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:#f0f4f8;overflow-y:auto;">
+  <div style="max-width:480px;margin:0 auto;padding:24px 20px 40px;">
+    <div id="mob-dl-content">
+      <!-- filled by showMobApproverModal() -->
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -1332,6 +1393,10 @@ const APPROVERS=[
   {name:'Susant',  av:'av-h',email:'susant.padhi@oneinsure.com'},
   {name:'Nasita',  av:'av-i',email:'nasita.londhe@oneinsure.com'},
 ];
+const FLOW_CARD_COLORS = [
+  '#6366f1','#0ea5e9','#10b981','#f59e0b',
+  '#ef4444','#8b5cf6','#ec4899','#14b8a6',
+];
 
 /* ════════════════════════════════
    APP STATE
@@ -1345,6 +1410,7 @@ let ideaFilter        = 'all';
 let allTasks          = [];
 let allIdeas          = [];
 let allFlows          = [];
+let _mobFlowTab       = 'active';
 let chatRoomId        = null;
 let chatUnsub         = null;
 let MOB_CHANNEL_UNREAD = {};  // roomId → count
@@ -1410,6 +1476,16 @@ let editingIdeaId     = null;
 function safeJSON(val, def) {
   if (typeof val === 'string') { try { return JSON.parse(val); } catch(e) { return def; } }
   return (val != null) ? val : def;
+}
+
+function deserializeFlowFromFirestore(f) {
+  if (!f) return f;
+  const out = { ...f };
+  if (typeof out.driveFiles    === 'string') out.driveFiles    = safeJSON(out.driveFiles, []);
+  if (typeof out.subtaskChecks === 'string') out.subtaskChecks = safeJSON(out.subtaskChecks, {});
+  if (typeof out.stepTimings   === 'string') out.stepTimings   = safeJSON(out.stepTimings, {});
+  if (typeof out.subAssignees  === 'string') out.subAssignees  = safeJSON(out.subAssignees, {});
+  return out;
 }
 
 function getStepOwner(f, i) {
@@ -1492,7 +1568,48 @@ function showToast(msg, type) {
 /* ════════════════════════════════
    AUTH
 ════════════════════════════════ */
+const _dlParams = (() => {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const flow     = p.get('flow');
+    const approver = decodeURIComponent(p.get('approver') || '').toLowerCase();
+    if (flow && approver && EMAIL_TO_MEMBER[approver]) {
+      const m = EMAIL_TO_MEMBER[approver];
+      if (m.role === 'approver' || m.role === 'head') return { flow, approver };
+    }
+  } catch(e) {}
+  return null;
+})();
+// Hide login screen immediately on deep-link so it doesn't flash while signing in anonymously
+if (_dlParams) {
+  const ls = document.getElementById('login-screen');
+  if (ls) ls.style.display = 'none';
+}
+
+let _fbMobReady = false;
 auth.onAuthStateChanged(user => {
+  // Deep-link: no user → sign in anonymously
+  if (!user && _dlParams) {
+    auth.signInAnonymously().catch(() => {
+      showLogin();
+    });
+    return;
+  }
+  // Deep-link: anonymous user → show approver modal
+  if (user && user.isAnonymous && _dlParams) {
+    if (_fbMobReady) return;
+    _fbMobReady = true;
+    currentUser   = user;
+    const m = EMAIL_TO_MEMBER[_dlParams.approver];
+    currentMember = { ...m, email: _dlParams.approver };
+    // Init db connection then show modal
+    db.collection('flows').doc('active').get().then(snap => {
+      const flows = snap.exists ? (snap.data().flows || []).map(deserializeFlowFromFirestore) : [];
+      allFlows = flows;
+      showMobApproverModal(_dlParams.flow, _dlParams.approver);
+    }).catch(() => showMobApproverModal(_dlParams.flow, _dlParams.approver));
+    return;
+  }
   if (user) {
     currentUser   = user;
     currentMember = EMAIL_TO_MEMBER[user.email]
@@ -1578,7 +1695,7 @@ function stopListeners() {
 function startListeners() {
   let _prevMyTurnIds = new Set();
   flowsUnsub = db.collection('flows').doc('active').onSnapshot(snap => {
-    allFlows = snap.exists ? (snap.data().flows || []) : [];
+    allFlows = snap.exists ? (snap.data().flows || []).map(deserializeFlowFromFirestore) : [];
     renderFlows();
     updateTodayStats();
     // Notify when a new flow step is assigned to current user
@@ -1635,26 +1752,207 @@ function updateTodayStats() {
    FLOWS / TODAY TAB
 ════════════════════════════════ */
 function renderFlows() {
-  const el = document.getElementById('flows-list');
+  const el     = document.getElementById('flows-list');
+  const doneEl = document.getElementById('flows-done-list');
   if (!el) return;
-  if (!allFlows.length) {
-    el.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">🎬</div>
-      <div class="empty-title">No active flows</div>
-      <div class="empty-sub">Content production flows will appear here when created from the desktop app.</div>
-    </div>`;
-    return;
-  }
-  // Sort: my-turn first, then active, then done
-  const sorted = [...allFlows].sort((a, b) => {
-    const am = isMyTurn(a) ? 0 : 1;
-    const bm = isMyTurn(b) ? 0 : 1;
-    return am - bm;
+
+  const activeFlows = allFlows.filter(f => {
+    const statuses = f.stepStatuses || [];
+    return !(statuses.length > 0 && statuses.every(s => s === 'done'));
   });
-  el.innerHTML = sorted.map(f => buildFlowCard(f)).join('');
+  const doneFlows = allFlows.filter(f => {
+    const statuses = f.stepStatuses || [];
+    return statuses.length > 0 && statuses.every(s => s === 'done');
+  });
+
+  // Update tab counts
+  const activeCountEl = document.getElementById('mob-ftab-active-count');
+  const doneCountEl   = document.getElementById('mob-ftab-done-count');
+  if (activeCountEl) activeCountEl.textContent = activeFlows.length;
+  if (doneCountEl)   doneCountEl.textContent   = doneFlows.length;
+
+  // Show/hide boards
+  const showActive = _mobFlowTab === 'active';
+  if (el)     el.style.display     = showActive ? '' : 'none';
+  if (doneEl) doneEl.style.display = showActive ? 'none' : '';
+
+  // Render active board
+  if (showActive) {
+    if (!activeFlows.length) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">🎬</div>
+        <div class="empty-title">No active flows</div>
+        <div class="empty-sub">Content production flows will appear here when created from the desktop app.</div>
+      </div>`;
+    } else {
+      const sorted = [...activeFlows].sort((a, b) => (isMyTurn(a) ? 0 : 1) - (isMyTurn(b) ? 0 : 1));
+      el.innerHTML = sorted.map((f, i) => buildFlowCard(f, i)).join('');
+    }
+  } else {
+    // Render completed board
+    if (!doneFlows.length) {
+      doneEl.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">✅</div>
+        <div class="empty-title">No completed flows</div>
+        <div class="empty-sub">Flows that are fully complete will appear here.</div>
+      </div>`;
+    } else {
+      doneEl.innerHTML = doneFlows.map((f, i) => buildFlowCard(f, activeFlows.length + i)).join('');
+    }
+  }
 }
 
-function buildFlowCard(f) {
+function setMobFlowTab(tab) {
+  _mobFlowTab = tab;
+  document.getElementById('mob-ftab-active')?.classList.toggle('active', tab === 'active');
+  document.getElementById('mob-ftab-done')?.classList.toggle('active', tab === 'completed');
+  renderFlows();
+}
+
+/* ════════════════════════════════
+   APPROVER DEEP-LINK MODAL
+════════════════════════════════ */
+function showMobApproverModal(flowId, approverEmail) {
+  const f = allFlows.find(x => x.id === flowId);
+  const modal = document.getElementById('mob-dl-modal');
+  const content = document.getElementById('mob-dl-content');
+  if (!modal || !content) return;
+
+  const approverName = currentMember?.name || approverEmail.split('@')[0];
+  const cs        = f ? (parseInt(f.currentStep) || 0) : 0;
+  const stepNames = f ? (f.stepNames || []) : [];
+  const stepName  = stepNames[cs] || 'Approval Step';
+  const flowTitle = f ? (f.title || 'Untitled Flow') : `Flow #${flowId}`;
+  const driveFiles = f ? (f.driveFiles || []) : [];
+  const allFiles = driveFiles.flatMap((files, i) =>
+    (files||[]).map(file => ({ ...file, stepName: stepNames[i] || `Step ${i+1}` }))
+  );
+
+  const platHtml = f ? (f.platforms||[]).map(p =>
+    `<span class="plat-chip ${platClass(p)}">${escHtml(p)}</span>`
+  ).join('') : '';
+
+  const filesHtml = allFiles.length ? `
+    <div class="dl-section-hdr">📁 Files attached</div>
+    ${allFiles.map(file => `<div class="flow-drive-item">
+      <span style="font-size:18px;">${getMobDriveIcon(file.mimeType)}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="flow-drive-name">${escHtml(file.name || 'File')}</div>
+        <div class="flow-drive-meta">${escHtml(file.stepName)}${file.addedBy?' · '+escHtml(file.addedBy):''}</div>
+      </div>
+      <button class="flow-drive-preview-btn" onclick="window.open('${file.url||'#'}','_blank')">👁</button>
+    </div>`).join('')}
+  ` : '';
+
+  content.innerHTML = `
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:32px;">👋</div>
+      <div style="font-size:18px;font-weight:700;color:#1a1a2e;">Hi ${escHtml(approverName)}</div>
+      <div style="font-size:14px;color:#666;margin-top:4px;">You have a content approval waiting</div>
+    </div>
+    <div class="dl-card">
+      <div class="dl-flow-title">${escHtml(flowTitle)}</div>
+      <div class="dl-step-name">Step: ${escHtml(stepName)}</div>
+      <div class="dl-plat-row">${platHtml || '<span style="color:#999;font-size:14px;">No platforms</span>'}</div>
+      ${filesHtml}
+    </div>
+    <div id="mob-dl-action-area">
+      <button class="dl-approve-btn" onclick="mobDlApprove('${escHtml(flowId)}')">✅ Approve</button>
+      <button class="dl-reject-btn" onclick="mobDlShowReject('${escHtml(flowId)}')">❌ Reject</button>
+      <div id="mob-dl-reject-area" style="display:none;">
+        <textarea class="dl-reject-reason" id="mob-dl-reason" placeholder="Please provide a reason for rejection (required, min 10 characters)…"></textarea>
+        <button class="dl-confirm-btn" onclick="mobDlConfirmReject('${escHtml(flowId)}')">Confirm Rejection</button>
+      </div>
+    </div>
+    <a class="dl-open-app" href="javascript:void(0)" onclick="mobDlOpenFullApp()">Open full app →</a>
+  `;
+
+  modal.style.display = 'block';
+}
+
+function mobDlShowReject(flowId) {
+  document.getElementById('mob-dl-reject-area').style.display = '';
+}
+
+async function mobDlApprove(flowId) {
+  const area = document.getElementById('mob-dl-action-area');
+  if (area) area.innerHTML = '<div style="text-align:center;padding:16px;color:#888;">Processing…</div>';
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) throw new Error('No data');
+    const flows = snap.data().flows || [];
+    const idx = flows.findIndex(f => f.id === flowId);
+    if (idx === -1) throw new Error('Flow not found');
+    const f = { ...flows[idx] };
+    const statuses = [...(f.stepStatuses || [])];
+    const cs = parseInt(f.currentStep) || 0;
+    statuses[cs] = 'done';
+    if (cs < statuses.length - 1) { statuses[cs + 1] = 'active'; f.currentStep = cs + 1; }
+    f.stepStatuses = statuses;
+    f.approvalRoutees = [];
+    flows[idx] = f;
+    await db.collection('flows').doc('active').update({ flows });
+    _mobDlShowConfirm('approved', null);
+  } catch(err) {
+    console.error(err);
+    showToast('Failed to approve. Please try again.', 'err');
+  }
+}
+
+async function mobDlConfirmReject(flowId) {
+  const reason = (document.getElementById('mob-dl-reason')?.value || '').trim();
+  if (reason.length < 10) { showToast('Please enter at least 10 characters.', 'warn'); return; }
+  const area = document.getElementById('mob-dl-action-area');
+  if (area) area.innerHTML = '<div style="text-align:center;padding:16px;color:#888;">Processing…</div>';
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) throw new Error('No data');
+    const flows = snap.data().flows || [];
+    const idx = flows.findIndex(f => f.id === flowId);
+    if (idx === -1) throw new Error('Flow not found');
+    const f = { ...flows[idx] };
+    const cs = parseInt(f.currentStep) || 0;
+    const statuses = [...(f.stepStatuses || [])];
+    statuses[cs] = 'active';
+    f.stepStatuses = statuses;
+    f.approvalRoutees = [];
+    const notes = safeJSON(f.rejectionNotes, {});
+    notes[cs] = reason;
+    f.rejectionNotes = JSON.stringify(notes);
+    flows[idx] = f;
+    await db.collection('flows').doc('active').update({ flows });
+    _mobDlShowConfirm('rejected', reason);
+  } catch(err) {
+    console.error(err);
+    showToast('Failed to submit rejection. Please try again.', 'err');
+  }
+}
+
+function _mobDlShowConfirm(action, reason) {
+  const content = document.getElementById('mob-dl-content');
+  if (!content) return;
+  const isApproved = action === 'approved';
+  content.innerHTML = `
+    <div style="text-align:center;padding:40px 20px;">
+      <div style="font-size:64px;margin-bottom:16px;">${isApproved ? '✅' : '❌'}</div>
+      <div style="font-size:22px;font-weight:700;color:#1a1a2e;margin-bottom:8px;">Done!</div>
+      <div style="font-size:16px;color:#666;margin-bottom:16px;">Your response has been recorded.</div>
+      <div style="font-size:15px;font-weight:600;color:${isApproved ? '#10b981' : '#ef4444'};">
+        ${isApproved ? 'Approved ✓' : 'Rejected'}
+      </div>
+      ${!isApproved && reason ? `<div style="margin-top:12px;font-size:14px;color:#666;background:#f9fafb;border-radius:10px;padding:12px;">"${escHtml(reason)}"</div>` : ''}
+      <a class="dl-open-app" href="javascript:void(0)" onclick="mobDlOpenFullApp()" style="margin-top:32px;">Open full app →</a>
+    </div>
+  `;
+}
+
+function mobDlOpenFullApp() {
+  const modal = document.getElementById('mob-dl-modal');
+  if (modal) modal.style.display = 'none';
+  auth.signOut().then(() => showLogin());
+}
+
+function buildFlowCard(f, cardIdx) {
   const cs         = parseInt(f.currentStep) || 0;
   const statuses   = f.stepStatuses || [];
   const stepNames  = f.stepNames    || [];
@@ -1663,6 +1961,18 @@ function buildFlowCard(f) {
   const mine       = isMyTurn(f);
   const stepOwner  = getStepOwner(f, cs);
   const curName    = stepNames[cs] || `Step ${cs + 1}`;
+
+  // Accent color
+  const _accentColor = FLOW_CARD_COLORS[(cardIdx || 0) % FLOW_CARD_COLORS.length];
+  const _accentTint  = _accentColor + '14';
+
+  // Target date chip
+  let targetChip = '';
+  if (f.targetDate) {
+    const today = todayStr();
+    const overdue = f.targetDate < today && !allDone;
+    targetChip = `<span class="flow-target-chip${overdue ? ' overdue' : ''}" onclick="setMobTargetDate('${escHtml(f.id)}',this);event.stopPropagation();">📅 ${f.targetDate}</span>`;
+  }
 
   // Platform chips
   const plats = (f.platforms || []).map(p =>
@@ -1731,18 +2041,21 @@ function buildFlowCard(f) {
     </div>`;
   }
 
-  const cardCls  = mine ? 'flow-card my-turn' : 'flow-card';
-  const innerCls = mine ? 'flow-card-inner' : 'flow-card-inner no-tint';
-  const badge    = mine ? `<span class="your-turn-badge">🔥 Your Turn</span>` : '';
+  const innerBg = mine ? `background:${_accentTint};` : `background:${_accentTint};`;
+  const badge   = mine ? `<span class="your-turn-badge">🔥 Your Turn</span>` : '';
+  const renameBtn = `<button class="flow-rename-btn" onclick="renameMobFlow('${escHtml(f.id)}');event.stopPropagation();" title="Rename">✏️</button>`;
 
-  return `<div class="${cardCls}" onclick="openFlowDetail('${escHtml(f.id)}')">
-    <div class="${innerCls}">
+  return `<div class="flow-card" style="border-left-color:${_accentColor};" onclick="openFlowDetail('${escHtml(f.id)}')">
+    <div class="flow-card-inner" style="${innerBg}">
       <div class="flow-head">
         <div class="flow-title-row">
-          <div class="flow-title">${escHtml(f.title || 'Untitled Flow')}</div>
+          <div class="flow-title">${escHtml(f.title || 'Untitled Flow')}${renameBtn}</div>
           ${badge}
         </div>
-        <div class="plat-row">${plats || '<span style="font-size:14px;color:var(--ink4);">No platforms</span>'}</div>
+        <div class="plat-row" style="align-items:center;">
+          ${plats || '<span style="font-size:14px;color:var(--ink4);">No platforms</span>'}
+          ${targetChip}
+        </div>
       </div>
       <div class="steps-track">${dotsHtml}</div>
     </div>
@@ -1811,9 +2124,18 @@ function openFlowDetail(flowId) {
   const totalSteps = Math.max(statuses.length, stepNames.length);
   const allDone    = statuses.length > 0 && statuses.every(s => s === 'done');
 
-  document.getElementById('fd-title').textContent = f.title || 'Flow';
-  document.getElementById('fd-plats').innerHTML = (f.platforms || [])
-    .map(p => `<span class="plat-chip ${platClass(p)}">${escHtml(p)}</span>`).join('');
+  const fdTitleEl = document.getElementById('fd-title');
+  fdTitleEl.innerHTML = escHtml(f.title || 'Flow') +
+    ` <button class="flow-rename-btn" onclick="renameMobFlow('${escHtml(f.id)}')" style="font-size:16px;" title="Rename">✏️</button>`;
+
+  let platHtml = (f.platforms || []).map(p => `<span class="plat-chip ${platClass(p)}">${escHtml(p)}</span>`).join('');
+  if (f.targetDate) {
+    const overdue = f.targetDate < todayStr() && !allDone;
+    platHtml += `<span class="flow-target-chip${overdue?' overdue':''}" onclick="setMobTargetDate('${escHtml(f.id)}',this)">📅 ${f.targetDate}</span>`;
+  } else {
+    platHtml += `<span class="flow-target-chip" onclick="setMobTargetDate('${escHtml(f.id)}',this)" style="cursor:pointer;">📅 Set date</span>`;
+  }
+  document.getElementById('fd-plats').innerHTML = platHtml;
 
   let stepsHtml = '';
   for (let i = 0; i < totalSteps; i++) {
@@ -1864,6 +2186,34 @@ function openFlowDetail(flowId) {
     const owner = getStepOwner(f, cs);
     pushArea.innerHTML = `<div style="text-align:center;padding:12px 0;color:var(--ink4);font-size:16px;">
       Waiting for <strong style="color:var(--ink2);">${escHtml(owner || '—')}</strong> to push</div>`;
+  }
+
+  // Drive files
+  const tmplSteps = f.stepNames || [];
+  const driveFiles = f.driveFiles || [];
+  const allFiles = driveFiles.flatMap((files, i) =>
+    (files || []).map(file => ({ ...file, stepName: tmplSteps[i] || `Step ${i + 1}` }))
+  );
+  let driveSectionEl = document.getElementById('fd-drive-section');
+  if (!driveSectionEl) {
+    driveSectionEl = document.createElement('div');
+    driveSectionEl.id = 'fd-drive-section';
+    document.getElementById('fd-steps').after(driveSectionEl);
+  }
+  if (allFiles.length) {
+    driveSectionEl.innerHTML = `<div class="flow-drive-section">
+      <div class="flow-drive-title">📁 ${allDone ? 'Files from this flow' : 'Files attached'}</div>
+      ${allFiles.map(file => `<div class="flow-drive-item">
+        <span style="font-size:18px;">${getMobDriveIcon(file.mimeType)}</span>
+        <div style="flex:1;min-width:0;">
+          <div class="flow-drive-name">${escHtml(file.name || 'File')}</div>
+          <div class="flow-drive-meta">${escHtml(file.stepName)}${file.addedBy ? ' · ' + escHtml(file.addedBy) : ''}</div>
+        </div>
+        <button class="flow-drive-preview-btn" onclick="window.open('${file.url || '#'}','_blank')">👁</button>
+      </div>`).join('')}
+    </div>`;
+  } else {
+    driveSectionEl.innerHTML = '';
   }
 
   openSheet('sheet-flow-detail');
@@ -1943,6 +2293,68 @@ async function confirmMobApprovalRouting() {
     console.error(err);
     showToast('Failed to send for approval', 'err');
   }
+}
+
+function getMobDriveIcon(mimeType) {
+  if (!mimeType) return '📄';
+  if (mimeType.includes('image'))       return '🖼️';
+  if (mimeType.includes('video'))       return '🎬';
+  if (mimeType.includes('audio'))       return '🎵';
+  if (mimeType.includes('pdf'))         return '📕';
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return '📊';
+  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return '📊';
+  if (mimeType.includes('document') || mimeType.includes('word')) return '📝';
+  return '📄';
+}
+
+async function renameMobFlow(flowId) {
+  const f = allFlows.find(x => x.id === flowId);
+  if (!f) return;
+  const newName = prompt('Rename flow:', f.title || '');
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed) { showToast('Name cannot be empty.', 'warn'); return; }
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) return;
+    const flows = snap.data().flows || [];
+    const idx = flows.findIndex(x => x.id === flowId);
+    if (idx === -1) return;
+    flows[idx] = { ...flows[idx], title: trimmed };
+    await db.collection('flows').doc('active').update({ flows });
+    showToast('Flow renamed.', 'ok');
+    closeSheet();
+  } catch(err) {
+    console.error(err);
+    showToast('Failed to rename flow.', 'err');
+  }
+}
+
+async function setMobTargetDate(flowId, triggerEl) {
+  const f = allFlows.find(x => x.id === flowId);
+  if (!f) return;
+  const inp = document.createElement('input');
+  inp.type = 'date'; inp.value = f.targetDate || '';
+  inp.style.cssText = 'position:fixed;opacity:0;pointer-events:none;top:50%;left:50%;';
+  document.body.appendChild(inp);
+  inp.focus(); inp.showPicker?.();
+  inp.addEventListener('change', async () => {
+    const newDate = inp.value || null;
+    inp.remove();
+    try {
+      const snap = await db.collection('flows').doc('active').get();
+      if (!snap.exists) return;
+      const flows = snap.data().flows || [];
+      const idx = flows.findIndex(x => x.id === flowId);
+      if (idx === -1) return;
+      flows[idx] = { ...flows[idx], targetDate: newDate };
+      await db.collection('flows').doc('active').update({ flows });
+      showToast(newDate ? `Target date set: ${newDate}` : 'Target date cleared.', 'ok');
+    } catch(err) {
+      console.error(err); showToast('Failed to set target date.', 'err');
+    }
+  });
+  inp.addEventListener('blur', () => setTimeout(() => inp.remove(), 200));
 }
 
 async function doMobApprove(flowId, e) {
