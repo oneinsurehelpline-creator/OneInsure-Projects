@@ -1325,6 +1325,56 @@ let allIdeas          = [];
 let allFlows          = [];
 let chatRoomId        = null;
 let chatUnsub         = null;
+let MOB_CHANNEL_UNREAD = {};  // roomId → count
+let MOB_CHANNEL_LAST   = {};  // roomId → { sender, text, loggedAt }
+let _mobTrackers       = {};  // roomId → unsubscribe
+
+function _mobGetLastRead(r) { try { return JSON.parse(localStorage.getItem('sd_mob_last_read')||'{}')[r]||0; } catch{return 0;} }
+function _mobSetLastRead(r, ts) { try { const m=JSON.parse(localStorage.getItem('sd_mob_last_read')||'{}'); m[r]=ts||Date.now(); localStorage.setItem('sd_mob_last_read',JSON.stringify(m)); } catch{} }
+
+function initMobChannelTrackers() {
+  if (!db) return;
+  CHAT_ROOMS.forEach(r => {
+    if (_mobTrackers[r.id]) return;
+    _mobTrackers[r.id] = db.collection('chat')
+      .where('room','==',r.id).orderBy('loggedAt','desc').limit(5)
+      .onSnapshot(snap => {
+        if (!snap.size) return;
+        const msgs = snap.docs.map(d=>({...d.data(),id:d.id}));
+        const latest = msgs[0];
+        MOB_CHANNEL_LAST[r.id] = { sender: latest.sender||'', text: latest.text||(latest.type==='poll'?'📊 Poll':latest.type==='image'?'🖼 Image':''), loggedAt: latest.loggedAt||0 };
+        if (chatRoomId !== r.id) {
+          const lr = _mobGetLastRead(r.id);
+          const n  = msgs.filter(m=>(m.loggedAt||0)>lr && m.sender!==currentMember?.name).length;
+          if (n>0) { MOB_CHANNEL_UNREAD[r.id] = n; triggerMobNotif(latest, r.label); }
+        }
+        renderChatList();
+      }, ()=>{});
+  });
+}
+
+// Web Notification for new messages
+function triggerMobNotif(msg, roomLabel) {
+  if (!notifEnabled) return;
+  if (document.visibilityState === 'visible' && chatRoomId === msg.room) return; // already reading
+  if (msg.sender === currentMember?.name) return; // own message
+  if (Notification.permission === 'granted') {
+    new Notification(`${msg.sender} in #${roomLabel}`, { body: msg.text || '📎 Attachment', icon: '/favicon.ico', tag: msg.room });
+  }
+}
+
+// Flow step assigned notification
+function triggerFlowStepNotif(flowTitle) {
+  if (!notifEnabled) return;
+  if (Notification.permission === 'granted') {
+    new Notification('Your turn!', { body: `You have a step to action: ${flowTitle}`, icon: '/favicon.ico', tag: 'flow_step' });
+  }
+}
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') await Notification.requestPermission();
+}
 let tasksUnsub        = null;
 let flowsUnsub        = null;
 let ideasUnsub        = null;
@@ -1478,6 +1528,8 @@ function initApp() {
   renderTeamList();
   setupProfile();
   startListeners();
+  initMobChannelTrackers();
+  requestNotifPermission();
   switchTab('today');
   const t = todayStr();
   ['nt-due','ni-date'].forEach(id => { const el = document.getElementById(id); if (el) el.value = t; });
@@ -1491,10 +1543,17 @@ function stopListeners() {
 }
 
 function startListeners() {
+  let _prevMyTurnIds = new Set();
   flowsUnsub = db.collection('flows').doc('active').onSnapshot(snap => {
     allFlows = snap.exists ? (snap.data().flows || []) : [];
     renderFlows();
     updateTodayStats();
+    // Notify when a new flow step is assigned to current user
+    const myFlows = allFlows.filter(f => isMyTurn(f));
+    myFlows.forEach(f => {
+      if (!_prevMyTurnIds.has(f.id)) triggerFlowStepNotif(f.title || 'Untitled Flow');
+    });
+    _prevMyTurnIds = new Set(myFlows.map(f => f.id));
   }, err => console.warn('flows err', err));
 
   tasksUnsub = db.collection('tasks').orderBy('createdAt','desc').onSnapshot(snap => {
@@ -1884,15 +1943,32 @@ async function saveNewTask() {
 function renderChatList() {
   const chEl = document.getElementById('channel-list-items');
   if (chEl) {
-    chEl.innerHTML = CHAT_ROOMS.map(r => `
-      <div class="chat-list-row" onclick="openChatRoom('${r.id}','${escHtml(r.label)}','channel','${escHtml(r.desc)}')">
+    const sorted = [...CHAT_ROOMS].sort((a,b) => {
+      const ua=MOB_CHANNEL_UNREAD[a.id]||0, ub=MOB_CHANNEL_UNREAD[b.id]||0;
+      if (ua!==ub) return ub-ua;
+      return (MOB_CHANNEL_LAST[b.id]?.loggedAt||0) - (MOB_CHANNEL_LAST[a.id]?.loggedAt||0);
+    });
+    chEl.innerHTML = sorted.map(r => {
+      const unread  = MOB_CHANNEL_UNREAD[r.id]||0;
+      const last    = MOB_CHANNEL_LAST[r.id];
+      const preview = last ? `${last.sender!==currentMember?.name?last.sender+': ':''}${last.text||''}`.slice(0,45) : r.desc;
+      return `<div class="chat-list-row${unread?' unread-row':''}" onclick="openChatRoom('${r.id}','${escHtml(r.label)}','channel','${escHtml(r.desc)}')">
         <div class="ch-icon-box">${r.icon}</div>
         <div class="ch-text">
-          <div class="ch-name">${r.label}</div>
-          <div class="ch-preview">${r.desc}</div>
+          <div class="ch-name" style="${unread?'font-weight:700;':''}">${r.label}</div>
+          <div class="ch-preview" style="${unread?'color:var(--ink2);font-weight:500;':''}">${escHtml(preview)}</div>
         </div>
-        <div class="ch-chevron">›</div>
-      </div>`).join('');
+        <div class="ch-meta">
+          ${last?.loggedAt ? `<div class="ch-time">${new Date(last.loggedAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true})}</div>` : ''}
+          ${unread ? `<div class="ch-unread" style="background:#25D366;">${unread>99?'99+':unread}</div>` : '<div class="ch-chevron">›</div>'}
+        </div>
+      </div>`;
+    }).join('');
+    chEl.innerHTML += `<div class="chat-list-row" onclick="openMobNewGroup()" style="opacity:0.65;border:1.5px dashed #ccc;border-radius:12px;margin-top:6px;">
+      <div class="ch-icon-box">➕</div>
+      <div class="ch-text"><div class="ch-name">New Group</div><div class="ch-preview">Create a custom channel</div></div>
+      <div class="ch-chevron">›</div>
+    </div>`;
   }
 
   const dmEl = document.getElementById('dm-list-items');
@@ -1915,6 +1991,11 @@ function renderChatList() {
 }
 
 function openChatRoom(roomId, title, type, subtitle) {
+  // Mark channel as read
+  MOB_CHANNEL_UNREAD[roomId] = 0;
+  const lastMsg = MOB_CHANNEL_LAST[roomId];
+  if (lastMsg?.loggedAt) _mobSetLastRead(roomId, lastMsg.loggedAt);
+  renderChatList();
   chatRoomId = roomId;
   const prefix = type === 'channel' ? '# ' : '';
   document.getElementById('chat-room-title').textContent    = prefix + title;
@@ -1942,6 +2023,21 @@ function openChatRoom(roomId, title, type, subtitle) {
           renderMessages(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => (a.loggedAt||0)-(b.loggedAt||0)));
         });
     });
+}
+
+function openMobNewGroup() {
+  const name = prompt('Group name:');
+  if (!name || !name.trim()) return;
+  const id = 'grp_' + name.toLowerCase().replace(/[^a-z0-9]/g,'_').slice(0,20) + '_' + Date.now().toString(36);
+  const channel = { id, label: name.trim(), icon: '💬', desc: 'Custom group', custom: true };
+  if (db) {
+    db.collection('customChannels').doc(id).set(channel).then(() => {
+      CHAT_ROOMS.push(channel);
+      renderChatList();
+      initMobChannelTrackers();
+      showToast('Group created!', 'ok');
+    }).catch(e => showToast('Error: ' + e.message, 'err'));
+  }
 }
 
 function closeChatRoom() {
