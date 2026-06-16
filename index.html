@@ -9819,16 +9819,7 @@ function notifyMyTurn(stepName, flowTitle, owner) {
     body: `"${flowTitle}" is now waiting on you.`,
     icon: '📲', type: 'turn', tag: 'turn-' + flowTitle,
   });
-  // Email notification
-  if (owner) {
-    const email = getMemberEmail(owner);
-    if (email) sendEmailNotification(
-      email, owner,
-      `[SociaDesk] Your turn — ${stepName}`,
-      `Hi ${owner},\n\nThe flow "${flowTitle}" has reached your step: ${stepName}.\n\nPlease log in to SociaDesk and take action.\n\nThanks,\nSociaDesk`,
-      flowTitle, stepName
-    );
-  }
+  // Email only goes to approvers — step-advance emails for regular members use in-app notifications only
 }
 
 function notifyBlocked(taskTitle, assignee) {
@@ -9856,16 +9847,7 @@ function notifyTaskAssigned(taskTitle, assignee) {
     body: taskTitle,
     icon: '📋', type: 'assigned',
   });
-  // Email notification
-  if (assignee) {
-    const email = getMemberEmail(assignee);
-    if (email) sendEmailNotification(
-      email, assignee,
-      `[SociaDesk] New task assigned: ${taskTitle}`,
-      `Hi ${assignee},\n\nA new task has been assigned to you: "${taskTitle}".\n\nLog in to SociaDesk to view details and get started.\n\nThanks,\nSociaDesk`,
-      taskTitle, ''
-    );
-  }
+  // Email reserved for approvers only — task assignments use in-app notifications
 }
 
 function notifyMorning() {
