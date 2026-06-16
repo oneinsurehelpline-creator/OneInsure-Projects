@@ -1276,6 +1276,21 @@ a{text-decoration:none;color:inherit;}
   <div style="height:8px;"></div>
 </div>
 
+<!-- Approval Routing Sheet -->
+<div class="sheet" id="sheet-approval-routing">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">Send for Approval</div>
+    <div class="sheet-subtitle" id="mob-ar-subtitle">Select approver(s)</div>
+  </div>
+  <div class="sheet-field" id="mob-ar-list" style="max-height:260px;overflow-y:auto;"></div>
+  <div style="padding:0 20px 8px;font-size:12px;color:#c0392b;display:none;" id="mob-ar-warn">Please select at least one approver.</div>
+  <div class="sheet-actions">
+    <button class="sheet-btn-cancel" onclick="closeSheet()">Cancel</button>
+    <button class="sheet-btn-primary" onclick="confirmMobApprovalRouting()">Send</button>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -1310,6 +1325,13 @@ const db   = firebase.firestore();
 const MEMBERS=[{name:'Akshay',role:'head',av:'av-c'},{name:'Chirag',role:'manager',av:'av-a'},{name:'Anamika',role:'manager',av:'av-b'},{name:'Shivam',role:'member',av:'av-d'},{name:'Sandeep',role:'member',av:'av-e'},{name:'Shantanu',role:'member',av:'av-a'},{name:'Deepanshu',role:'member',av:'av-c'},{name:'Harsh',role:'member',av:'av-d'},{name:'Pawan',role:'member',av:'av-b'},{name:'Ria',role:'member',av:'av-b'},{name:'Isha',role:'member',av:'av-e'},{name:'Tamanna',role:'member',av:'av-a'},{name:'Rochelle',role:'approver',av:'av-f'},{name:'Anirudh',role:'approver',av:'av-g'},{name:'Susant',role:'approver',av:'av-h'},{name:'Nasita',role:'approver',av:'av-i'}];
 const EMAIL_TO_MEMBER={'akshay.raje@oneinsure.com':{name:'Akshay',role:'head',av:'av-c'},'chirag.bhoir@oneinsure.com':{name:'Chirag',role:'manager',av:'av-a'},'anamika.patil@oneinsure.com':{name:'Anamika',role:'manager',av:'av-b'},'shivam.kumar@oneinsure.com':{name:'Shivam',role:'member',av:'av-d'},'sandeep.gawade@oneinsure.com':{name:'Sandeep',role:'member',av:'av-e'},'shantanu.tiwari@oneinsure.com':{name:'Shantanu',role:'member',av:'av-a'},'deepanshu.sharma@oneinsure.com':{name:'Deepanshu',role:'member',av:'av-c'},'harsh.das@oneinsure.com':{name:'Harsh',role:'member',av:'av-d'},'pawan.sonar@oneinsure.com':{name:'Pawan',role:'member',av:'av-b'},'ria.panchal@oneinsure.com':{name:'Ria',role:'member',av:'av-b'},'isha.upadhye@oneinsure.com':{name:'Isha',role:'member',av:'av-e'},'tamanna.shaikh@oneinsure.com':{name:'Tamanna',role:'member',av:'av-a'},'rochelle.mascarenhas@oneinsure.com':{name:'Rochelle',role:'approver',av:'av-f'},'anirudh.baardwaj@oneinsure.com':{name:'Anirudh',role:'approver',av:'av-g'},'susant.padhi@oneinsure.com':{name:'Susant',role:'approver',av:'av-h'},'nasita.londhe@oneinsure.com':{name:'Nasita',role:'approver',av:'av-i'}};
 const CHAT_ROOMS=[{id:'general',label:'General',icon:'🌐',desc:'Team announcements & chat'},{id:'editing',label:'Editing',icon:'✂️',desc:'Video & image editing'},{id:'ideas',label:'Ideas',icon:'💡',desc:'Brainstorming & concepts'},{id:'compliance',label:'Compliance',icon:'⚖️',desc:'Approvals & compliance'},{id:'tasks',label:'Tasks',icon:'✅',desc:'Task coordination'},{id:'leads',label:'Leads',icon:'🎯',desc:'Leads & pipeline'}];
+const APPROVERS=[
+  {name:'Akshay',  av:'av-c',email:'akshay.raje@oneinsure.com'},
+  {name:'Rochelle',av:'av-f',email:'rochelle.mascarenhas@oneinsure.com'},
+  {name:'Anirudh', av:'av-g',email:'anirudh.baardwaj@oneinsure.com'},
+  {name:'Susant',  av:'av-h',email:'susant.padhi@oneinsure.com'},
+  {name:'Nasita',  av:'av-i',email:'nasita.londhe@oneinsure.com'},
+];
 
 /* ════════════════════════════════
    APP STATE
@@ -1399,7 +1421,18 @@ function isMyTurn(f) {
   if (!currentMember) return false;
   const statuses = f.stepStatuses || [];
   const cs = f.currentStep || 0;
-  return statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
+  if (statuses[cs] !== 'active') return false;
+  if (getStepOwner(f, cs) === currentMember.name) return true;
+  // Routed approver also gets their turn indicator
+  const stepNames = f.stepNames || [];
+  const isApprovalStep = /approv/i.test(stepNames[cs] || '');
+  return isApprovalStep && (f.approvalRoutees || []).includes(currentMember.name);
+}
+
+function _isApprovalStep(f) {
+  const cs = f.currentStep || 0;
+  const stepNames = f.stepNames || [];
+  return /approv/i.test(stepNames[cs] || '');
 }
 
 function todayStr() {
@@ -1654,10 +1687,29 @@ function buildFlowCard(f) {
     dotsHtml += `<div style="font-size:14px;color:var(--ink4);margin-left:6px;">+${totalSteps-MAX_DOTS}</div>`;
   }
 
+  // Approval step logic
+  const isApprStep  = _isApprovalStep(f);
+  const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
+  const isRoutedApproverTurn = currentMember && isApprStep && (f.approvalRoutees || []).includes(currentMember.name);
+  const canRoute = isApprStep && isStepOwnerTurn && !isRoutedApproverTurn;
+
   // Footer
   let footHtml = '';
   if (allDone) {
     footHtml = `<div class="flow-done-banner">🎉 All steps complete!</div>`;
+  } else if (isRoutedApproverTurn) {
+    footHtml = `<div class="flow-foot">
+      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="push-btn-full" style="background:var(--green);flex:1;" onclick="doMobApprove('${escHtml(f.id)}',event)">✓ Approve</button>
+        <button class="push-btn-full" style="background:#e74c3c;flex:1;" onclick="doMobReject('${escHtml(f.id)}',event)">✗ Reject</button>
+      </div>
+    </div>`;
+  } else if (canRoute) {
+    footHtml = `<div class="flow-foot">
+      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
+      <button class="push-btn-full" style="background:var(--purple,#9113af);" onclick="openMobApprovalRouting('${escHtml(f.id)}',event)">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}</button>
+    </div>`;
   } else if (mine) {
     const isLast = cs >= totalSteps - 1;
     footHtml = `<div class="flow-foot">
@@ -1665,6 +1717,11 @@ function buildFlowCard(f) {
       <button class="push-btn-full" onclick="doPushStep('${escHtml(f.id)}',event)">
         ${isLast ? 'Mark Flow Complete' : 'Push Step →'}
       </button>
+    </div>`;
+  } else if (isApprStep && (f.approvalRoutees || []).length) {
+    footHtml = `<div class="flow-foot">
+      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
+      <div class="flow-waiting">Awaiting decision from <strong>${escHtml((f.approvalRoutees||[]).join(', '))}</strong></div>
     </div>`;
   } else {
     const waiting = stepOwner || '—';
@@ -1773,15 +1830,36 @@ function openFlowDetail(flowId) {
   }
   document.getElementById('fd-steps').innerHTML = stepsHtml;
 
+  const isApprStep  = _isApprovalStep(f);
+  const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
+  const isRoutedApproverTurn = currentMember && isApprStep && (f.approvalRoutees || []).includes(currentMember.name);
+  const canRouteDetail = isApprStep && isStepOwnerTurn && !isRoutedApproverTurn;
+
   const pushArea = document.getElementById('fd-push-area');
   if (allDone) {
     pushArea.innerHTML = `<div style="text-align:center;padding:16px 0;color:var(--green);font-size:18px;font-weight:600;">🎉 Flow Complete!</div>`;
+  } else if (isRoutedApproverTurn) {
+    pushArea.innerHTML = `<div style="display:flex;gap:10px;padding:4px 0;">
+      <button class="push-btn-full" style="background:var(--green);flex:1;margin:0;"
+        onclick="doMobApprove('${escHtml(f.id)}',event)">✓ Approve</button>
+      <button class="push-btn-full" style="background:#e74c3c;flex:1;margin:0;"
+        onclick="doMobReject('${escHtml(f.id)}',event)">✗ Reject</button>
+    </div>`;
+  } else if (canRouteDetail) {
+    pushArea.innerHTML = `<button class="push-btn-full" style="margin:0;background:var(--purple,#9113af);"
+      onclick="openMobApprovalRouting('${escHtml(f.id)}',event)">
+      📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}
+    </button>`;
   } else if (isMyTurn(f)) {
     const isLast = cs >= totalSteps - 1;
     pushArea.innerHTML = `<button class="push-btn-full" style="margin:0;"
       onclick="doPushStepFromDetail('${escHtml(f.id)}',this)">
       ${isLast ? 'Mark Flow Complete' : 'Push to Next Step →'}
     </button>`;
+  } else if (isApprStep && (f.approvalRoutees || []).length) {
+    const routees = (f.approvalRoutees || []).join(', ');
+    pushArea.innerHTML = `<div style="text-align:center;padding:12px 0;color:var(--ink4);font-size:16px;">
+      Awaiting decision from <strong style="color:var(--ink2);">${escHtml(routees)}</strong></div>`;
   } else {
     const owner = getStepOwner(f, cs);
     pushArea.innerHTML = `<div style="text-align:center;padding:12px 0;color:var(--ink4);font-size:16px;">
@@ -1815,6 +1893,118 @@ async function doPushStepFromDetail(flowId, btn) {
     console.error(err);
     showToast('Failed to push step', 'err');
     btn.disabled = false; btn.textContent = 'Push Step →';
+  }
+}
+
+/* ════════════════════════════════
+   APPROVAL ROUTING (MOBILE)
+════════════════════════════════ */
+let _mobArFlowId = null;
+
+function openMobApprovalRouting(flowId, e) {
+  if (e) e.stopPropagation();
+  const f = allFlows.find(x => x.id === flowId);
+  if (!f) return;
+  _mobArFlowId = flowId;
+  const stepNames = f.stepNames || [];
+  const cs = f.currentStep || 0;
+  document.getElementById('mob-ar-subtitle').textContent =
+    `Flow: "${f.title}" · Step: ${stepNames[cs] || 'Approval'}`;
+  const prev = f.approvalRoutees || [];
+  document.getElementById('mob-ar-list').innerHTML = APPROVERS.map(a => `
+    <label style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border,#e8ecf0);cursor:pointer;">
+      <input type="checkbox" value="${escHtml(a.name)}" ${prev.includes(a.name)?'checked':''} style="width:18px;height:18px;accent-color:var(--purple,#9113af);">
+      <span style="font-size:15px;font-weight:500;">${escHtml(a.name)}</span>
+    </label>`).join('');
+  document.getElementById('mob-ar-warn').style.display = 'none';
+  openSheet('sheet-approval-routing');
+}
+
+async function confirmMobApprovalRouting() {
+  if (!_mobArFlowId) return;
+  const selected = Array.from(
+    document.querySelectorAll('#mob-ar-list input[type=checkbox]:checked')
+  ).map(cb => cb.value);
+  if (!selected.length) {
+    document.getElementById('mob-ar-warn').style.display = 'block';
+    return;
+  }
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) return;
+    const flows = snap.data().flows || [];
+    const idx = flows.findIndex(f => f.id === _mobArFlowId);
+    if (idx === -1) return;
+    flows[idx] = { ...flows[idx], approvalRoutees: selected };
+    await db.collection('flows').doc('active').update({ flows });
+    showToast(`Sent to ${selected.join(', ')} for approval!`, 'ok');
+    closeSheet();
+  } catch(err) {
+    console.error(err);
+    showToast('Failed to send for approval', 'err');
+  }
+}
+
+async function doMobApprove(flowId, e) {
+  if (e) e.stopPropagation();
+  if (!currentMember) return;
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) return;
+    const flows = snap.data().flows || [];
+    const idx = flows.findIndex(f => f.id === flowId);
+    if (idx === -1) return;
+    const f = { ...flows[idx] };
+    if (!(f.approvalRoutees || []).includes(currentMember.name)) {
+      showToast('Only the assigned approver can approve.', 'err'); return;
+    }
+    const statuses = [...(f.stepStatuses || [])];
+    const cs = parseInt(f.currentStep) || 0;
+    statuses[cs] = 'done';
+    const isLast = cs >= statuses.length - 1;
+    if (!isLast) { statuses[cs + 1] = 'active'; f.currentStep = cs + 1; }
+    f.stepStatuses = statuses;
+    delete f.approvalRoutees;
+    flows[idx] = f;
+    await db.collection('flows').doc('active').update({ flows });
+    showToast('Step approved and pushed forward!', 'ok');
+    closeSheet();
+  } catch(err) {
+    console.error(err);
+    showToast('Failed to approve', 'err');
+  }
+}
+
+async function doMobReject(flowId, e) {
+  if (e) e.stopPropagation();
+  if (!currentMember) return;
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) return;
+    const flows = snap.data().flows || [];
+    const idx = flows.findIndex(f => f.id === flowId);
+    if (idx === -1) return;
+    const f = { ...flows[idx] };
+    if (!(f.approvalRoutees || []).includes(currentMember.name)) {
+      showToast('Only the assigned approver can reject.', 'err'); return;
+    }
+    // Send back to previous step
+    const cs = parseInt(f.currentStep) || 0;
+    const statuses = [...(f.stepStatuses || [])];
+    if (cs > 0) {
+      statuses[cs] = 'pending';
+      statuses[cs - 1] = 'active';
+      f.currentStep = cs - 1;
+    }
+    f.stepStatuses = statuses;
+    delete f.approvalRoutees;
+    flows[idx] = f;
+    await db.collection('flows').doc('active').update({ flows });
+    showToast('Step rejected — sent back to previous step.', 'ok');
+    closeSheet();
+  } catch(err) {
+    console.error(err);
+    showToast('Failed to reject', 'err');
   }
 }
 

@@ -4038,10 +4038,11 @@ function flowCardHTML(f) {
   const isApprovalStep = curStep.isApproval === true ||
     curStep.name?.toLowerCase().includes('approval') ||
     curStep.name?.toLowerCase().includes('approve');
-  // Approval: only the routed approver (or step owner if they are the designated approver) can approve/reject
-  const isRoutedApprover = loggedInMember && loggedInMember.role === 'approver' &&
+  // Approval: only the explicitly routed approver can approve — step owner must send for approval first
+  const isRoutedApprover = loggedInMember &&
     isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
-  const canApprove = isRoutedApprover || (isApprovalStep && isStepOwner);
+  const canApprove = isRoutedApprover;
+  const canRoute = isApprovalStep && !canApprove && (isStepOwner || isManager);
   const subtasksDone = areSubtasksDone(f, curStepIdx);
   const curSubtasks = curStep.subtasks || [];
   const curChecks = (f.subtaskChecks || [])[curStepIdx] || [];
@@ -4217,7 +4218,7 @@ function flowCardHTML(f) {
     ${subtaskSection}
     ${subAssignSection}
     ${driveSection}
-    ${isApprovalStep && status !== 'done' && (isManager || canApprove) ? `
+    ${isApprovalStep && status !== 'done' && (canRoute || canApprove) ? `
     <div class="approval-actions">
       <div class="approval-title">⚖️ Approval Step — ${curStep.name}</div>
       ${(f.approvalRoutees && f.approvalRoutees.length) ? `
@@ -4228,7 +4229,7 @@ function flowCardHTML(f) {
           </span>`).join('')}
         </div>` : ''}
       <div class="approval-btns">
-        ${isManager ? `<button class="btn btn-sm" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);" onclick="openApprovalRoutingModal('${f.id}')">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}</button>` : ''}
+        ${canRoute ? `<button class="btn btn-sm" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);" onclick="openApprovalRoutingModal('${f.id}')">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}</button>` : ''}
         ${canApprove ? `
         <button class="btn-approve" onclick="approveStep('${f.id}')">✓ Approve</button>
         <button class="btn-reject" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>` : `<span style="font-size:11px;color:var(--ink3);">Awaiting decision from approver</span>`}
@@ -7640,11 +7641,10 @@ async function approveStep(flowId) {
   const tmplSteps = getTemplateSteps(f.templateId);
   const curStep = tmplSteps[f.currentStep] || {};
   const stepName = curStep.name || 'step';
-  // Guard: only the routed approver (or the step's own assigned owner) can approve
-  const isRoutedApprover = loggedInMember && loggedInMember.role === 'approver' &&
+  // Guard: only the explicitly routed approver can approve — not the step owner
+  const isRoutedApprover = loggedInMember &&
     (f.approvalRoutees || []).includes(loggedInMember.name);
-  const isStepOwner = loggedInMember && curStep.owner === loggedInMember.name;
-  if (!isRoutedApprover && !isStepOwner) {
+  if (!isRoutedApprover) {
     toast('Only the assigned approver can approve this step.', 'warn'); return;
   }
   // Directly advance the flow (bypass markStepDone owner check for approval steps)
@@ -7735,6 +7735,7 @@ async function confirmReject() {
 // APPROVAL ROUTING
 // ═══════════════════════════════════════════
 const APPROVERS = [
+  { name:'Akshay',   av:'av-c', email:'akshay.raje@oneinsure.com' },
   { name:'Rochelle', av:'av-f', email:'rochelle.mascarenhas@oneinsure.com' },
   { name:'Anirudh',  av:'av-g', email:'anirudh.baardwaj@oneinsure.com' },
   { name:'Susant',   av:'av-h', email:'susant.padhi@oneinsure.com' },
