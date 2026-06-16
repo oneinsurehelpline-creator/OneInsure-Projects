@@ -147,7 +147,9 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .plat-re{background:#FFF3E0;color:#E65100;}
 
 /* ── TODAY'S FLOWS ── */
-.flow-board{display:flex;flex-direction:column;gap:28px;}
+.flow-board{display:flex;flex-direction:column;gap:0;}
+.flow-card-wrap{padding-bottom:48px;position:relative;}
+.flow-card-wrap::after{content:'';position:absolute;bottom:24px;left:50%;transform:translateX(-50%);width:90%;height:1px;background:var(--border);}
 .flow-title-row{display:flex;align-items:center;gap:6px;}
 .flow-rename-btn{background:none;border:none;cursor:pointer;color:rgba(0,0,0,0.25);font-size:12px;padding:2px 4px;border-radius:4px;line-height:1;flex-shrink:0;transition:color 0.13s;}
 .flow-rename-btn:hover{color:var(--ink3);}
@@ -161,10 +163,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .flow-tab-badge.done{background:var(--green-mid,#22c55e);}
 .completed-flows-header{display:flex;align-items:center;gap:10px;padding:8px 0 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink3);}
 .completed-flows-header::after{content:'';flex:1;height:1px;background:var(--border);}
-.flow-card{background:var(--white);border:1px solid var(--border);border-left-width:5px;border-radius:var(--radxl);overflow:hidden;transition:box-shadow 0.15s;}
-.flow-card:hover{box-shadow:var(--shadow);}
-.my-turn-card{border-color:var(--amber);border-width:2px;box-shadow:0 0 0 3px rgba(245,158,11,0.12);}
-.done-card{background:linear-gradient(135deg,#f0fdf4,#ffffff);border-color:#86efac;opacity:0.8;}
+.flow-card{background:var(--white);border:1px solid rgba(0,0,0,0.10);border-left-width:8px;border-top-width:4px;border-radius:var(--radxl);overflow:hidden;transition:box-shadow 0.2s;box-shadow:0 3px 14px rgba(0,0,0,0.07);}
+.flow-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.13);}
+.my-turn-card{border-color:var(--amber);border-width:2px;border-left-width:8px;border-top-width:4px;box-shadow:0 0 0 3px rgba(245,158,11,0.12),0 3px 14px rgba(0,0,0,0.07);}
+.done-card{background:linear-gradient(135deg,#f0fdf4,#ffffff);border-color:#86efac;opacity:0.85;}
 .done-card:hover{opacity:1;}
 .flow-header{padding:14px 16px 10px;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid var(--border);}
 .flow-num{font-family:var(--ff-head);font-size:11px;font-weight:700;color:var(--ink4);min-width:20px;}
@@ -1063,7 +1065,8 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
   .content { padding:12px 12px 80px; overflow-y:auto; height:calc(100vh - 54px); }
 
   /* ── TODAY'S FLOWS — vertical card layout ── */
-  .flow-board { gap:12px; }
+  .flow-card-wrap { padding-bottom:32px; }
+  .flow-card-wrap::after { bottom:16px; }
   .flow-card { border-radius:14px; }
   .flow-header { padding:12px 14px 10px; }
   .flow-title { font-size:13px; }
@@ -3408,7 +3411,13 @@ function startListeners() {
       const steps = getTemplateSteps(f.templateId);
       if (steps.length && (!f.stepStatuses || f.stepStatuses.length !== steps.length)) {
         const old = f.stepStatuses || [];
-        f.stepStatuses = steps.map((_, i) => old[i] || (i === f.currentStep ? 'active' : i < f.currentStep ? 'done' : 'pending'));
+        const wasCompleted = old.length > 0 && old.every(s => s === 'done');
+        if (wasCompleted) {
+          // Flow was already fully completed — mark all steps done regardless of template changes
+          f.stepStatuses = steps.map(() => 'done');
+        } else {
+          f.stepStatuses = steps.map((_, i) => old[i] || (i === f.currentStep ? 'active' : i < f.currentStep ? 'done' : 'pending'));
+        }
       }
       if (steps.length && (!f.notes || f.notes.length !== steps.length)) {
         const oldNotes = f.notes || [];
@@ -3751,10 +3760,12 @@ function renderTeam(){
 // TODAY'S FLOWS
 // ═══════════════════════════════════════════
 function getFlowStatus(f){
-  if(f.stepStatuses.every(s=>s==='done')) return 'done';
-  if(f.stepStatuses.some(s=>s==='stuck')) return 'stuck';
-  const cs=f.stepStatuses[f.currentStep];
-  const _fSteps = getTemplateSteps(f.templateId); const _fStep = _fSteps[f.currentStep]; if(cs==='active'&&(_fStep?.isApproval||_fStep?.name?.toLowerCase().includes('approv'))) return 'approval';
+  const ss = f.stepStatuses || [];
+  if(!ss.length) return 'active';
+  if(ss.every(s=>s==='done')) return 'done';
+  if(ss.some(s=>s==='stuck')) return 'stuck';
+  const cs=ss[f.currentStep];
+  const _fSteps = getTemplateSteps(f.templateId); const _fStep = _fSteps?.[f.currentStep]; if(cs==='active'&&(_fStep?.isApproval||_fStep?.name?.toLowerCase().includes('approv'))) return 'approval';
   return 'active';
 }
 
@@ -3853,7 +3864,7 @@ function renderToday(){
       try { return flowCardHTML(f); }
       catch(e) { console.error('flowCardHTML error for flow', f.id, e);
         const _ec = FLOW_CARD_COLORS[TODAY_FLOWS.indexOf(f) % FLOW_CARD_COLORS.length];
-        return `<div class="flow-card" style="border-left-color:${_ec};"><div class="flow-header" style="background:${_ec}14;"><div class="flow-num">#${TODAY_FLOWS.indexOf(f)+1}</div><div class="flow-info"><div class="flow-title">${f.title||'Untitled flow'}</div><div style="font-size:11px;color:var(--red);">⚠ Error rendering this flow — try refreshing.</div></div></div></div>`;
+        return `<div class="flow-card-wrap"><div class="flow-card" style="border-left-color:${_ec};border-top-color:${_ec};"><div class="flow-header" style="background:${_ec}2a;"><div class="flow-num">#${TODAY_FLOWS.indexOf(f)+1}</div><div class="flow-info"><div class="flow-title">${f.title||'Untitled flow'}</div><div style="font-size:11px;color:var(--red);">⚠ Error rendering this flow — try refreshing.</div></div></div></div></div>`;
       }
     }).join('') : `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No active flows right now</div><div class="empty-sub">All flows are complete! Check the Completed tab.</div></div>`;
     renderFlowSummary(visibleFlows);
@@ -3868,7 +3879,7 @@ function renderToday(){
       try { return flowCardHTML(f); }
       catch(e) {
         const _ec = FLOW_CARD_COLORS[TODAY_FLOWS.indexOf(f) % FLOW_CARD_COLORS.length];
-        return `<div class="flow-card" style="border-left-color:${_ec};"><div class="flow-header" style="background:${_ec}14;"><div class="flow-info"><div class="flow-title">${f.title||'Untitled flow'}</div></div></div></div>`;
+        return `<div class="flow-card-wrap"><div class="flow-card" style="border-left-color:${_ec};border-top-color:${_ec};"><div class="flow-header" style="background:${_ec}2a;"><div class="flow-info"><div class="flow-title">${f.title||'Untitled flow'}</div></div></div></div></div>`;
       }
     }).join('') : `<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">No completed flows yet</div><div class="empty-sub">Flows will appear here once all steps are marked done.</div></div>`;
     return; // skip the setFlowView call below since completed uses its own board
@@ -4161,8 +4172,8 @@ function flowCardHTML(f) {
   if (!tmplSteps || tmplSteps.length === 0) {
   {
     const _lc = FLOW_CARD_COLORS[TODAY_FLOWS.indexOf(f) % FLOW_CARD_COLORS.length];
-    return `<div class="flow-card" id="fc-${f.id}" style="border-left-color:${_lc};">
-      <div class="flow-header" style="background:${_lc}14;">
+    return `<div class="flow-card-wrap"><div class="flow-card" id="fc-${f.id}" style="border-left-color:${_lc};border-top-color:${_lc};">
+      <div class="flow-header" style="background:${_lc}2a;">
         <div class="flow-num">#${TODAY_FLOWS.indexOf(f)+1}</div>
         <div class="flow-info">
           <div class="flow-title">${f.title||'Untitled flow'}</div>
@@ -4170,11 +4181,11 @@ function flowCardHTML(f) {
         </div>
         ${loggedInMember&&(loggedInMember.role==='manager'||loggedInMember.role==='head')?`<button style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:18px;padding:4px 8px;" onclick="deleteFlow('${f.id}')" title="Delete this flow">🗑</button>`:''}
       </div>
-    </div>`;
+    </div></div>`;
   }
   }
   const _accentColor = FLOW_CARD_COLORS[TODAY_FLOWS.indexOf(f) % FLOW_CARD_COLORS.length];
-  const _accentTint  = _accentColor + '14'; // ~8% opacity tint for header bg
+  const _accentTint  = _accentColor + '2a'; // ~16% opacity tint for header bg
 
   const status = getFlowStatus(f);
   const statusCls = {active:'fsp-active',stuck:'fsp-stuck',approval:'fsp-approval',done:'fsp-done',pending:'fsp-pending'}[status] || 'fsp-pending';
@@ -4364,7 +4375,7 @@ function flowCardHTML(f) {
   </div>` : '';
 
   const isDoneFlow = getFlowStatus(f) === 'done';
-  return `<div class="flow-card${isMyTurn?' my-turn-card':''}${isDoneFlow?' done-card':''}" id="fc-${f.id}" style="border-left-color:${_accentColor};">
+  return `<div class="flow-card-wrap"><div class="flow-card${isMyTurn?' my-turn-card':''}${isDoneFlow?' done-card':''}" id="fc-${f.id}" style="border-left-color:${_accentColor};border-top-color:${_accentColor};">
     ${myTurnBanner}
     <div class="flow-header" style="background:${_accentTint};">
       <div class="flow-num">#${TODAY_FLOWS.indexOf(f)+1}</div>
@@ -4428,7 +4439,7 @@ function flowCardHTML(f) {
         <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
       ` : ''}
     </div>
-  </div>`;
+  </div></div>`;
 }
 
 function confirmMarkStepDone(flowId) {
