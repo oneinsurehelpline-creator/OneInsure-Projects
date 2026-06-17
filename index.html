@@ -3498,7 +3498,7 @@ function startListeners() {
         document.getElementById('badge-today').textContent = TODAY_FLOWS.length;
         // Start background chat trackers after flows load so loggedInMember is set
         initAllChannelTrackers();
-        initAllDMTrackers();
+        listenForDMInbox();
       }, 800);
     }, err => {
       console.error('Flows listener error:', err);
@@ -8132,6 +8132,11 @@ function openDM(otherUser) {
   currentRoom = null;
   delete DM_UNREAD[currentDM.roomId];
   _setLastRead(currentDM.roomId, Date.now());
+  // Clear the Firestore inbox entry so the unread dot disappears
+  if (fbReady && db) {
+    const inboxId = currentDM.roomId + '__' + loggedInMember.name;
+    db.collection('dm_inbox').doc(inboxId).delete().catch(() => {});
+  }
   updateChatNavBadge();
   renderChat();
   initChat();
@@ -8296,42 +8301,54 @@ function initAllChannelTrackers() {
   });
 }
 
-// ── Background DM trackers — listen to ALL possible DMs with current user ──
-function initAllDMTrackers() {
+// ── DM Inbox: Firestore-backed reliable unread tracking ──
+// Collection: dm_inbox / doc: {roomId}__{recipientName}
+// Each doc: { to, from, roomId, text, count, updatedAt }
+// Sender writes on send; recipient's listener shows the dot; openDM() deletes on read.
+let _dmInboxListener = null;
+let _dmInboxReady = false;
+
+function listenForDMInbox() {
   if (!fbReady || !db || !loggedInMember) return;
-  MEMBERS.filter(m => m.name !== loggedInMember.name).forEach(m => {
-    const roomId = getDMRoomId(loggedInMember.name, m.name);
-    if (_channelTrackers[roomId]) return; // already watching
-    _channelTrackers[roomId] = db.collection('chat')
-      .where('room', '==', roomId)
-      .orderBy('loggedAt', 'desc')
-      .limit(5)
-      .onSnapshot(snap => {
-        if (!snap.size) return;
-        const msgs = snap.docs.map(d => ({...d.data(), id: d.id}));
-        const latest = msgs[0];
-        if (!latest || latest.sender === loggedInMember.name) return;
-        // Only count as unread if NOT currently viewing this DM
-        if (currentDM?.roomId !== roomId) {
-          const lastRead = _getLastRead(roomId);
-          const newMsgs = msgs.filter(x => (x.loggedAt||0) > lastRead && x.sender !== loggedInMember.name);
-          const prevCount = DM_UNREAD[roomId] || 0;
-          if (newMsgs.length > 0) {
-            DM_UNREAD[roomId] = newMsgs.length;
-            // Always surface in DM sidebar so unread DMs are visible
-            trackDMRecent(m.name);
-            renderDMList();
-            // Only toast/ping when a new message arrives while app is open (not on initial load)
-            if (prevCount > 0 && newMsgs.length > prevCount) {
-              chatToast(latest.sender, m.name, latest.text || '', true);
-              pushNotif({ title: `💬 DM from ${latest.sender}`, body: (latest.text || '(attachment)').substring(0,80), icon: '💬', type: 'chat', tag: 'dm-' + roomId, silent: false });
-            }
-          }
+  if (_dmInboxListener) return;
+  _dmInboxListener = db.collection('dm_inbox')
+    .where('to', '==', loggedInMember.name)
+    .onSnapshot(snap => {
+      const wasReady = _dmInboxReady;
+      _dmInboxReady = true;
+      snap.docs.forEach(doc => {
+        const d = doc.data();
+        const roomId = d.roomId;
+        const fromName = d.from;
+        if (!roomId || !fromName) return;
+        // Currently in this DM — auto-clear inbox entry
+        if (currentDM?.roomId === roomId) {
+          doc.ref.delete().catch(() => {});
+          _setLastRead(roomId, Date.now());
+          delete DM_UNREAD[roomId];
+          return;
         }
-        updateChatNavBadge();
-      }, () => {});
-  });
+        const prevCount = DM_UNREAD[roomId] || 0;
+        const newCount = d.count || 1;
+        DM_UNREAD[roomId] = newCount;
+        trackDMRecent(fromName);
+        if (wasReady && newCount > prevCount) {
+          chatToast(fromName, fromName, d.text || '', true);
+          pushNotif({ title: `💬 DM from ${fromName}`, body: (d.text || '(attachment)').substring(0, 80), icon: '💬', type: 'chat', tag: 'dm-' + roomId });
+        }
+      });
+      // Clear unreads for rooms no longer in inbox
+      const inboxRooms = new Set(snap.docs.map(d => d.data().roomId));
+      Object.keys(DM_UNREAD).forEach(roomId => {
+        if (!inboxRooms.has(roomId)) delete DM_UNREAD[roomId];
+      });
+      renderDMList();
+      updateChatNavBadge();
+    }, err => console.warn('DM inbox listener error:', err));
 }
+
+// Legacy per-room tracker — kept for backward compat but superseded by listenForDMInbox
+function initAllDMTrackers() { listenForDMInbox(); }
 
 function renderChannelList() {
   const el = document.getElementById('chat-rooms');
@@ -8533,7 +8550,7 @@ function initChat() {
   if (chatUnsubscribe) chatUnsubscribe();
   // Start background unread trackers for all channels + DMs (idempotent)
   initAllChannelTrackers();
-  initAllDMTrackers();
+  listenForDMInbox();
   const chatRoom = currentDM ? currentDM.roomId : currentRoom;
   // Order by loggedAt (plain number) — avoids Firestore composite index requirement
   // sentAt is a server timestamp which needs an index; loggedAt is set client-side
@@ -9132,6 +9149,19 @@ async function sendChatMessage() {
 
   try {
     await db.collection('chat').add(msg);
+    // Write DM inbox notification so recipient sees unread dot immediately
+    if (currentDM) {
+      const inboxId = currentDM.roomId + '__' + currentDM.otherUser;
+      const preview = (msg.text || (msg.fileName ? `Shared a file: ${msg.fileName}` : '')).substring(0, 80);
+      db.collection('dm_inbox').doc(inboxId).set({
+        to: currentDM.otherUser,
+        from: loggedInMember.name,
+        roomId: currentDM.roomId,
+        text: preview,
+        count: firebase.firestore.FieldValue.increment(1),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    }
   } catch(e) {
     CHAT_MESSAGES.push({ ...msg, id: Date.now() });
     renderChatMessages();
