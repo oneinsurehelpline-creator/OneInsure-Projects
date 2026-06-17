@@ -529,6 +529,23 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .reject-form textarea{resize:vertical;min-height:52px;}
 .rejection-note{padding:6px 10px;background:var(--red-light);border-radius:var(--rad);border:1px solid #F7C1C1;font-size:11px;color:var(--red);margin-top:4px;}
 
+/* ── NOTIFICATION TICKER STRIP ── */
+#notif-ticker{display:none;background:linear-gradient(90deg,#0f1e42,#1a2d5a);border-bottom:2px solid var(--coral);height:36px;flex-shrink:0;overflow:hidden;align-items:center;position:relative;}
+#notif-ticker.show{display:flex;}
+.nticker-label{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 12px 0 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);border-right:1px solid rgba(255,255,255,0.1);height:100%;white-space:nowrap;}
+.nticker-label .nlbl-dot{width:7px;height:7px;border-radius:50%;background:var(--coral);animation:dot-pulse 1.4s ease-in-out infinite;}
+@keyframes dot-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.7)}}
+.nticker-scroll{flex:1;overflow:hidden;height:100%;display:flex;align-items:center;cursor:pointer;}
+.nticker-track{display:inline-flex;gap:0;white-space:nowrap;animation:nticker-move 18s linear infinite;}
+.nticker-track:hover{animation-play-state:paused;}
+.nticker-item{display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.85);font-size:12.5px;padding:0 28px;border-right:1px solid rgba(255,255,255,0.08);}
+.nticker-item .ni-icon{font-size:14px;}
+.nticker-item .ni-type{font-size:10px;font-weight:700;opacity:0.5;text-transform:uppercase;letter-spacing:0.04em;margin-right:2px;}
+.nticker-item .ni-text{max-width:280px;overflow:hidden;text-overflow:ellipsis;}
+@keyframes nticker-move{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.nticker-close{flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.35);font-size:18px;cursor:pointer;padding:0 14px;height:100%;display:flex;align-items:center;transition:color 0.15s;}
+.nticker-close:hover{color:rgba(255,255,255,0.8);}
+
 /* ── CHAT NOTIFICATION TOAST ── */
 #chat-notif-toast{
   position:fixed;bottom:24px;right:24px;z-index:9999;
@@ -1451,6 +1468,18 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ── NOTIFICATION TICKER ── -->
+    <div id="notif-ticker" role="marquee" aria-live="polite">
+      <div class="nticker-label">
+        <span class="nlbl-dot"></span>
+        <span id="nticker-count">1 new</span>
+      </div>
+      <div class="nticker-scroll" onclick="_tickerClick(event)">
+        <div class="nticker-track" id="nticker-track"></div>
+      </div>
+      <button class="nticker-close" onclick="dismissNotifTicker()" title="Dismiss">×</button>
     </div>
 
     <div class="content-row">
@@ -9865,6 +9894,8 @@ function loadNotifData() {
     const p = JSON.parse(localStorage.getItem('sd_notif_prefs') || 'null');
     if (p) NOTIF_PREFS = p;
   } catch(e) {}
+  // Show ticker for any unread notifications carried over from previous session
+  setTimeout(updateNotifTicker, 500);
 }
 
 async function saveNotifPrefs() {
@@ -9969,6 +10000,67 @@ function dismissNotifBanner() {
   localStorage.setItem('sd_notif_banner_dismissed', '1');
 }
 
+// ── Notification ticker strip ─────────────
+const _NTICKER_TYPE_LABELS = { turn:'Step', push:'Flow', assigned:'Task', blocked:'Blocked', chat:'Chat', system:'System', info:'Info' };
+const _NTICKER_ACCENT = { turn:'#3b82f6', push:'#10b981', assigned:'#f59e0b', blocked:'#ef4444', chat:'#ec4899', system:'#8b5cf6', info:'#6366f1' };
+
+function updateNotifTicker() {
+  const ticker  = document.getElementById('notif-ticker');
+  const track   = document.getElementById('nticker-track');
+  const lbl     = document.getElementById('nticker-count');
+  if (!ticker || !track) return;
+
+  const unread = NOTIF_HISTORY.filter(n => !n.read).slice(0, 12);
+  if (!unread.length) { ticker.classList.remove('show'); return; }
+
+  // Color the ticker border based on highest-priority unread type
+  const priority = ['blocked','turn','chat','assigned','push','system','info'];
+  const topType  = priority.find(p => unread.some(n => n.type === p)) || 'info';
+  ticker.style.borderBottomColor = _NTICKER_ACCENT[topType] || 'var(--coral)';
+
+  // Build items HTML — duplicate for seamless loop
+  const makeItem = n => {
+    const typeLabel = _NTICKER_TYPE_LABELS[n.type] || 'Notif';
+    const accent    = _NTICKER_ACCENT[n.type] || 'var(--coral)';
+    return `<span class="nticker-item" data-type="${n.type}">` +
+      `<span class="ni-icon">${n.icon||'🔔'}</span>` +
+      `<span class="ni-type" style="color:${accent};">${typeLabel}</span>` +
+      `<span class="ni-text">${n.title}</span>` +
+    `</span>`;
+  };
+  const html = unread.map(makeItem).join('');
+  track.innerHTML = html + html; // duplicate for infinite loop
+
+  // Adjust speed: ~100px/s, min 8s max 40s
+  const trackW = unread.length * 340;
+  const dur    = Math.min(40, Math.max(8, trackW / 100));
+  track.style.animationDuration = dur + 's';
+
+  lbl.textContent = unread.length === 1 ? '1 new' : `${unread.length} new`;
+  ticker.classList.add('show');
+}
+
+function dismissNotifTicker() {
+  const ticker = document.getElementById('notif-ticker');
+  if (ticker) ticker.classList.remove('show');
+  // Mark all as read
+  NOTIF_HISTORY.forEach(n => { n.read = true; });
+  localStorage.setItem('sd_notif_hist', JSON.stringify(NOTIF_HISTORY));
+  const pip = document.getElementById('notif-pip');
+  if (pip) pip.classList.remove('show');
+  document.getElementById('badge-notif').textContent = '';
+}
+
+function _tickerClick(e) {
+  const item = e.target.closest('.nticker-item');
+  const type = item?.dataset.type;
+  dismissNotifTicker();
+  if (type === 'chat') go('chat');
+  else if (type === 'turn' || type === 'push') go('today');
+  else if (type === 'assigned') go('tasks');
+  else go('notifications');
+}
+
 // ── Core notify function ───────────────────
 function pushNotif({ title, body, icon='📋', type='info', tag=null, silent=false }) {
   // Add to in-app history
@@ -9981,6 +10073,9 @@ function pushNotif({ title, body, icon='📋', type='info', tag=null, silent=fal
   const pip = document.getElementById('notif-pip');
   if (pip) pip.classList.add('show');
   document.getElementById('badge-notif').textContent = NOTIF_HISTORY.filter(n=>!n.read).length;
+
+  // Show notification ticker strip
+  updateNotifTicker();
 
   // Re-render if on notifications panel
   if (currentPanel === 'notifications') renderNotifHistory();
@@ -10214,11 +10309,12 @@ function clearNotifHistory() {
 }
 
 function renderNotifHistory() {
-  // Mark all as read when viewing
+  // Mark all as read when viewing — hide ticker too
   NOTIF_HISTORY.forEach(n => n.read = true);
   localStorage.setItem('sd_notif_hist', JSON.stringify(NOTIF_HISTORY));
   const pip = document.getElementById('notif-pip');
   if (pip) pip.classList.remove('show');
+  document.getElementById('notif-ticker')?.classList.remove('show');
   document.getElementById('badge-notif').textContent = '0';
 
   const iconMap = { turn:'#E6F1FB', blocked:'#FCEBEB', push:'#EAF3DE', morning:'#FAEEDA', assigned:'#EEE9F8', eod:'#F2F0EA', system:'#E6F1FB', test:'#E6F1FB' };
