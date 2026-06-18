@@ -982,6 +982,18 @@ a{text-decoration:none;color:inherit;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 #toast.ok{background:#166534;}
 #toast.err{background:#991B1B;}
+/* ── Deadline chips ── */
+.mob-dl-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px;vertical-align:middle;}
+.mob-dl-chip.dl-ok{background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;}
+.mob-dl-chip.dl-warn{background:#fffbeb;color:#b45309;border:1px solid #fcd34d;}
+.mob-dl-chip.dl-due{background:#fff7ed;color:#c2410c;border:1px solid #fdba74;}
+.mob-dl-chip.dl-overdue{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;}
+/* ── Flag badge ── */
+.mob-flag-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;vertical-align:middle;}
+.mob-flag-box{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:10px 12px;font-size:12px;color:#dc2626;margin-top:8px;}
+.mob-flag-btn{width:100%;padding:10px;border:1.5px solid #fca5a5;background:#fef2f2;color:#dc2626;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+/* ── Stuck step dot ── */
+.fsl-dot.fsl-stuck{background:#ef4444;color:white;}
 </style>
 </head>
 <body>
@@ -1421,6 +1433,9 @@ let chatUnsub         = null;
 let MOB_CHANNEL_UNREAD = {};  // roomId → count
 let MOB_CHANNEL_LAST   = {};  // roomId → { sender, text, loggedAt }
 let _mobTrackers       = {};  // roomId → unsubscribe
+let MOB_DM_UNREAD      = {};  // roomId → count
+let _mobDmInboxListener = null;
+let _mobDmInboxReady    = false;
 
 function _mobGetLastRead(r) { try { return JSON.parse(localStorage.getItem('sd_mob_last_read')||'{}')[r]||0; } catch{return 0;} }
 function _mobSetLastRead(r, ts) { try { const m=JSON.parse(localStorage.getItem('sd_mob_last_read')||'{}'); m[r]=ts||Date.now(); localStorage.setItem('sd_mob_last_read',JSON.stringify(m)); } catch{} }
@@ -1444,6 +1459,37 @@ function initMobChannelTrackers() {
         renderChatList();
       }, ()=>{});
   });
+}
+
+function mobListenForDMInbox() {
+  if (!db || !currentMember) return;
+  if (_mobDmInboxListener) return;
+  _mobDmInboxListener = db.collection('dm_inbox')
+    .where('to', '==', currentMember.name)
+    .onSnapshot(snap => {
+      const wasReady = _mobDmInboxReady;
+      _mobDmInboxReady = true;
+      snap.docs.forEach(doc => {
+        const d = doc.data();
+        if (!d.roomId || !d.from) return;
+        if (chatRoomId === d.roomId) {
+          doc.ref.delete().catch(() => {});
+          delete MOB_DM_UNREAD[d.roomId];
+          return;
+        }
+        const prev = MOB_DM_UNREAD[d.roomId] || 0;
+        MOB_DM_UNREAD[d.roomId] = d.count || 1;
+        if (wasReady && (d.count || 1) > prev) {
+          showToast(`💬 New DM from ${d.from}`, 'ok');
+          if (Notification.permission === 'granted') {
+            new Notification(`💬 DM from ${d.from}`, { body: d.text || '(attachment)', icon: '/favicon.ico', tag: 'dm-' + d.roomId });
+          }
+        }
+      });
+      const inboxRooms = new Set(snap.docs.map(d => d.data().roomId));
+      Object.keys(MOB_DM_UNREAD).forEach(r => { if (!inboxRooms.has(r)) delete MOB_DM_UNREAD[r]; });
+      renderChatList();
+    }, err => console.warn('[mob dm inbox]', err));
 }
 
 // Web Notification for new messages
@@ -1684,6 +1730,7 @@ function initApp() {
   setupProfile();
   startListeners();
   initMobChannelTrackers();
+  mobListenForDMInbox();
   requestNotifPermission();
   switchTab('today');
   const t = todayStr();
@@ -1703,6 +1750,7 @@ function startListeners() {
     allFlows = snap.exists ? (snap.data().flows || []).map(deserializeFlowFromFirestore) : [];
     renderFlows();
     updateTodayStats();
+    mobCheckStepDeadlines();
     // Notify when a new flow step is assigned to current user
     const myFlows = allFlows.filter(f => isMyTurn(f));
     myFlows.forEach(f => {
@@ -1957,6 +2005,47 @@ function mobDlOpenFullApp() {
   auth.signOut().then(() => showLogin());
 }
 
+function _mobStepDlChip(f, stepIdx) {
+  const dl = (f.stepDeadlines || [])[stepIdx];
+  if (!dl) return '';
+  const today = (new Date()).toISOString().slice(0, 10);
+  const daysLeft = Math.ceil((new Date(dl) - new Date(today)) / 86400000);
+  let cls, label;
+  if (daysLeft < 0)       { cls = 'dl-overdue'; label = Math.abs(daysLeft) + 'd overdue'; }
+  else if (daysLeft === 0) { cls = 'dl-due';     label = 'Due today'; }
+  else if (daysLeft <= 2)  { cls = 'dl-warn';    label = daysLeft + 'd left'; }
+  else                    { cls = 'dl-ok';       label = daysLeft + 'd left'; }
+  return `<span class="mob-dl-chip ${cls}">📅 ${dl} · ${label}</span>`;
+}
+
+function mobCheckStepDeadlines() {
+  if (!currentMember || !allFlows.length) return;
+  const today = (new Date()).toISOString().slice(0, 10);
+  const cacheKey = 'sd_mobdlchk_' + today + '_' + currentMember.name;
+  if (localStorage.getItem(cacheKey)) return;
+  allFlows.forEach(f => {
+    const allDone = (f.stepStatuses||[]).every(s => s === 'done');
+    if (allDone) return;
+    const si = parseInt(f.currentStep) || 0;
+    const dl = (f.stepDeadlines || [])[si];
+    if (!dl) return;
+    const owner = (f.stepOwners || [])[si] || '';
+    const isRelevant = currentMember.name === owner ||
+      currentMember.role === 'manager' || currentMember.role === 'head';
+    if (!isRelevant) return;
+    const daysLeft = Math.ceil((new Date(dl) - new Date(today)) / 86400000);
+    const stepName = (f.stepNames || [])[si] || 'Step';
+    if (daysLeft < 0) {
+      showToast(`🔴 Overdue: "${stepName}" on ${f.title}`, 'err');
+    } else if (daysLeft === 0) {
+      showToast(`⚠️ Due today: "${stepName}" on ${f.title}`, 'warn');
+    } else if (daysLeft === 1) {
+      showToast(`⏰ Due tomorrow: "${stepName}" on ${f.title}`, 'warn');
+    }
+  });
+  localStorage.setItem(cacheKey, '1');
+}
+
 function buildFlowCard(f, cardIdx) {
   const cs         = parseInt(f.currentStep) || 0;
   const statuses   = f.stepStatuses || [];
@@ -2028,7 +2117,7 @@ function buildFlowCard(f, cardIdx) {
   } else if (mine) {
     const isLast = cs >= totalSteps - 1;
     footHtml = `<div class="flow-foot">
-      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
+      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong>${(f.stepFlags||{})[cs] ? ' <span class="mob-flag-badge">🚩</span>' : ''}${_mobStepDlChip(f,cs) ? ' ' + _mobStepDlChip(f,cs) : ''}</div>
       <button class="push-btn-full" onclick="doPushStep('${escHtml(f.id)}',event)">
         ${isLast ? 'Mark Flow Complete' : 'Push Step →'}
       </button>
@@ -2041,7 +2130,7 @@ function buildFlowCard(f, cardIdx) {
   } else {
     const waiting = stepOwner || '—';
     footHtml = `<div class="flow-foot">
-      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
+      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong>${(f.stepFlags||{})[cs] ? ' <span class="mob-flag-badge">🚩</span>' : ''}${_mobStepDlChip(f,cs) ? ' ' + _mobStepDlChip(f,cs) : ''}</div>
       <div class="flow-waiting">Waiting for <strong>${escHtml(waiting)}</strong></div>
     </div>`;
   }
@@ -2148,10 +2237,15 @@ function openFlowDetail(flowId) {
     let cls = 'fsl-pending'; let icon = i + 1;
     if (st === 'done')   { cls = 'fsl-done';   icon = '✓'; }
     if (st === 'active') { cls = 'fsl-active';  icon = i + 1; }
+    const isFlagged = !!(f.stepFlags||{})[i];
+    const hasDl = !!(f.stepDeadlines||[])[i];
+    if (isFlagged && st !== 'done') cls = 'fsl-stuck';
     stepsHtml += `<div class="fsl-item">
       <div class="fsl-dot ${cls}">${icon}</div>
-      <div class="fsl-name${st==='active'?' active-step':''}">${escHtml(stepNames[i] || `Step ${i+1}`)}</div>
-      <div class="fsl-owner">${escHtml(own)}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="fsl-name${st==='active'?' active-step':''}">${escHtml(stepNames[i] || 'Step '+(i+1))}${isFlagged ? ' <span class="mob-flag-badge">🚩</span>' : ''}</div>
+        <div class="fsl-owner">${escHtml(own)}${hasDl ? ' ' + _mobStepDlChip(f,i) : ''}</div>
+      </div>
     </div>`;
   }
   document.getElementById('fd-steps').innerHTML = stepsHtml;
@@ -2178,10 +2272,25 @@ function openFlowDetail(flowId) {
     </button>`;
   } else if (isMyTurn(f)) {
     const isLast = cs >= totalSteps - 1;
-    pushArea.innerHTML = `<button class="push-btn-full" style="margin:0;"
+    const flagData = (f.stepFlags||{})[cs];
+    const flagHtml = flagData
+      ? `<div class="mob-flag-box">
+          <div style="font-weight:700;margin-bottom:3px;">🚩 Issue: ${escHtml(flagData.reason)}</div>
+          <div style="font-size:11px;opacity:0.7;">— ${escHtml(flagData.flaggedBy)}</div>
+          <button onclick="mobClearStepFlag('${escHtml(f.id)}',${cs})" style="margin-top:6px;font-size:11px;padding:3px 9px;background:none;border:1px solid #fca5a5;border-radius:6px;color:#dc2626;cursor:pointer;">✕ Clear Flag</button>
+        </div>`
+      : `<button class="mob-flag-btn" onclick="mobShowFlagInput('${escHtml(f.id)}',${cs})">🚩 Flag an Issue</button>
+         <div id="mob-flag-inp-${escHtml(f.id)}-${cs}" style="display:none;margin-top:8px;">
+           <textarea id="mob-flag-ta-${escHtml(f.id)}-${cs}" placeholder="Describe the issue…" style="width:100%;padding:8px;border:1.5px solid var(--border2,#ddd);border-radius:8px;font-size:13px;min-height:64px;resize:vertical;box-sizing:border-box;font-family:inherit;outline:none;"></textarea>
+           <div style="display:flex;gap:8px;margin-top:6px;">
+             <button class="push-btn-full" style="margin:0;flex:1;background:#ef4444;font-size:13px;padding:10px;" onclick="mobFlagStep('${escHtml(f.id)}',${cs})">Submit Flag</button>
+             <button class="push-btn-full" style="margin:0;flex:0 0 80px;background:var(--ink3,#888);font-size:13px;padding:10px;" onclick="document.getElementById('mob-flag-inp-${escHtml(f.id)}-${cs}').style.display='none'">Cancel</button>
+           </div>
+         </div>`;
+    pushArea.innerHTML = `<button class="push-btn-full" style="margin:0 0 8px 0;"
       onclick="doPushStepFromDetail('${escHtml(f.id)}',this)">
       ${isLast ? 'Mark Flow Complete' : 'Push to Next Step →'}
-    </button>`;
+    </button>${flagHtml}`;
   } else if (isApprStep && (f.approvalRoutees || []).length) {
     const routees = (f.approvalRoutees || []).join(', ');
     pushArea.innerHTML = `<div style="text-align:center;padding:12px 0;color:var(--ink4);font-size:16px;">
@@ -2221,6 +2330,51 @@ function openFlowDetail(flowId) {
   }
 
   openSheet('sheet-flow-detail');
+}
+
+function mobShowFlagInput(flowId, stepIdx) {
+  const el = document.getElementById('mob-flag-inp-' + flowId + '-' + stepIdx);
+  if (el) { el.style.display = 'block'; el.querySelector('textarea')?.focus(); }
+}
+
+async function mobFlagStep(flowId, stepIdx) {
+  const f = allFlows.find(x => x.id === flowId);
+  if (!f || !currentMember) return;
+  const ta = document.getElementById('mob-flag-ta-' + flowId + '-' + stepIdx);
+  const reason = ta?.value?.trim();
+  if (!reason) { showToast('Please describe the issue.', 'warn'); ta?.focus(); return; }
+  if (!f.stepFlags) f.stepFlags = {};
+  f.stepFlags[stepIdx] = { reason, flaggedBy: currentMember.name, flaggedAt: Date.now() };
+  if ((f.stepStatuses || [])[stepIdx] === 'active') f.stepStatuses[stepIdx] = 'stuck';
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) throw new Error('No data');
+    const flows = snap.data().flows || [];
+    const idx = flows.findIndex(x => x.id === flowId);
+    if (idx === -1) throw new Error('Flow not found');
+    flows[idx] = { ...flows[idx], stepFlags: f.stepFlags, stepStatuses: f.stepStatuses };
+    await db.collection('flows').doc('active').update({ flows });
+    showToast('Flag raised.', 'ok');
+    openFlowDetail(flowId);
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
+
+async function mobClearStepFlag(flowId, stepIdx) {
+  const f = allFlows.find(x => x.id === flowId);
+  if (!f) return;
+  if (f.stepFlags) delete f.stepFlags[stepIdx];
+  if ((f.stepStatuses||[])[stepIdx] === 'stuck') f.stepStatuses[stepIdx] = 'active';
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) throw new Error('No data');
+    const flows = snap.data().flows || [];
+    const idx = flows.findIndex(x => x.id === flowId);
+    if (idx === -1) throw new Error('Flow not found');
+    flows[idx] = { ...flows[idx], stepFlags: f.stepFlags || {}, stepStatuses: f.stepStatuses };
+    await db.collection('flows').doc('active').update({ flows });
+    showToast('Flag cleared.', 'ok');
+    openFlowDetail(flowId);
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
 }
 
 async function doPushStepFromDetail(flowId, btn) {
@@ -2584,13 +2738,16 @@ function renderChatList() {
     dmEl.innerHTML = others.map(m => {
       const init  = m.name.charAt(0).toUpperCase();
       const dmId  = dmRoomId(currentMember ? currentMember.name : '', m.name);
-      return `<div class="chat-list-row" onclick="openChatRoom('${dmId}','${escHtml(m.name)}','dm','${ROLE_LABELS[m.role]||m.role}')">
+      const dmUnread = MOB_DM_UNREAD[dmId] || 0;
+      return `<div class="chat-list-row${dmUnread ? ' unread-row' : ''}" onclick="openChatRoom('${dmId}','${escHtml(m.name)}','dm','${ROLE_LABELS[m.role]||m.role}')">
         <div class="dm-av-icon ${m.av}">${init}</div>
         <div class="ch-text">
-          <div class="ch-name">${m.name}</div>
+          <div class="ch-name" style="${dmUnread ? 'font-weight:700;' : ''}">${m.name}</div>
           <div class="dm-role-badge">${ROLE_LABELS[m.role] || m.role}</div>
         </div>
-        <div class="ch-chevron">›</div>
+        <div class="ch-meta">
+          ${dmUnread ? `<div class="ch-unread" style="background:var(--coral,#ef4444);">${dmUnread > 99 ? '99+' : dmUnread}</div>` : '<div class="ch-chevron">›</div>'}
+        </div>
       </div>`;
     }).join('');
   }
@@ -2603,6 +2760,12 @@ function openChatRoom(roomId, title, type, subtitle) {
   if (lastMsg?.loggedAt) _mobSetLastRead(roomId, lastMsg.loggedAt);
   renderChatList();
   chatRoomId = roomId;
+  // Clear DM inbox entry when opening a DM room
+  if (type === 'dm' && currentMember && db) {
+    const inboxId = roomId + '__' + currentMember.name;
+    db.collection('dm_inbox').doc(inboxId).delete().catch(() => {});
+    delete MOB_DM_UNREAD[roomId];
+  }
   const prefix = type === 'channel' ? '# ' : '';
   document.getElementById('chat-room-title').textContent    = prefix + title;
   document.getElementById('chat-room-subtitle').textContent = subtitle || '';
@@ -2703,6 +2866,25 @@ async function sendMessage() {
       time:     new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
       loggedAt: Date.now(),
     });
+    // Write DM inbox notification for recipient
+    if (chatRoomId && chatRoomId.startsWith('dm_') && currentMember) {
+      // Derive recipient from roomId: dm_A_B, remove current user part
+      const parts = chatRoomId.replace('dm_', '').split('_');
+      // Reassemble names (names may have had spaces replaced by _)
+      // Use MEMBERS to find who the other person is
+      const recipientName = MEMBERS.find(m => m.name !== currentMember.name && chatRoomId.includes(m.name.replace(/\s+/g,'_')))?.name;
+      if (recipientName) {
+        const inboxId = chatRoomId + '__' + recipientName;
+        db.collection('dm_inbox').doc(inboxId).set({
+          to: recipientName,
+          from: currentMember.name,
+          roomId: chatRoomId,
+          text: text.substring(0, 80),
+          count: firebase.firestore.FieldValue.increment(1),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(() => {});
+      }
+    }
   } catch(err) {
     showToast('Failed to send', 'err');
     input.value = text;
