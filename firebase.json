@@ -9,5 +9,8 @@
     "rewrites": [
       { "source": "/mobile", "destination": "/mobile.html" }
     ]
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }
