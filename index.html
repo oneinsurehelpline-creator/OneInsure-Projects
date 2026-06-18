@@ -592,6 +592,22 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .chat-tick{font-size:11px;margin-left:3px;opacity:0.55;letter-spacing:-1px;}
 .chat-tick.delivered{opacity:0.7;}
 .chat-tick.read{color:#3b82f6;opacity:1;}
+.room-mute-btn{background:none;border:none;cursor:pointer;font-size:11px;opacity:0.4;padding:0 2px;margin-left:auto;flex-shrink:0;transition:opacity 0.13s;}
+.room-mute-btn:hover{opacity:1;}
+.chat-room-btn.muted .room-name{opacity:0.5;}
+.chat-search-bar{padding:8px 14px;border-bottom:1px solid var(--border);background:var(--white);display:none;}
+.chat-search-bar.show{display:flex;gap:8px;align-items:center;}
+.chat-search-input{flex:1;padding:7px 12px;border:1.5px solid var(--border2);border-radius:20px;font-size:13px;font-family:var(--ff-body);outline:none;background:var(--cream);}
+.chat-search-input:focus{border-color:var(--navy);}
+.chat-search-clear{background:none;border:none;cursor:pointer;font-size:16px;color:var(--ink3);}
+.chat-search-count{font-size:11px;color:var(--ink3);white-space:nowrap;}
+.chat-msg.search-hidden{display:none;}
+.chat-msg.search-match .chat-bubble{outline:2px solid var(--coral);outline-offset:2px;}
+.typing-indicator{padding:4px 16px 2px;font-size:11px;color:var(--ink3);min-height:20px;display:flex;align-items:center;gap:5px;}
+.typing-dots span{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--ink3);animation:tdot 1.2s infinite;margin:0 1px;}
+.typing-dots span:nth-child(2){animation-delay:0.2s;}
+.typing-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes tdot{0%,80%,100%{transform:scale(0.7);opacity:0.4;}40%{transform:scale(1);opacity:1;}}
 .chat-main{flex:1;display:flex;flex-direction:column;min-width:0;}
 .chat-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--white);display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .chat-header-title{font-size:14px;font-weight:700;color:var(--ink);flex:1;}
@@ -1748,11 +1764,18 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                   <div class="chat-header-title" id="chat-header-title">General</div>
                   <div class="chat-header-meta" id="chat-header-meta">Team-wide conversation</div>
                 </div>
+                <button onclick="toggleChatSearch()" title="Search messages" style="background:none;border:1px solid var(--border);border-radius:var(--rad);padding:4px 10px;font-size:11px;color:var(--ink3);cursor:pointer;">🔍</button>
                 <button id="clear-channel-btn" onclick="clearChannelMessages()" title="Clear all messages in this channel"
                   style="display:none;background:none;border:1px solid var(--border);border-radius:var(--rad);padding:4px 10px;font-size:11px;color:var(--ink3);cursor:pointer;">
                   🗑 Clear History
                 </button>
               </div>
+              <div class="chat-search-bar" id="chat-search-bar">
+                <input class="chat-search-input" id="chat-search-input" placeholder="Search messages…" oninput="applyChatSearch(this.value)">
+                <span class="chat-search-count" id="chat-search-count"></span>
+                <button class="chat-search-clear" onclick="closeChatSearch()" title="Close">✕</button>
+              </div>
+              <div class="typing-indicator" id="typing-indicator"></div>
               <div class="chat-messages" id="chat-messages">
                 <div class="empty" style="margin:auto;">
                   <div class="empty-icon">💬</div>
@@ -8272,6 +8295,79 @@ let CHANNEL_UNREAD = {};  // roomId → unread count
 let CHANNEL_LAST   = {};  // roomId → { sender, text, loggedAt }
 let _channelTrackers = {}; // roomId → unsubscribe fn
 const _chanTrackerReady = new Set(); // rooms whose initial snapshot has been processed
+
+// ── Muted channels (persisted to localStorage) ──
+const _MUTED_CHANS = new Set(JSON.parse(localStorage.getItem('sd_muted_chans') || '[]'));
+function toggleMuteChannel(roomId) {
+  if (_MUTED_CHANS.has(roomId)) _MUTED_CHANS.delete(roomId);
+  else _MUTED_CHANS.add(roomId);
+  localStorage.setItem('sd_muted_chans', JSON.stringify([..._MUTED_CHANS]));
+  renderChannelList();
+  updateChatNavBadge();
+}
+
+// ── Message search ──
+let _chatSearchQuery = '';
+function toggleChatSearch() {
+  const bar = document.getElementById('chat-search-bar');
+  if (!bar) return;
+  const isOpen = bar.classList.contains('show');
+  if (isOpen) { closeChatSearch(); return; }
+  bar.classList.add('show');
+  document.getElementById('chat-search-input')?.focus();
+}
+function closeChatSearch() {
+  const bar = document.getElementById('chat-search-bar');
+  if (bar) bar.classList.remove('show');
+  const inp = document.getElementById('chat-search-input');
+  if (inp) inp.value = '';
+  _chatSearchQuery = '';
+  document.querySelectorAll('.chat-msg').forEach(el => { el.classList.remove('search-hidden','search-match'); });
+  document.getElementById('chat-search-count').textContent = '';
+}
+function applyChatSearch(q) {
+  _chatSearchQuery = q.toLowerCase().trim();
+  const msgs = document.querySelectorAll('.chat-msg');
+  let hits = 0;
+  msgs.forEach(el => {
+    if (!_chatSearchQuery) { el.classList.remove('search-hidden','search-match'); return; }
+    const text = el.textContent.toLowerCase();
+    if (text.includes(_chatSearchQuery)) { el.classList.remove('search-hidden'); el.classList.add('search-match'); hits++; }
+    else { el.classList.add('search-hidden'); el.classList.remove('search-match'); }
+  });
+  const cnt = document.getElementById('chat-search-count');
+  if (cnt) cnt.textContent = _chatSearchQuery ? `${hits} result${hits!==1?'s':''}` : '';
+}
+
+// ── Typing indicator ──
+let _typingTimer = null;
+let _typingListener = null;
+function _sendTyping() {
+  if (!fbReady || !db || !loggedInMember || !currentDM) return;
+  db.collection('typing').doc(currentDM.roomId + '__' + loggedInMember.name)
+    .set({ user: loggedInMember.name, roomId: currentDM.roomId, typingAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(() => {});
+  clearTimeout(_typingTimer);
+  _typingTimer = setTimeout(() => _clearTyping(), 4000);
+}
+function _clearTyping() {
+  if (!fbReady || !db || !loggedInMember || !currentDM) return;
+  db.collection('typing').doc(currentDM.roomId + '__' + loggedInMember.name).delete().catch(() => {});
+}
+function _listenTyping(roomId, otherUser) {
+  if (_typingListener) { _typingListener(); _typingListener = null; }
+  if (!fbReady || !db) return;
+  _typingListener = db.collection('typing').doc(roomId + '__' + otherUser)
+    .onSnapshot(snap => {
+      const el = document.getElementById('typing-indicator');
+      if (!el) return;
+      const d = snap.data();
+      if (d?.typingAt) {
+        const age = Date.now() - (d.typingAt.toMillis?.() || 0);
+        if (age < 5000) { el.innerHTML = `<span class="typing-dots"><span></span><span></span><span></span></span> ${otherUser} is typing…`; return; }
+      }
+      el.innerHTML = '';
+    }, () => {});
+}
 let CUSTOM_CHANNELS = []; // user-created groups (loaded from Firestore)
 
 function _getLastRead(roomId) {
@@ -8330,6 +8426,7 @@ function openDM(otherUser) {
         _partnerReadAt = d?.readAt?.toMillis?.() || 0;
         renderChatMessages();
       }, () => {});
+    _listenTyping(currentDM.roomId, otherUser);
   }
   updateChatNavBadge();
   renderChat();
@@ -8483,7 +8580,7 @@ function initAllChannelTrackers() {
           const newMsgs = msgs.filter(m => (m.loggedAt||0) > lastRead && m.sender !== loggedInMember?.name);
           const prevCount = CHANNEL_UNREAD[r.id] || 0;
           CHANNEL_UNREAD[r.id] = newMsgs.length;
-          if (wasReady && newMsgs.length > prevCount && latest.sender !== loggedInMember?.name) {
+          if (wasReady && newMsgs.length > prevCount && latest.sender !== loggedInMember?.name && !_MUTED_CHANS.has(r.id)) {
             chatToast(latest.sender, r.id, CHANNEL_LAST[r.id].text, false);
             pushNotif({ title: `💬 ${latest.sender} in #${r.label}`, body: CHANNEL_LAST[r.id].text || '(attachment)', icon: '💬', type: 'chat', tag: 'chat-' + r.id, silent: false });
           }
@@ -8569,15 +8666,18 @@ function renderChannelList() {
     const unread   = CHANNEL_UNREAD[r.id] || 0;
     const last     = CHANNEL_LAST[r.id];
     const preview  = last ? `${last.sender !== loggedInMember?.name ? last.sender + ': ' : ''}${last.text || ''}`.slice(0, 38) : r.desc || '';
-    return `<button class="chat-room-btn${isActive?' active':''}${unread?' has-unread':''}" onclick="switchRoom('${r.id}')">
+    const isMuted = _MUTED_CHANS.has(r.id);
+    return `<button class="chat-room-btn${isActive?' active':''}${unread&&!isMuted?' has-unread':''}${isMuted?' muted':''}" onclick="switchRoom('${r.id}')">
       <span class="room-icon">${r.icon}</span>
       <div class="room-body">
         <div class="room-top">
           <span class="room-name">${r.label}</span>
-          ${unread ? `<span class="room-unread">${unread > 99 ? '99+' : unread}</span>` : ''}
+          ${unread && !isMuted ? `<span class="room-unread">${unread > 99 ? '99+' : unread}</span>` : ''}
+          ${isMuted ? `<span style="font-size:10px;opacity:0.4;">🔇</span>` : ''}
         </div>
         ${preview ? `<div class="room-preview">${preview}</div>` : ''}
       </div>
+      <button class="room-mute-btn" onclick="event.stopPropagation();toggleMuteChannel('${r.id}')" title="${isMuted?'Unmute':'Mute'}">${isMuted?'🔔':'🔕'}</button>
     </button>`;
   }).join('');
   el.innerHTML += `<button class="chat-new-group-btn" onclick="openNewGroup()">＋ New Group</button>`;
@@ -8638,6 +8738,7 @@ function chatInputHandler(e) {
   const input = e.target;
   input.style.height = 'auto';
   input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+  if (currentDM) _sendTyping();
   const val = input.value;
   const pos = input.selectionStart;
   // Detect @ trigger
@@ -8851,6 +8952,8 @@ function renderChat() {
 function switchRoom(roomId) {
   if (!canAccessChannel(roomId)) { toast("You're not a member of this channel.", 'warn'); return; }
   if (_partnerReadListener) { _partnerReadListener(); _partnerReadListener = null; }
+  if (_typingListener) { _typingListener(); _typingListener = null; }
+  _clearTyping();
   _partnerReadAt = 0;
   currentDM = null;
   currentRoom = roomId;
@@ -9160,7 +9263,7 @@ function renderChatMessages() {
         ${msg.tagLabel?`<div class="chat-tag">📌 ${msg.tagLabel}</div>`:''}
         ${fileHtml}
         ${msg.text?`<div class="chat-bubble">${renderMessageText(msg.text)}</div>`:''}
-        <div class="chat-meta">${timeStr}${isMine ? (() => { const msgTs = msg.loggedAt || 0; const isRead = currentDM && _partnerReadAt > 0 && _partnerReadAt >= msgTs; return isRead ? '<span class="chat-tick read">✓✓</span>' : '<span class="chat-tick delivered">✓✓</span>'; })() : ''}</div>
+        <div class="chat-meta">${timeStr}${isMine && currentDM ? (() => { const msgTs = msg.loggedAt || 0; const isRead = _partnerReadAt > 0 && _partnerReadAt >= msgTs; return isRead ? '<span class="chat-tick read">✓✓</span>' : '<span class="chat-tick delivered">✓✓</span>'; })() : ''}</div>
         ${reactionHtml}
         <div class="chat-action-row">
           ${['👍','❤️','😂','🔥'].map(e=>`<button class="chat-react-btn" onclick="toggleReaction('${msg.id}','${e}')">${e}</button>`).join('')}
@@ -9348,9 +9451,10 @@ async function sendChatMessage() {
     loggedAt: Date.now(),
     sentAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
-  if (input) input.value = '';
+  if (input) { input.value = ''; input.style.height = 'auto'; }
   if (document.getElementById('chat-tag-ref')) document.getElementById('chat-tag-ref').value = '';
   clearChatAttach();
+  _clearTyping();
 
   // Notify @mentioned members
   msg.mentions.forEach(name => {

@@ -1201,7 +1201,14 @@ a{text-decoration:none;color:inherit;}
       Loading messages…
     </div>
   </div>
+  <div id="mob-attach-preview" style="display:none;padding:6px 12px;background:#e0f2fe;border-top:1px solid #bae6fd;font-size:12px;color:#0369a1;display:none;align-items:center;gap:8px;">
+    <span>📎</span><span id="mob-attach-name" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    <button onclick="mobClearAttach()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#0369a1;">✕</button>
+  </div>
   <div class="chat-input-bar">
+    <label style="padding:0 4px;cursor:pointer;font-size:20px;color:#888;flex-shrink:0;" title="Attach image">
+      📎<input type="file" accept="image/*,video/*,application/pdf" style="display:none;" onchange="mobAttachFile(event)">
+    </label>
     <textarea class="chat-input" id="chat-input" placeholder="Message…" rows="1"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"
       oninput="autoResizeTA(this)"></textarea>
@@ -1378,6 +1385,7 @@ a{text-decoration:none;color:inherit;}
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <script>
 'use strict';
@@ -2852,34 +2860,57 @@ function renderMessages(msgs) {
   requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
 }
 
+let _mobAttachPending = null;
+function mobAttachFile(e) {
+  const file = e.target.files[0]; if (!file) return; e.target.value = '';
+  _mobAttachPending = file;
+  const preview = document.getElementById('mob-attach-preview');
+  if (preview) { document.getElementById('mob-attach-name').textContent = file.name; preview.style.display = 'flex'; }
+}
+function mobClearAttach() {
+  _mobAttachPending = null;
+  const preview = document.getElementById('mob-attach-preview'); if (preview) preview.style.display = 'none';
+}
+
 async function sendMessage() {
   if (!chatRoomId || !currentMember) return;
   const input = document.getElementById('chat-input');
   const text  = input.value.trim();
-  if (!text) return;
+  if (!text && !_mobAttachPending) return;
   input.value = ''; input.style.height = 'auto';
+
+  let fileUrl = '', fileName = '';
+  if (_mobAttachPending) {
+    const file = _mobAttachPending; _mobAttachPending = null; mobClearAttach();
+    showToast('Uploading…', 'info');
+    try {
+      const storage = firebase.storage();
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const ref = storage.ref(`chat-files/${chatRoomId}/${Date.now()}_${safeName}`);
+      await ref.put(file);
+      fileUrl = await ref.getDownloadURL();
+      fileName = file.name;
+    } catch(e) {
+      showToast('Upload failed — ' + (e.code || e.message), 'err'); return;
+    }
+  }
+
   try {
-    await db.collection('chat').add({
-      room:     chatRoomId,
-      sender:   currentMember.name,
-      text,
-      time:     new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+    const msg = {
+      room: chatRoomId, sender: currentMember.name,
+      text: text || (fileName ? `Shared a file: ${fileName}` : ''),
+      fileUrl, fileName,
+      time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
       loggedAt: Date.now(),
-    });
+    };
+    await db.collection('chat').add(msg);
     // Write DM inbox notification for recipient
     if (chatRoomId && chatRoomId.startsWith('dm_') && currentMember) {
-      // Derive recipient from roomId: dm_A_B, remove current user part
-      const parts = chatRoomId.replace('dm_', '').split('_');
-      // Reassemble names (names may have had spaces replaced by _)
-      // Use MEMBERS to find who the other person is
       const recipientName = MEMBERS.find(m => m.name !== currentMember.name && chatRoomId.includes(m.name.replace(/\s+/g,'_')))?.name;
       if (recipientName) {
-        const inboxId = chatRoomId + '__' + recipientName;
-        db.collection('dm_inbox').doc(inboxId).set({
-          to: recipientName,
-          from: currentMember.name,
-          roomId: chatRoomId,
-          text: text.substring(0, 80),
+        db.collection('dm_inbox').doc(chatRoomId + '__' + recipientName).set({
+          to: recipientName, from: currentMember.name, roomId: chatRoomId,
+          text: (text || fileName || '').substring(0, 80),
           count: firebase.firestore.FieldValue.increment(1),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true }).catch(() => {});
