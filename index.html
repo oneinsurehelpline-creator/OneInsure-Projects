@@ -319,7 +319,18 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .tl-dot{width:8px;height:8px;border-radius:50%;position:absolute;left:-5px;top:3px;background:var(--cream3);border:1.5px solid var(--border2);}
 .tl-dot.done{background:var(--green);border-color:var(--green);}
 .tl-dot.active{background:var(--coral);border-color:var(--coral);}
+.tl-dot.flagged{background:#dc2626;border-color:#dc2626;}
 .tl-name{font-size:12px;font-weight:500;}
+.step-flag-badge{display:inline-flex;align-items:center;gap:3px;background:#fef2f2;color:#dc2626;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;border:1px solid #fca5a5;margin-left:4px;}
+.step-dl-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:1px 6px;border-radius:8px;}
+.step-dl-chip.ok{background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;}
+.step-dl-chip.warn{background:#fffbeb;color:#b45309;border:1px solid #fcd34d;}
+.step-dl-chip.due{background:#fff7ed;color:#c2410c;border:1px solid #fdba74;}
+.step-dl-chip.overdue{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;}
+.flag-reason-box{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:var(--rad);padding:10px 12px;font-size:12px;line-height:1.5;margin-top:8px;}
+.spawn-dl-grid{display:grid;grid-template-columns:1fr 140px;gap:5px 10px;align-items:center;margin-top:6px;}
+.spawn-dl-lbl{font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.spawn-dl-inp{padding:5px 8px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;background:var(--cream);color:var(--ink);width:100%;}
 .tl-sub{font-size:10px;color:var(--ink3);}
 .comment-item{background:var(--cream2);border-radius:var(--rad);padding:8px 10px;font-size:11px;line-height:1.45;margin-bottom:5px;}
 .comment-meta{font-size:9px;color:var(--ink3);font-weight:600;margin-bottom:2px;}
@@ -2403,9 +2414,19 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         </select>
       </div>
       <div id="spawn-template-meta" style="font-size:11px;color:var(--ink3);margin-bottom:14px;padding:8px 12px;background:var(--cream2);border-radius:var(--rad);"></div>
-      <div class="login-field" style="margin-bottom:16px;">
+      <div class="login-field" style="margin-bottom:12px;">
         <label style="font-size:12px;font-weight:600;color:var(--ink2);">Flow Name</label>
         <input type="text" id="spawn-flow-name" style="width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:13px;font-family:var(--ff-body);outline:none;" placeholder="e.g. Morning Post — May 13" onkeydown="if(event.key==='Enter')confirmSpawn()"/>
+      </div>
+      <!-- Step deadlines (manager / head) -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <label style="font-size:12px;font-weight:600;color:var(--ink2);">📅 Step Deadlines <span style="font-weight:400;font-size:11px;color:var(--ink3);">— optional, per step</span></label>
+          <button type="button" id="spawn-dl-toggle" style="background:none;border:none;font-size:11px;color:var(--coral);cursor:pointer;font-family:var(--ff-body);" onclick="_toggleSpawnDl()">▸ Set</button>
+        </div>
+        <div id="spawn-dl-body" style="display:none;background:var(--cream2);border-radius:var(--rad);padding:10px;">
+          <div class="spawn-dl-grid" id="spawn-dl-grid"></div>
+        </div>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn" onclick="closeSpawnModal()">Cancel</button>
@@ -3528,6 +3549,8 @@ function startListeners() {
         // Start background chat trackers after flows load so loggedInMember is set
         initAllChannelTrackers();
         listenForDMInbox();
+        // Check step deadlines once per day after flows are loaded
+        checkStepDeadlines();
       }, 800);
     }, err => {
       console.error('Flows listener error:', err);
@@ -4138,6 +4161,24 @@ function updateSpawnMeta() {
     nameInput.value = `${tmpl.name} — ${dateStr}`;
     nameInput.dataset.autoName = 'true';
   }
+  // Rebuild deadline inputs for this template's steps
+  const grid = document.getElementById('spawn-dl-grid');
+  if (grid) {
+    const todayVal = new Date().toISOString().slice(0, 10);
+    grid.innerHTML = steps.map((s, i) =>
+      `<div class="spawn-dl-lbl">${i+1}. ${s.name || 'Step '+(i+1)}</div>` +
+      `<input type="date" class="spawn-dl-inp" id="spawn-dl-${i}" min="${todayVal}" />`
+    ).join('');
+  }
+}
+
+function _toggleSpawnDl() {
+  const body = document.getElementById('spawn-dl-body');
+  const btn  = document.getElementById('spawn-dl-toggle');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (btn) btn.textContent = open ? '▸ Set' : '▴ Hide';
 }
 
 function closeSpawnModal() {
@@ -4190,6 +4231,8 @@ async function confirmSpawn() {
     startedAt: Date.now(),
     assignedSteps: {},
     stuck: false,
+    stepDeadlines: steps.map((_, i) => document.getElementById('spawn-dl-' + i)?.value || ''),
+    stepFlags: {},
   };
   closeSpawnModal();
   TODAY_FLOWS.push(newFlow);
@@ -4197,6 +4240,89 @@ async function confirmSpawn() {
   auditLog('flow_spawned', `Spawned flow "${title}" from template "${tmpl.name}"`, { template: tmpl.name, platforms: (tmpl.platforms||[]).join(', ') });
   renderToday();
   toast(`"${title}" spawned!`, 'ok');
+}
+
+// ── Step deadline helpers ─────────────────
+function _stepDeadlineChip(f, stepIdx) {
+  const dl = (f.stepDeadlines || [])[stepIdx];
+  if (!dl) return '';
+  const today = new Date().toISOString().slice(0, 10);
+  const daysLeft = Math.ceil((new Date(dl) - new Date(today)) / 86400000);
+  const cls   = daysLeft < 0 ? 'overdue' : daysLeft === 0 ? 'due' : daysLeft <= 2 ? 'warn' : 'ok';
+  const label = daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : daysLeft === 0 ? 'Due today' : daysLeft === 1 ? 'Due tomorrow' : `${daysLeft}d left`;
+  return `<span class="step-dl-chip ${cls}">📅 ${dl} · ${label}</span>`;
+}
+
+// ── Step flag helpers ─────────────────────
+function showFlagInput(flowId, stepIdx) {
+  const el = document.getElementById('flag-inp-' + flowId + '-' + stepIdx);
+  if (el) { el.style.display = 'block'; el.querySelector('textarea')?.focus(); }
+}
+
+async function flagFlowStep(flowId, stepIdx) {
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f || !loggedInMember) return;
+  const ta = document.getElementById('flag-ta-' + flowId + '-' + stepIdx);
+  const reason = ta?.value?.trim();
+  if (!reason) { toast('Please describe the issue.', 'warn'); ta?.focus(); return; }
+  if (!f.stepFlags) f.stepFlags = {};
+  f.stepFlags[stepIdx] = { reason, flaggedBy: loggedInMember.name, flaggedAt: Date.now() };
+  f.stepStatuses[stepIdx] = 'stuck';
+  await fbSaveFlows();
+  renderToday();
+  pushNotif({ title: `🚩 Step flagged — "${f.title}"`, body: `${loggedInMember.name}: "${reason}"`, icon: '🚩', type: 'blocked', tag: 'flag-' + f.id });
+  openFlowStep(flowId, stepIdx);
+  toast('Flag raised. Manager will be notified.', 'ok');
+}
+
+async function clearFlowStepFlag(flowId, stepIdx) {
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  if (f.stepFlags) delete f.stepFlags[stepIdx];
+  if ((f.stepStatuses || [])[stepIdx] === 'stuck') f.stepStatuses[stepIdx] = 'active';
+  await fbSaveFlows();
+  renderToday();
+  openFlowStep(flowId, stepIdx);
+  toast('Flag cleared.', 'ok');
+}
+
+async function setStepDeadline(flowId, stepIdx, dateVal) {
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  if (!f.stepDeadlines) f.stepDeadlines = getTemplateSteps(f.templateId).map(() => '');
+  f.stepDeadlines[stepIdx] = dateVal;
+  await fbSaveFlows();
+  renderToday();
+  openFlowStep(flowId, stepIdx);
+  toast('Deadline set to ' + dateVal, 'ok');
+}
+
+// ── Check step deadlines on login ─────────
+function checkStepDeadlines() {
+  if (!loggedInMember || !TODAY_FLOWS.length) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const cacheKey = 'sd_dlchk_' + today + '_' + loggedInMember.name;
+  if (localStorage.getItem(cacheKey)) return;
+  TODAY_FLOWS.forEach(f => {
+    if (getFlowStatus(f) === 'done') return;
+    const si = f.currentStep;
+    const dl = (f.stepDeadlines || [])[si];
+    if (!dl) return;
+    const owner = (f.stepOwners || [])[si] || '';
+    const isRelevant = loggedInMember.name === owner ||
+      loggedInMember.role === 'manager' || loggedInMember.role === 'head';
+    if (!isRelevant) return;
+    const daysLeft = Math.ceil((new Date(dl) - new Date(today)) / 86400000);
+    const stepName = (f.stepNames || [])[si] || 'Step';
+    if (daysLeft < 0) {
+      pushNotif({ title: `🔴 Overdue — ${f.title}`, body: `"${stepName}" was due ${dl}. ${Math.abs(daysLeft)}d overdue.`, icon:'🔴', type:'blocked', tag:'dl-' + f.id + '-' + si });
+    } else if (daysLeft === 0) {
+      pushNotif({ title: `⚠️ Due today — ${f.title}`, body: `"${stepName}" is due today. Complete it now.`, icon:'⚠️', type:'blocked', tag:'dl-' + f.id + '-' + si });
+    } else if (daysLeft === 1) {
+      pushNotif({ title: `⏰ Due tomorrow — ${f.title}`, body: `"${stepName}" is due tomorrow.`, icon:'⏰', type:'turn', tag:'dl-' + f.id + '-' + si });
+    }
+  });
+  localStorage.setItem(cacheKey, '1');
 }
 
 function areSubtasksDone(f, stepIdx) {
@@ -4481,7 +4607,9 @@ function flowCardHTML(f) {
     <div class="flow-footer">
       <div class="current-step-info">
         ${status!=='done'
-          ? `Current: <span class="current-step-name">${curStep.name}</span> → <span style="font-size:11px;">${subAssignee||curStep.owner||'<span style="color:var(--amber);">Unassigned</span>'}</span>`
+          ? `Current: <span class="current-step-name">${curStep.name}</span> → <span style="font-size:11px;">${subAssignee||curStep.owner||'<span style="color:var(--amber);">Unassigned</span>'}</span>` +
+            ((f.stepFlags||{})[curStepIdx] ? ' <span class="step-flag-badge">🚩</span>' : '') +
+            (_stepDeadlineChip(f, curStepIdx) ? ' ' + _stepDeadlineChip(f, curStepIdx) : '')
           : '<span style="color:var(--green);font-weight:600;">✓ All steps complete!</span>'}
       </div>
       ${status !== 'done' && !isApprovalStep ? `
@@ -4642,7 +4770,13 @@ function openFlowStep(flowId, stepIdx) {
     <div class="dp-sec">
       <div class="dp-label">Status</div>
       <span class="sp ${SC[st]||'sp-todo'}" style="display:inline-block;">${stLabel}</span>
+      ${_stepDeadlineChip(f, stepIdx) ? `&nbsp;${_stepDeadlineChip(f, stepIdx)}` : ''}
     </div>
+    ${isManagerOrHead && st !== 'done' ? `
+    <div class="dp-sec">
+      <div class="dp-label">Step Deadline ${(f.stepDeadlines||[])[stepIdx] ? '' : '<span style="font-size:10px;color:var(--ink3);">(not set)</span>'}</div>
+      <input type="date" style="padding:5px 8px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;" min="${new Date().toISOString().slice(0,10)}" value="${(f.stepDeadlines||[])[stepIdx]||''}" onchange="setStepDeadline('${f.id}',${stepIdx},this.value)" />
+    </div>` : ''}
     <div class="dp-sec">
       <div class="dp-label">Flow</div>
       <div class="dp-val" style="font-weight:500;">${f.title}</div>
@@ -4667,12 +4801,16 @@ function openFlowStep(flowId, stepIdx) {
     ${f.notes[stepIdx] ? `<div class="dp-sec"><div class="dp-label">Notes</div><div class="dp-val" style="font-size:12px;line-height:1.5;">${f.notes[stepIdx]}</div></div>` : ''}
     <div class="divider"></div>
     <div class="dp-label" style="margin-bottom:8px;">All Steps</div>
-    <div class="timeline">${tmplSteps.map((s, i) => `
-      <div class="tl-item">
-        <div class="tl-dot ${f.stepStatuses[i]==='done'?'done':i===f.currentStep?'active':''}"></div>
-        <div class="tl-name">${s.name}</div>
-        <div class="tl-sub">${s.owner||'Unassigned'} ${f.notes[i]?'· '+f.notes[i].substring(0,30)+'…':''}</div>
-      </div>`).join('')}</div>
+    <div class="timeline">${tmplSteps.map((s, i) => {
+      const isFlagged = !!(f.stepFlags||{})[i];
+      const dotCls = f.stepStatuses[i]==='done' ? 'done' : isFlagged ? 'flagged' : i===f.currentStep ? 'active' : '';
+      const dl = (f.stepDeadlines||[])[i];
+      return `<div class="tl-item">
+        <div class="tl-dot ${dotCls}"></div>
+        <div class="tl-name">${s.name}${isFlagged ? '<span class="step-flag-badge">🚩 Flagged</span>' : ''}</div>
+        <div class="tl-sub">${s.owner||'Unassigned'} ${dl?'· 📅 '+dl:''} ${f.notes[i]?'· '+f.notes[i].substring(0,20)+'…':''}</div>
+      </div>`;
+    }).join('')}</div>
     ${canEdit ? `
     <div class="divider"></div>
     <div class="dp-label" style="margin-bottom:8px;">📁 Drive Files</div>
@@ -4710,6 +4848,23 @@ function openFlowStep(flowId, stepIdx) {
       <label class="drive-btn" style="padding:6px 12px;cursor:pointer;">⬆ Upload<input type="file" style="display:none;" onchange="uploadToDrive(event,'${f.id}',${stepIdx})"/></label>
     </div>
     <div class="divider"></div>
+    ${st !== 'done' ? (() => {
+      const flag = (f.stepFlags || {})[stepIdx];
+      if (flag) return `<div class="flag-reason-box">
+        <div style="font-weight:700;margin-bottom:3px;">🚩 Issue raised by ${flag.flaggedBy}</div>
+        <div style="line-height:1.5;">${flag.reason}</div>
+        ${isManagerOrHead || (loggedInMember && flag.flaggedBy === loggedInMember.name) ? `<button onclick="clearFlowStepFlag('${f.id}',${stepIdx})" style="margin-top:6px;font-size:11px;padding:3px 9px;background:none;border:1px solid #fca5a5;border-radius:var(--rad);color:#dc2626;cursor:pointer;">✕ Clear Flag</button>` : ''}
+      </div>`;
+      return `<button class="btn btn-sm" style="color:var(--red);border-color:var(--red-mid);background:var(--red-light);" onclick="showFlagInput('${f.id}',${stepIdx})">🚩 Flag an Issue</button>
+      <div id="flag-inp-${f.id}-${stepIdx}" style="display:none;margin-top:8px;">
+        <textarea id="flag-ta-${f.id}-${stepIdx}" placeholder="Describe what's blocking this step — e.g. waiting for client content, resource unavailable…" style="width:100%;padding:8px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);resize:vertical;min-height:72px;outline:none;box-sizing:border-box;"></textarea>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button class="btn btn-sm btn-coral" onclick="flagFlowStep('${f.id}',${stepIdx})">Submit Flag</button>
+          <button class="btn btn-sm" onclick="document.getElementById('flag-inp-${f.id}-${stepIdx}').style.display='none'">Cancel</button>
+        </div>
+      </div>`;
+    })() : ''}
+    <div class="divider" style="margin:10px 0 8px;"></div>
     <div style="display:flex;flex-direction:column;gap:6px;">
       ${canMarkThisStepDone ? `
       <button class="btn btn-coral"
