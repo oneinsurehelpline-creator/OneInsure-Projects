@@ -609,11 +609,11 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .chat-sidebar-scroll::-webkit-scrollbar-thumb{background:#e9edef;border-radius:4px;}
 .chat-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8696a0;padding:10px 16px 4px;background:#f0f2f5;}
 /* WhatsApp-style contact/channel row */
-.chat-room-row{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid #f0f0f0;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
+.chat-room-row{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid #f5f5f5;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
 .chat-room-row:hover{background:#f5f5f5;}
 .chat-room-row.active{background:#ebebeb;}
 .chat-room-row.muted .chat-room-name{opacity:0.55;}
-.chat-room-avatar{width:46px;height:46px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff;font-weight:700;}
+.chat-room-avatar{width:40px;height:40px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;font-weight:700;}
 .chat-room-body{flex:1;min-width:0;}
 .chat-room-name{font-size:14px;font-weight:600;color:#111;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chat-room-preview{font-size:12px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -751,10 +751,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .dl-open-full:hover{color:rgba(255,255,255,0.7);}
 .dl-no-files{font-size:13px;color:rgba(255,255,255,0.3);font-style:italic;}
 /* ── DIRECT MESSAGES (WhatsApp-style — uses .chat-dm-btn from above) ── */
-.chat-dm-btn{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid #f0f0f0;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
+.chat-dm-btn{display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid #f5f5f5;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
 .chat-dm-btn:hover{background:#f5f5f5;}
 .chat-dm-btn.active{background:#ebebeb;}
-.chat-dm-unread{background:#25D366;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;}
+.chat-dm-unread{background:#25D366;color:#fff;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
 /* Legacy room-body classes used in some templates */
 .room-icon{font-size:15px;flex-shrink:0;}
 .room-body{flex:1;min-width:0;}
@@ -3845,6 +3845,12 @@ function go(panel){
   document.getElementById('panel-'+panel).classList.add('active');
   document.getElementById('nav-'+panel)?.classList.add('active');
   currentPanel=panel;
+  // Remove content padding for chat so the panel fills the full height
+  const contentEl = document.querySelector('.content');
+  if (contentEl) {
+    if (panel === 'chat') { contentEl.style.padding = '0'; contentEl.style.overflow = 'hidden'; }
+    else { contentEl.style.padding = ''; contentEl.style.overflow = ''; }
+  }
   // Auto-close sidebar on mobile after nav tap
   if(window.innerWidth<=768){
     const sb=document.querySelector('.sidebar');
@@ -8651,28 +8657,35 @@ function openNewDM() {
 function renderDMList() {
   const el = document.getElementById('chat-dm-list');
   if (!el || !loggedInMember) return;
-  const recent = JSON.parse(localStorage.getItem('sd_recent_dms') || '[]');
-  if (!recent.length) {
-    el.innerHTML = `<div style="padding:12px 16px;font-size:12px;color:#8696a0;text-align:center;">No recent conversations</div>`;
-    return;
-  }
-  el.innerHTML = recent.slice(0, 10).map(name => {
-    const roomId = getDMRoomId(loggedInMember.name, name);
-    const isActive = currentDM?.otherUser === name;
+  // Show ALL team members (except self and approvers), with unread/active ones first
+  const others = MEMBERS.filter(m => m.name !== loggedInMember.name && m.role !== 'approver');
+  const withUnread = others.filter(m => DM_UNREAD[getDMRoomId(loggedInMember.name, m.name)] > 0);
+  const withRecent = others.filter(m => {
+    const rid = getDMRoomId(loggedInMember.name, m.name);
+    return !DM_UNREAD[rid] && DM_LAST[rid];
+  });
+  const rest = others.filter(m => {
+    const rid = getDMRoomId(loggedInMember.name, m.name);
+    return !DM_UNREAD[rid] && !DM_LAST[rid];
+  });
+  const sorted = [...withUnread, ...withRecent, ...rest];
+  el.innerHTML = sorted.map(m => {
+    const roomId = getDMRoomId(loggedInMember.name, m.name);
+    const isActive = currentDM?.otherUser === m.name;
     const unread = DM_UNREAD[roomId] || 0;
-    const avClass = AV[name] || 'av-a';
-    const lastMsg = DM_LAST ? DM_LAST[roomId] : null;
-    const preview = lastMsg ? ((lastMsg.sender === loggedInMember.name ? 'You: ' : '') + (lastMsg.text || '📎')).slice(0, 42) : 'Tap to chat';
+    const avClass = AV[m.name] || 'av-a';
+    const lastMsg = DM_LAST[roomId];
+    const preview = lastMsg ? ((lastMsg.sender === loggedInMember.name ? 'You: ' : '') + (lastMsg.text || '📎')).slice(0, 36) : 'Tap to chat';
     const timeStr = lastMsg ? fmtChatTime(lastMsg.loggedAt) : '';
-    return `<button class="chat-dm-btn${isActive?' active':''}" onclick="openDM('${name}')">
-      <div class="av ${avClass}" style="width:46px;height:46px;border-radius:50%;font-size:18px;flex-shrink:0;">${ini(name)}</div>
+    return `<button class="chat-dm-btn${isActive?' active':''}" onclick="openDM('${m.name}')">
+      <div class="av ${avClass}" style="width:38px;height:38px;border-radius:50%;font-size:14px;flex-shrink:0;">${ini(m.name)}</div>
       <div class="chat-room-body">
-        <div class="chat-room-name">${name}</div>
-        <div class="chat-room-preview">${preview}</div>
+        <div class="chat-room-name" style="font-size:13px;">${m.name}</div>
+        <div class="chat-room-preview" style="font-size:11px;">${preview}</div>
       </div>
       <div class="chat-room-meta">
-        ${timeStr ? `<div class="chat-room-time">${timeStr}</div>` : ''}
-        ${unread ? `<div class="chat-room-badge">${unread}</div>` : ''}
+        ${timeStr ? `<div class="chat-room-time" style="font-size:10px;">${timeStr}</div>` : ''}
+        ${unread ? `<div class="chat-room-badge" style="font-size:10px;min-width:17px;height:17px;">${unread}</div>` : ''}
       </div>
     </button>`;
   }).join('');
@@ -9659,7 +9672,7 @@ async function sendChatMessage() {
     loggedAt: Date.now(),
     sentAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
-  if (input) { input.value = ''; input.style.height = 'auto'; }
+  if (input) { input.value = ''; input.style.height = '44px'; }
   if (document.getElementById('chat-tag-ref')) document.getElementById('chat-tag-ref').value = '';
   clearChatAttach();
   _clearTyping();
