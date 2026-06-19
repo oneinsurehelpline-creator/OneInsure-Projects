@@ -600,7 +600,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .home-empty-row{font-size:13px;color:var(--ink3);padding:10px 0;text-align:center;}
 /* ── CHAT ── */
 /* ── CHAT PANEL (WhatsApp-style) ── */
-.chat-panel{display:flex;height:calc(100vh - 60px);gap:0;background:#e5ddd5;border-radius:var(--radl);overflow:hidden;border:1px solid var(--border);}
+.chat-panel{display:flex;flex:1;min-height:0;height:100%;gap:0;background:#e5ddd5;border-radius:var(--radl);overflow:hidden;border:1px solid var(--border);}
 .chat-sidebar{width:300px;flex-shrink:0;background:#fff;display:flex;flex-direction:column;padding:0;overflow:hidden;border-right:1px solid #e9edef;}
 .chat-sidebar-header{background:#128C7E;padding:13px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .chat-sidebar-header-title{font-size:16px;font-weight:700;color:#fff;flex:1;}
@@ -1232,7 +1232,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
   .modal-body { padding:14px 16px 24px; }
 
   /* ── CHAT — full height, channel sidebar collapses ── */
-  .chat-panel { height:calc(100vh - 54px); flex-direction:column; border-radius:0; border:none; }
+  .chat-panel { flex-direction:column; border-radius:0; border:none; }
   .chat-sidebar {
     width:100% !important; height:auto; max-height:120px;
     flex-direction:column; padding:0;
@@ -3845,11 +3845,15 @@ function go(panel){
   document.getElementById('panel-'+panel).classList.add('active');
   document.getElementById('nav-'+panel)?.classList.add('active');
   currentPanel=panel;
-  // Remove content padding for chat so the panel fills the full height
+  // Make chat panel fill full height by fixing the flex chain
   const contentEl = document.querySelector('.content');
-  if (contentEl) {
-    if (panel === 'chat') { contentEl.style.padding = '0'; contentEl.style.overflow = 'hidden'; }
-    else { contentEl.style.padding = ''; contentEl.style.overflow = ''; }
+  const chatPanelEl = document.getElementById('panel-chat');
+  if (panel === 'chat') {
+    if (contentEl) { contentEl.style.padding = '0'; contentEl.style.overflow = 'hidden'; contentEl.style.display = 'flex'; contentEl.style.flexDirection = 'column'; }
+    if (chatPanelEl) { chatPanelEl.style.flex = '1'; chatPanelEl.style.minHeight = '0'; chatPanelEl.style.overflow = 'hidden'; }
+  } else {
+    if (contentEl) { contentEl.style.padding = ''; contentEl.style.overflow = ''; contentEl.style.display = ''; contentEl.style.flexDirection = ''; }
+    if (chatPanelEl) { chatPanelEl.style.flex = ''; chatPanelEl.style.minHeight = ''; chatPanelEl.style.overflow = ''; }
   }
   // Auto-close sidebar on mobile after nav tap
   if(window.innerWidth<=768){
