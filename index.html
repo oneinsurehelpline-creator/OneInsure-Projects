@@ -8797,7 +8797,7 @@ function initAllChannelTrackers() {
           CHANNEL_UNREAD[r.id] = newMsgs.length;
           if (wasReady && newMsgs.length > prevCount && latest.sender !== loggedInMember?.name && !_MUTED_CHANS.has(r.id)) {
             chatToast(latest.sender, r.id, CHANNEL_LAST[r.id].text, false);
-            pushNotif({ title: `💬 ${latest.sender} in #${r.label}`, body: CHANNEL_LAST[r.id].text || '(attachment)', icon: '💬', type: 'chat', tag: 'chat-' + r.id, silent: false });
+            pushNotif({ title: `💬 ${latest.sender} in #${r.label}`, body: CHANNEL_LAST[r.id].text || '(attachment)', icon: '💬', type: 'chat', tag: 'chat-' + r.id, silent: false, chatDest: { type: 'channel', id: r.id } });
           }
         }
         renderChannelList();
@@ -8842,7 +8842,7 @@ function listenForDMInbox() {
         trackDMRecent(fromName);
         if (wasReady && newCount > prevCount) {
           chatToast(fromName, fromName, d.text || '', true);
-          pushNotif({ title: `💬 DM from ${fromName}`, body: (d.text || '(attachment)').substring(0, 80), icon: '💬', type: 'chat', tag: 'dm-' + roomId });
+          pushNotif({ title: `💬 DM from ${fromName}`, body: (d.text || '(attachment)').substring(0, 80), icon: '💬', type: 'chat', tag: 'dm-' + roomId, chatDest: { type: 'dm', id: fromName } });
         }
       });
       // Clear unreads for rooms no longer in inbox
@@ -9488,7 +9488,7 @@ function renderChatMessages() {
         ${msg.tagLabel?`<div class="chat-tag">📌 ${msg.tagLabel}</div>`:''}
         ${fileHtml}
         ${msg.text?`<div class="chat-bubble">${renderMessageText(msg.text)}</div>`:''}
-        <div class="chat-meta">${timeStr}${isMine && currentDM ? (() => { const msgTs = msg.loggedAt || 0; const isRead = _partnerReadAt > 0 && _partnerReadAt >= msgTs; return isRead ? '<span class="chat-tick read">✓✓</span>' : '<span class="chat-tick delivered">✓✓</span>'; })() : ''}</div>
+        <div class="chat-meta">${timeStr}${isMine && currentDM ? (() => { const msgTs = msg.sentAt?.toMillis?.() || msg.loggedAt || 0; const isRead = _partnerReadAt > 0 && _partnerReadAt >= msgTs - 5000; return isRead ? '<span class="chat-tick read">✓✓</span>' : '<span class="chat-tick delivered">✓✓</span>'; })() : ''}</div>
         ${reactionHtml}
         <div class="chat-action-row">
           ${['👍','❤️','😂','🔥'].map(e=>`<button class="chat-react-btn" onclick="toggleReaction('${msg.id}','${e}')">${e}</button>`).join('')}
@@ -10567,7 +10567,7 @@ function _tickerClick(e) {
 }
 
 // ── Core notify function ───────────────────
-function pushNotif({ title, body, icon='📋', type='info', tag=null, silent=false }) {
+function pushNotif({ title, body, icon='📋', type='info', tag=null, silent=false, chatDest=null }) {
   // Add to in-app history
   const entry = { id: Date.now(), title, body, icon, type, time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}), read: false };
   NOTIF_HISTORY.unshift(entry);
@@ -10593,9 +10593,24 @@ function pushNotif({ title, body, icon='📋', type='info', tag=null, silent=fal
       icon: '/favicon.ico',
       tag: tag || type + '-' + Date.now(),
       badge: '/favicon.ico',
-      requireInteraction: type === 'blocked', // blocked tasks stay until dismissed
+      requireInteraction: type === 'blocked',
     });
-    n.onclick = () => { window.focus(); go('today'); n.close(); };
+    n.onclick = () => {
+      window.focus();
+      // Route to the specific chat that triggered the notification
+      if (chatDest) {
+        go('chat');
+        setTimeout(() => {
+          if (chatDest.type === 'dm') openDM(chatDest.id);
+          else { currentRoom = chatDest.id; currentDM = null; renderChat(); initChat(); }
+        }, 150);
+      } else if (type === 'chat') {
+        go('chat');
+      } else {
+        go('today');
+      }
+      n.close();
+    };
   } catch(e) { console.warn('Notification error:', e); }
 }
 
