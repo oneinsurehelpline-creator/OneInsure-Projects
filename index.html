@@ -2951,6 +2951,7 @@ const MEMBERS = [
   {name:'Anirudh',   role:'approver',    av:'av-g', status:'online', reportsTo:null},
   {name:'Susant',    role:'approver',    av:'av-h', status:'online', reportsTo:null},
   {name:'Nasita',    role:'approver',    av:'av-i', status:'online', reportsTo:null},
+  {name:'Sakshi',    role:'member',      av:'av-d', status:'online', reportsTo:'Akshay'},
 ];
 
 const AV = {
@@ -2958,7 +2959,8 @@ const AV = {
   'Shivam':'av-d','Sandeep':'av-e','Shantanu':'av-a',
   'Deepanshu':'av-c','Harsh':'av-d','Pawan':'av-b',
   'Ria':'av-b','Isha':'av-e','Tamanna':'av-a',
-  'Rochelle':'av-f','Anirudh':'av-g','Susant':'av-h','Nasita':'av-i'
+  'Rochelle':'av-f','Anirudh':'av-g','Susant':'av-h','Nasita':'av-i',
+  'Sakshi':'av-d'
 };
 const ini = n => n.split(' ').map(x=>x[0]).join('');
 
@@ -3088,6 +3090,7 @@ const EMAIL_TO_MEMBER = {
   'anirudh.baardwaj@oneinsure.com':     { name:'Anirudh',   role:'approver', av:'av-g' },
   'susant.padhi@oneinsure.com':         { name:'Susant',    role:'approver', av:'av-h' },
   'nasita.londhe@oneinsure.com':        { name:'Nasita',    role:'approver', av:'av-i' },
+  'sakshi.bhadarge@oneinsure.com':      { name:'Sakshi',    role:'member',   av:'av-d' },
 };
 // Default password everyone starts with — change this to what you set
 const DEFAULT_PASSWORD = 'Pass@123';
