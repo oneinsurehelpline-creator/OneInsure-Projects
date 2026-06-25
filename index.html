@@ -2241,6 +2241,13 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         <div class="fg fc-full"><label>Notes</label>
           <textarea id="nt-notes" placeholder="Brief, references, requirements…"></textarea>
         </div>
+        <div class="fg fc-full">
+          <label>Attach File <span style="font-size:10px;color:var(--ink3);font-weight:400;">(optional)</span></label>
+          <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border:1.5px dashed var(--border2);border-radius:var(--rad);cursor:pointer;font-size:12px;color:var(--ink3);">
+            📎 <span id="nt-file-label">Choose file…</span>
+            <input type="file" id="nt-file" style="display:none;" onchange="document.getElementById('nt-file-label').textContent=this.files[0]?.name||'Choose file…'"/>
+          </label>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -3191,6 +3198,7 @@ function applyLoggedInUser() {
     'analytics':   'manager',  // managers + head only
     'campaigns':   'manager',  // managers + head only
     'flows':       'manager',  // managers + head only — members don't edit templates
+    'deviation':   'manager',  // further restricted by name inside renderDeviationReport
     'performance': 'manager',  // managers + head only
     'pipeline':    'all',      // everyone
     'regular':     'manager',  // managers + head only
@@ -3212,6 +3220,9 @@ function applyLoggedInUser() {
     if (minRole === 'head')    visible = (r === 'head');
     navEl.style.display = visible ? '' : 'none';
   });
+  // Deviation Report: only for specific people
+  const devNav = document.getElementById('nav-deviation');
+  if (devNav) devNav.style.display = ['Akshay','Anamika','Chirag'].includes(loggedInMember.name) ? '' : 'none';
 }
 
 // ── Login ──────────────────────────────────
@@ -3993,8 +4004,9 @@ function renderHome() {
     return flag && getFlowStatus(f) !== 'done';
   });
 
-  // Tasks due today or overdue
-  const myTasks = TASKS.filter(t => !t.done && (t.assignee === me || isManager));
+  // Tasks due today or overdue — only show to the assignee or head (not all managers)
+  const isHead = loggedInMember.role === 'head';
+  const myTasks = TASKS.filter(t => t.status !== 'done' && !t.done && (t.assignee === me || isHead));
   const overdueTasks = myTasks.filter(t => t.due && t.due < today);
   const dueTodayTasks = myTasks.filter(t => t.due === today);
 
@@ -5290,6 +5302,7 @@ function openTask(id){
       :`<div style="height:5px;background:var(--cream3);border-radius:3px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:${t.progress}%;background:var(--coral);border-radius:3px;"></div></div>`}
     </div>
     ${t.notes?`<div class="dp-sec"><div class="dp-label">Notes</div><div style="font-size:12px;line-height:1.5;color:var(--ink2);">${t.notes}</div></div>`:''}
+    ${(t.attachments||[]).length?`<div class="dp-sec"><div class="dp-label">📎 Attachments</div>${t.attachments.map(a=>`<div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:18px;">${getDriveIcon(a.mimeType)}</span><a href="${a.url}" target="_blank" style="font-size:12px;color:var(--navy);text-decoration:none;font-weight:500;">${a.name}</a><span style="font-size:10px;color:var(--ink3);">by ${a.addedBy}</span></div>`).join('')}</div>`:''}
     <div class="divider"></div>
     <div class="dp-label" style="margin-bottom:6px;">Status History</div>
     <div style="margin-bottom:12px;">${historyHTML}</div>
@@ -6468,14 +6481,34 @@ function openTaskModal(){
 
   document.getElementById('task-modal').classList.add('open');
 }
-function closeTaskModal(){document.getElementById('task-modal').classList.remove('open');}
+function closeTaskModal(){
+  document.getElementById('task-modal').classList.remove('open');
+  const fi = document.getElementById('nt-file');
+  if (fi) fi.value = '';
+  const fl = document.getElementById('nt-file-label');
+  if (fl) fl.textContent = 'Choose file…';
+}
 async function createTask(){
   const title=document.getElementById('nt-title').value.trim();
   if(!title){toast('Enter a task title.','warn');return;}
   const platsEl=document.getElementById('nt-platform');
   const platforms=Array.from(platsEl.selectedOptions).map(o=>o.value);
+  const taskId = Date.now();
+  // Upload attachment if provided
+  let attachments = [];
+  const fileInput = document.getElementById('nt-file');
+  if (fileInput?.files?.length) {
+    const file = fileInput.files[0];
+    try {
+      toast('Uploading attachment…', '');
+      const storageRef = firebase.storage().ref(`task_attachments/${taskId}/${file.name}`);
+      await storageRef.put(file);
+      const url = await storageRef.getDownloadURL();
+      attachments = [{ name: file.name, url, mimeType: file.type, addedBy: loggedInMember?.name || '', addedAt: new Date().toLocaleDateString('en-IN') }];
+    } catch(e) { console.warn('Attachment upload failed:', e); }
+  }
   const t={
-    id: Date.now(), title,
+    id: taskId, title,
     status:'todo',
     priority:document.getElementById('nt-priority').value,
     assignee:document.getElementById('nt-assignee').value,
@@ -6483,7 +6516,7 @@ async function createTask(){
     due:document.getElementById('nt-due').value,
     timeLogged:0,
     notes:document.getElementById('nt-notes').value.trim(),
-    progress:0, comments:[],
+    progress:0, comments:[], attachments,
   };
   TASKS.unshift(t);
   await fbSaveTask(t);
@@ -8082,8 +8115,9 @@ function renderDeviationReport() {
   const panel = document.getElementById('panel-deviation');
   if (!panel) return;
 
-  if (!loggedInMember || loggedInMember.role === 'member') {
-    panel.innerHTML = `<div class="dev-empty">📊 Deviation Report is only available to managers and head.</div>`;
+  const _devAllowed = ['Akshay', 'Anamika', 'Chirag'];
+  if (!loggedInMember || !_devAllowed.includes(loggedInMember.name)) {
+    panel.innerHTML = `<div class="dev-empty">📊 Deviation Report is only available to Akshay, Anamika, and Chirag.</div>`;
     return;
   }
 

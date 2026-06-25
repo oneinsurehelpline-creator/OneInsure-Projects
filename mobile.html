@@ -561,55 +561,47 @@ a{text-decoration:none;color:inherit;}
 .fab.hidden{opacity:0;pointer-events:none;}
 
 /* ─────────────────────────────────────
-   CHAT TAB — LIST
+   CHAT TAB — WhatsApp-style flat list
 ───────────────────────────────────── */
-.chat-list-body{padding:16px 16px 0;}
-.chat-section-card{
-  background:var(--card);border-radius:var(--r-lg);
-  box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;
-}
-.chat-sec-hdr{
-  padding:12px 16px 10px;
-  font-size:14px;font-weight:700;text-transform:uppercase;
-  letter-spacing:0.08em;color:var(--ink4);
-  border-bottom:1px solid var(--border-light);
+.chat-list-body{padding:0;background:#fff;}
+.chat-sec-divider{
+  padding:6px 16px 4px;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.1em;color:var(--ink4);
+  background:#f0f2f5;border-top:1px solid #e9edef;border-bottom:1px solid #e9edef;
 }
 .chat-list-row{
   display:flex;align-items:center;gap:12px;
-  padding:14px 16px;border-bottom:1px solid var(--border-light);
-  min-height:64px;cursor:pointer;
-  transition:background 0.1s;
+  padding:12px 16px;border-bottom:1px solid #f0f2f5;
+  background:#fff;cursor:pointer;transition:background 0.1s;
+  min-height:62px;
 }
-.chat-list-row:last-child{border-bottom:none;}
-.chat-list-row:active{background:var(--bg-subtle);}
+.chat-list-row:active{background:#f0f2f5;}
 .ch-icon-box{
-  width:44px;height:44px;border-radius:var(--r-md);
-  background:var(--bg-subtle);
+  width:46px;height:46px;border-radius:50%;
+  background:#e9edef;
   display:flex;align-items:center;justify-content:center;
-  font-size:22px;flex-shrink:0;
+  font-size:20px;flex-shrink:0;overflow:hidden;
 }
 .ch-text{flex:1;min-width:0;}
-.ch-name{font-size:18px;font-weight:600;letter-spacing:-0.01em;color:var(--ink);}
-.ch-preview{font-size:14px;color:var(--ink4);margin-top:2px;
+.ch-name{font-size:15px;font-weight:500;color:#111;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ch-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
-.ch-time{font-size:14px;color:var(--ink4);}
+.ch-preview{font-size:13px;color:#667781;margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ch-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;min-width:44px;}
+.ch-time{font-size:11px;color:#667781;}
 .ch-unread{
-  min-width:20px;height:20px;border-radius:var(--r-pill);
-  background:var(--coral);color:#fff;
-  font-size:14px;font-weight:700;padding:0 6px;
+  min-width:18px;height:18px;border-radius:50%;
+  background:#25D366;color:#fff;
+  font-size:11px;font-weight:700;padding:0 4px;
   display:flex;align-items:center;justify-content:center;
 }
+.ch-unread.coral{background:#ef4444;}
 .dm-av-icon{
-  width:44px;height:44px;border-radius:50%;
+  width:46px;height:46px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;font-weight:700;flex-shrink:0;
+  font-size:17px;font-weight:700;flex-shrink:0;color:#fff;
 }
-.dm-role-badge{
-  font-size:14px;color:var(--ink4);
-  text-transform:capitalize;margin-top:2px;
-}
-.ch-chevron{color:var(--ink4);font-size:18px;flex-shrink:0;}
+.ch-chevron{color:#c4c4c4;font-size:16px;flex-shrink:0;}
 
 /* ─────────────────────────────────────
    CHAT ROOM SCREEN
@@ -1082,14 +1074,10 @@ a{text-decoration:none;color:inherit;}
     <!-- ── CHAT ── -->
     <div class="panel" id="panel-chat">
       <div class="chat-list-body">
-        <div class="chat-section-card" id="channels-card">
-          <div class="chat-sec-hdr">Channels</div>
-          <div id="channel-list-items"></div>
-        </div>
-        <div class="chat-section-card">
-          <div class="chat-sec-hdr">Direct Messages</div>
-          <div id="dm-list-items"></div>
-        </div>
+        <div class="chat-sec-divider">Groups &amp; Channels</div>
+        <div id="channel-list-items"></div>
+        <div class="chat-sec-divider" style="margin-top:0;">Direct Messages</div>
+        <div id="dm-list-items"></div>
       </div>
       <div class="page-bottom"></div>
     </div>
@@ -2762,6 +2750,17 @@ async function saveNewTask() {
 /* ════════════════════════════════
    CHAT TAB
 ════════════════════════════════ */
+function _fmtMobChatTime(ts) {
+  if (!ts) return '';
+  const ms = typeof ts === 'object' && ts.toMillis ? ts.toMillis() : (ts < 1e12 ? ts * 1000 : ts);
+  const d = new Date(ms), now = new Date();
+  if (d.toDateString() === now.toDateString())
+    return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+  const dayDiff = Math.floor((now - d) / 86400000);
+  if (dayDiff < 7) return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit'});
+}
+
 function renderChatList() {
   const chEl = document.getElementById('channel-list-items');
   if (chEl) {
@@ -2775,20 +2774,22 @@ function renderChatList() {
       const last    = MOB_CHANNEL_LAST[r.id];
       const preview = last ? `${last.sender!==currentMember?.name?last.sender+': ':''}${last.text||''}`.slice(0,45) : r.desc;
       const isMuted = _MOB_MUTED.has(r.id);
-      return `<div class="chat-list-row${unread&&!isMuted?' unread-row':''}" onclick="openChatRoom('${r.id}','${escHtml(r.label)}','channel','${escHtml(r.desc)}')">
-        <div class="ch-icon-box">${r.icon}</div>
+      const timeStr = last?.loggedAt ? _fmtMobChatTime(last.loggedAt) : '';
+      const bold    = unread && !isMuted;
+      return `<div class="chat-list-row" onclick="openChatRoom('${r.id}','${escHtml(r.label)}','channel','${escHtml(r.desc)}')">
+        <div class="ch-icon-box" style="background:#e9edef;border-radius:50%;">${r.icon}</div>
         <div class="ch-text">
-          <div class="ch-name" style="${unread&&!isMuted?'font-weight:700;':''}${isMuted?'opacity:0.5;':''}">${r.label}${isMuted?' 🔇':''}</div>
-          <div class="ch-preview" style="${unread&&!isMuted?'color:var(--ink2);font-weight:500;':''}">${escHtml(preview)}</div>
+          <div class="ch-name" style="${bold?'font-weight:700;color:#111;':''}${isMuted?'opacity:0.55;':''}">${escHtml(r.label)}${isMuted?' 🔇':''}</div>
+          <div class="ch-preview" style="${bold?'color:#111;font-weight:500;':''}">${escHtml(preview)}</div>
         </div>
-        <div class="ch-meta" style="flex-direction:row;align-items:center;gap:6px;">
-          <button onclick="mobToggleMute('${r.id}',event)" style="background:none;border:none;font-size:16px;padding:4px;cursor:pointer;opacity:0.5;">${isMuted?'🔔':'🔕'}</button>
-          ${unread && !isMuted ? `<div class="ch-unread" style="background:#25D366;">${unread>99?'99+':unread}</div>` : '<div class="ch-chevron">›</div>'}
+        <div class="ch-meta">
+          ${timeStr?`<div class="ch-time" style="${bold?'color:#25D366;':''}">${timeStr}</div>`:''}
+          ${bold ? `<div class="ch-unread">${unread>99?'99+':unread}</div>` : '<div class="ch-chevron">›</div>'}
         </div>
       </div>`;
     }).join('');
-    chEl.innerHTML += `<div class="chat-list-row" onclick="openMobNewGroup()" style="opacity:0.65;border:1.5px dashed #ccc;border-radius:12px;margin-top:6px;">
-      <div class="ch-icon-box">➕</div>
+    chEl.innerHTML += `<div class="chat-list-row" onclick="openMobNewGroup()" style="opacity:0.6;">
+      <div class="ch-icon-box" style="background:#f0f2f5;border-radius:50%;border:1.5px dashed #aaa;">➕</div>
       <div class="ch-text"><div class="ch-name">New Group</div><div class="ch-preview">Create a custom channel</div></div>
       <div class="ch-chevron">›</div>
     </div>`;
@@ -2799,17 +2800,21 @@ function renderChatList() {
     const others = MEMBERS.filter(m => m.name !== (currentMember ? currentMember.name : ''));
     const ROLE_LABELS = {head:'Head of Social',manager:'Manager',member:'Team Member',approver:'Approver'};
     dmEl.innerHTML = others.map(m => {
-      const init  = m.name.charAt(0).toUpperCase();
-      const dmId  = dmRoomId(currentMember ? currentMember.name : '', m.name);
+      const init     = m.name.charAt(0).toUpperCase();
+      const dmId     = dmRoomId(currentMember ? currentMember.name : '', m.name);
       const dmUnread = MOB_DM_UNREAD[dmId] || 0;
-      return `<div class="chat-list-row${dmUnread ? ' unread-row' : ''}" onclick="openChatRoom('${dmId}','${escHtml(m.name)}','dm','${ROLE_LABELS[m.role]||m.role}')">
-        <div class="dm-av-icon ${m.av}">${init}</div>
+      const dmLast   = MOB_CHANNEL_LAST[dmId];
+      const preview  = dmLast ? `${dmLast.sender !== currentMember?.name ? dmLast.sender + ': ' : ''}${dmLast.text || ''}`.slice(0, 45) : ROLE_LABELS[m.role] || m.role;
+      const timeStr  = dmLast?.loggedAt ? _fmtMobChatTime(dmLast.loggedAt) : '';
+      return `<div class="chat-list-row" onclick="openChatRoom('${dmId}','${escHtml(m.name)}','dm','${ROLE_LABELS[m.role]||m.role}')">
+        <div class="ch-icon-box ${m.av}" style="border-radius:50%;font-size:18px;font-weight:700;color:#fff;">${init}</div>
         <div class="ch-text">
-          <div class="ch-name" style="${dmUnread ? 'font-weight:700;' : ''}">${m.name}</div>
-          <div class="dm-role-badge">${ROLE_LABELS[m.role] || m.role}</div>
+          <div class="ch-name" style="${dmUnread?'font-weight:700;color:#111;':''}">${escHtml(m.name)}</div>
+          <div class="ch-preview" style="${dmUnread?'color:#111;font-weight:500;':''}">${escHtml(preview)}</div>
         </div>
         <div class="ch-meta">
-          ${dmUnread ? `<div class="ch-unread" style="background:var(--coral,#ef4444);">${dmUnread > 99 ? '99+' : dmUnread}</div>` : '<div class="ch-chevron">›</div>'}
+          ${timeStr ? `<div class="ch-time" style="${dmUnread?'color:#ef4444;':''}">${timeStr}</div>` : ''}
+          ${dmUnread ? `<div class="ch-unread coral">${dmUnread > 99 ? '99+' : dmUnread}</div>` : '<div class="ch-chevron">›</div>'}
         </div>
       </div>`;
     }).join('');
