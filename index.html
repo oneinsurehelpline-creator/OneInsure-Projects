@@ -10078,7 +10078,7 @@ async function sendApproverOneClickEmail(flowId, stepIdx, approverName) {
   const stepName = steps[stepIdx]?.name || 'Approval Step';
   const approveToken = genApprovalToken(flowId, stepIdx, 'approve');
   const rejectToken  = genApprovalToken(flowId, stepIdx, 'reject');
-  const deepLink = `https://social-desk-d823c.web.app/?flow=${encodeURIComponent(flowId)}&approver=${encodeURIComponent(email)}`;
+  const deepLink = `https://sociadesk.oneinsure.com/?flow=${encodeURIComponent(flowId)}&approver=${encodeURIComponent(email)}`;
   const body = `Hi ${approverName},
 
 A content approval is waiting for your review.
