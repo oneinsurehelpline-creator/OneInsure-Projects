@@ -4643,15 +4643,17 @@ function flowCardHTML(f) {
     (curStep.owner && curStep.owner === loggedInMember.name) ||
     (subAssigneeForCur && subAssigneeForCur === loggedInMember.name)
   );
-  // Only the actual task owner can mark a step done — managers cannot bypass this
-  const canMarkDone = isStepOwner;
   const isApprovalStep = curStep.isApproval === true ||
     curStep.name?.toLowerCase().includes('approval') ||
     curStep.name?.toLowerCase().includes('approve');
+  // Only the actual task owner can mark a non-approval step done — managers cannot bypass this
+  const canMarkDone = isStepOwner && !isApprovalStep;
   // Approval: only the explicitly routed approver can approve — step owner must send for approval first
   const isRoutedApprover = loggedInMember &&
     isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
   const canApprove = isRoutedApprover;
+  // Who can "Send for Approval": only the approval step's designated owner (the reviewer), or any manager/head.
+  // The previous step's owner (content creator) should not route — they don't decide which approver is relevant.
   const canRoute = isApprovalStep && !canApprove && (isStepOwner || isManager);
   const subtasksDone = areSubtasksDone(f, curStepIdx);
   const curSubtasks = curStep.subtasks || [];
@@ -4988,14 +4990,24 @@ function openFlowStep(flowId, stepIdx) {
   const st = f.stepStatuses[stepIdx];
   const stLabel = {done:'Done',active:'Active',pending:'Pending',stuck:'Stuck',approval:'Awaiting Approval'}[st] || st;
   const canEdit = role !== 'viewer' && (st === 'active' || st === 'stuck');
-  // Only the step owner or sub-assignee can mark done — not just anyone
   const _subAssigneeForStep = (f.subAssignees || {})[stepIdx] || null;
+  const isManagerOrHead = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
+  // Use the snapshotted step owner (same source as the flow card) to avoid mismatch when template changes
+  const _snapOwner = (f.stepOwners && f.stepOwners[stepIdx]) || step.owner || '';
   const isThisStepMine = loggedInMember && (
-    step.owner === loggedInMember.name ||
+    _snapOwner === loggedInMember.name ||
     (_subAssigneeForStep && _subAssigneeForStep === loggedInMember.name)
   );
-  const isManagerOrHead = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
-  const canMarkThisStepDone = isThisStepMine && canEdit;
+  // Determine if this is an approval step
+  const _isApprovalStep = step.isApproval === true ||
+    step.name?.toLowerCase().includes('approval') ||
+    step.name?.toLowerCase().includes('approve');
+  // Approval step owner can route; routed approvers can approve/reject
+  const _isRoutedApprover = loggedInMember && _isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
+  const _canRouteThis = _isApprovalStep && !_isRoutedApprover && (isThisStepMine || isManagerOrHead) && canEdit;
+  const _canApproveThis = _isRoutedApprover;
+  // Mark as Done only for non-approval active steps
+  const canMarkThisStepDone = isThisStepMine && canEdit && !_isApprovalStep;
   const subtasks = step.subtasks || [];
   const checks = (f.subtaskChecks || [])[stepIdx] || [];
   const allDone = areSubtasksDone(f, stepIdx);
@@ -5003,10 +5015,10 @@ function openFlowStep(flowId, stepIdx) {
   document.getElementById('dp-type-label').textContent = 'Flow Step';
   document.getElementById('dp-body').innerHTML = `
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
-      <div class="av av-md ${AV[step.owner]||'av-a'}">${step.owner?ini(step.owner):'?'}</div>
+      <div class="av av-md ${AV[_snapOwner]||'av-a'}">${_snapOwner?ini(_snapOwner):'?'}</div>
       <div style="flex:1;">
-        <div style="font-family:var(--ff-head);font-size:15px;font-weight:700;">${step.name}</div>
-        <div style="font-size:12px;color:var(--ink3);">Step ${stepIdx+1} of ${tmplSteps.length} · ${step.owner||'<span style="color:var(--amber);">Unassigned</span>'}</div>
+        <div style="font-family:var(--ff-head);font-size:15px;font-weight:700;">${step.name}${_isApprovalStep?' <span style="font-size:10px;background:var(--purple-light);color:var(--purple);padding:1px 7px;border-radius:10px;font-weight:600;vertical-align:middle;">⚖️ Approval</span>':''}</div>
+        <div style="font-size:12px;color:var(--ink3);">Step ${stepIdx+1} of ${tmplSteps.length} · ${_snapOwner||'<span style="color:var(--amber);">Unassigned</span>'}</div>
       </div>
     </div>
     ${isManagerOrHead && st !== 'done' ? `
@@ -5119,14 +5131,25 @@ function openFlowStep(flowId, stepIdx) {
     })() : ''}
     <div class="divider" style="margin:10px 0 8px;"></div>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      ${canMarkThisStepDone ? `
+      ${_isApprovalStep ? `
+        ${_canRouteThis ? `
+        <button class="btn" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);font-weight:600;"
+          onclick="openApprovalRoutingModal('${f.id}');closeSide();">
+          📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}
+        </button>` : _canApproveThis ? `
+        <button class="btn-approve" onclick="approveStep('${f.id}');closeSide();">✓ Approve</button>
+        <button class="btn-reject" onclick="openRejectModal('${f.id}',${stepIdx});closeSide();">✗ Reject</button>` : `
+        <div style="font-size:12px;color:var(--ink3);padding:8px 0;">
+          ⏳ Waiting for <strong>${_snapOwner || 'reviewer'}</strong> to review and send for approval
+        </div>`}
+      ` : canMarkThisStepDone ? `
       <button class="btn btn-coral"
         onclick="markStepDone('${f.id}');closeSide();"
         ${!allDone?'disabled style="opacity:0.4;cursor:not-allowed;"':''}>
         ✓ Mark as Done & Push
       </button>` : st === 'active' ? `
       <div style="font-size:12px;color:var(--ink3);padding:8px 0;">
-        ⏳ Waiting for ${_subAssigneeForStep || step.owner || 'owner'} to complete this step
+        ⏳ Waiting for ${_subAssigneeForStep || _snapOwner || 'owner'} to complete this step
       </div>` : ''}
       <button class="btn" onclick="go('log')">✏️ Log Activity</button>
     </div>` : ''}
