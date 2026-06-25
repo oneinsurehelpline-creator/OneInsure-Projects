@@ -3126,6 +3126,7 @@ const EMAIL_TO_MEMBER = {
   'susant.padhi@oneinsure.com':         { name:'Susant',    role:'approver', av:'av-h' },
   'nasita.londhe@oneinsure.com':        { name:'Nasita',    role:'approver', av:'av-i' },
   'sakshi.bhadarge@oneinsure.com':      { name:'Sakshi',    role:'member',   av:'av-d' },
+  'admin@oneinsure.com':                { name:'Admin',     role:'viewer',   av:'av-c' },
 };
 // Default password everyone starts with — change this to what you set
 const DEFAULT_PASSWORD = 'Pass@123';
@@ -3189,6 +3190,10 @@ function applyLoggedInUser() {
   const logBtn = document.getElementById('log-btn');
   if (logBtn) logBtn.style.display = loggedInMember.role === 'member' ? '' : 'none';
 
+  // Hide New Task button for viewer (read-only)
+  const mainBtn = document.getElementById('main-btn');
+  if (mainBtn) mainBtn.style.display = loggedInMember.role === 'viewer' ? 'none' : '';
+
   // Hide nav items per role
   const r = loggedInMember.role;
   const navRules = {
@@ -3216,13 +3221,13 @@ function applyLoggedInUser() {
     const navEl = document.getElementById('nav-' + panel);
     if (!navEl) return;
     let visible = true;
-    if (minRole === 'manager') visible = (r === 'manager' || r === 'head');
-    if (minRole === 'head')    visible = (r === 'head');
+    if (minRole === 'manager') visible = (r === 'manager' || r === 'head' || r === 'viewer');
+    if (minRole === 'head')    visible = (r === 'head' || r === 'viewer');
     navEl.style.display = visible ? '' : 'none';
   });
   // Deviation Report: only for specific people
   const devNav = document.getElementById('nav-deviation');
-  if (devNav) devNav.style.display = ['Akshay','Anamika','Chirag'].includes(loggedInMember.name) ? '' : 'none';
+  if (devNav) devNav.style.display = (['Akshay','Anamika','Chirag'].includes(loggedInMember.name) || loggedInMember.role === 'viewer') ? '' : 'none';
 }
 
 // ── Login ──────────────────────────────────
@@ -4005,7 +4010,7 @@ function renderHome() {
   });
 
   // Tasks due today or overdue — only show to the assignee or head (not all managers)
-  const isHead = loggedInMember.role === 'head';
+  const isHead = loggedInMember.role === 'head' || loggedInMember.role === 'viewer';
   const myTasks = TASKS.filter(t => t.status !== 'done' && !t.done && (t.assignee === me || isHead));
   const overdueTasks = myTasks.filter(t => t.due && t.due < today);
   const dueTodayTasks = myTasks.filter(t => t.due === today);
@@ -8116,7 +8121,7 @@ function renderDeviationReport() {
   if (!panel) return;
 
   const _devAllowed = ['Akshay', 'Anamika', 'Chirag'];
-  if (!loggedInMember || !_devAllowed.includes(loggedInMember.name)) {
+  if (!loggedInMember || (!_devAllowed.includes(loggedInMember.name) && loggedInMember.role !== 'viewer')) {
     panel.innerHTML = `<div class="dev-empty">📊 Deviation Report is only available to Akshay, Anamika, and Chirag.</div>`;
     return;
   }
