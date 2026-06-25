@@ -4454,6 +4454,7 @@ async function confirmSpawn() {
     // Snapshot step owners at spawn time — so display never depends on template loading
     stepOwners: steps.map(s => s.owner || ''),
     stepNames: steps.map(s => s.name || ''),
+    stepIsApproval: steps.map(s => s.isApproval === true || /approv/i.test(s.name || '')),
     notes: steps.map(() => ''),
     subtaskChecks: steps.map(s => (s.subtasks || []).map(() => false)),
     driveFiles: steps.map(() => []),

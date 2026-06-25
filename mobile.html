@@ -1610,8 +1610,10 @@ function isMyTurn(f) {
 
 function _isApprovalStep(f) {
   const cs = f.currentStep || 0;
+  // Check snapshotted isApproval flag first (set at spawn time), then fall back to name regex
+  const stepIsApproval = f.stepIsApproval || [];
   const stepNames = f.stepNames || [];
-  return /approv/i.test(stepNames[cs] || '');
+  return stepIsApproval[cs] === true || /approv/i.test(stepNames[cs] || '');
 }
 
 function todayStr() {
@@ -2145,9 +2147,11 @@ function buildFlowCard(f, cardIdx) {
 
   // Approval step logic
   const isApprStep  = _isApprovalStep(f);
+  const isManagerOrHead = currentMember && (currentMember.role === 'manager' || currentMember.role === 'head');
   const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
   const isRoutedApproverTurn = currentMember && isApprStep && (f.approvalRoutees || []).includes(currentMember.name);
-  const canRoute = isApprStep && isStepOwnerTurn && !isRoutedApproverTurn;
+  // Step owner (reviewer) or manager can send for approval — NOT the previous step owner
+  const canRoute = isApprStep && !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHead && statuses[cs] === 'active'));
 
   // Footer
   let footHtml = '';
@@ -2166,7 +2170,7 @@ function buildFlowCard(f, cardIdx) {
       <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
       <button class="push-btn-full" style="background:var(--purple,#9113af);" onclick="openMobApprovalRouting('${escHtml(f.id)}',event)">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}</button>
     </div>`;
-  } else if (mine) {
+  } else if (mine && !isApprStep) {
     const isLast = cs >= totalSteps - 1;
     footHtml = `<div class="flow-foot">
       <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong>${(f.stepFlags||{})[cs] ? ' <span class="mob-flag-badge">🚩</span>' : ''}${_mobStepDlChip(f,cs) ? ' ' + _mobStepDlChip(f,cs) : ''}</div>
@@ -2181,9 +2185,12 @@ function buildFlowCard(f, cardIdx) {
     </div>`;
   } else {
     const waiting = stepOwner || '—';
+    const waitMsg = isApprStep
+      ? `Waiting for <strong>${escHtml(waiting)}</strong> to review &amp; send for approval`
+      : `Waiting for <strong>${escHtml(waiting)}</strong>`;
     footHtml = `<div class="flow-foot">
       <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong>${(f.stepFlags||{})[cs] ? ' <span class="mob-flag-badge">🚩</span>' : ''}${_mobStepDlChip(f,cs) ? ' ' + _mobStepDlChip(f,cs) : ''}</div>
-      <div class="flow-waiting">Waiting for <strong>${escHtml(waiting)}</strong></div>
+      <div class="flow-waiting">${waitMsg}</div>
     </div>`;
   }
 
@@ -2303,9 +2310,10 @@ function openFlowDetail(flowId) {
   document.getElementById('fd-steps').innerHTML = stepsHtml;
 
   const isApprStep  = _isApprovalStep(f);
+  const isManagerOrHeadDet = currentMember && (currentMember.role === 'manager' || currentMember.role === 'head');
   const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
   const isRoutedApproverTurn = currentMember && isApprStep && (f.approvalRoutees || []).includes(currentMember.name);
-  const canRouteDetail = isApprStep && isStepOwnerTurn && !isRoutedApproverTurn;
+  const canRouteDetail = isApprStep && !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHeadDet && statuses[cs] === 'active'));
 
   const pushArea = document.getElementById('fd-push-area');
   if (allDone) {
@@ -2322,7 +2330,7 @@ function openFlowDetail(flowId) {
       onclick="openMobApprovalRouting('${escHtml(f.id)}',event)">
       📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}
     </button>`;
-  } else if (isMyTurn(f)) {
+  } else if (isMyTurn(f) && !isApprStep) {
     const isLast = cs >= totalSteps - 1;
     const flagData = (f.stepFlags||{})[cs];
     const flagHtml = flagData
@@ -2349,8 +2357,10 @@ function openFlowDetail(flowId) {
       Awaiting decision from <strong style="color:var(--ink2);">${escHtml(routees)}</strong></div>`;
   } else {
     const owner = getStepOwner(f, cs);
-    pushArea.innerHTML = `<div style="text-align:center;padding:12px 0;color:var(--ink4);font-size:16px;">
-      Waiting for <strong style="color:var(--ink2);">${escHtml(owner || '—')}</strong> to push</div>`;
+    const waitMsg = isApprStep
+      ? `Waiting for <strong style="color:var(--ink2);">${escHtml(owner || '—')}</strong> to review &amp; send for approval`
+      : `Waiting for <strong style="color:var(--ink2);">${escHtml(owner || '—')}</strong>`;
+    pushArea.innerHTML = `<div style="text-align:center;padding:12px 0;color:var(--ink4);font-size:16px;">${waitMsg}</div>`;
   }
 
   // Drive files
