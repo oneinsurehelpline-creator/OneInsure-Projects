@@ -328,6 +328,26 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .step-dl-chip.due{background:#fff7ed;color:#c2410c;border:1px solid #fdba74;}
 .step-dl-chip.overdue{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;}
 .flag-reason-box{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:var(--rad);padding:10px 12px;font-size:12px;line-height:1.5;margin-top:8px;}
+.flow-overdue-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;animation:pulse-red 2s infinite;}
+@keyframes pulse-red{0%,100%{opacity:1;}50%{opacity:0.65;}}
+.dev-section-title{font-family:var(--ff-head);font-size:13px;font-weight:700;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--border);}
+.dev-section-title:first-child{margin-top:0;}
+.dev-table{width:100%;border-collapse:collapse;font-size:12px;}
+.dev-table th{text-align:left;padding:7px 10px;background:var(--cream2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink3);border-bottom:1px solid var(--border);}
+.dev-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.dev-table tr:last-child td{border-bottom:none;}
+.dev-table tr:hover td{background:var(--cream2);}
+.dev-overdue-days{font-weight:700;color:#dc2626;background:#fef2f2;padding:2px 7px;border-radius:10px;font-size:11px;}
+.dev-person-card{display:inline-flex;flex-direction:column;align-items:center;background:var(--cream2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;min-width:120px;gap:4px;}
+.dev-person-name{font-weight:700;font-size:13px;}
+.dev-person-stat{font-size:11px;color:var(--ink3);}
+.dev-person-worst{background:#fef2f2;border-color:#fecaca;}
+.dev-person-worst .dev-person-name{color:#dc2626;}
+.dev-empty{text-align:center;padding:32px;color:var(--ink3);font-size:13px;}
+.dev-summary-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px;}
+.dev-stat-card{flex:1;min-width:130px;background:var(--cream2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.dev-stat-num{font-family:var(--ff-head);font-size:28px;font-weight:800;line-height:1;}
+.dev-stat-lbl{font-size:11px;color:var(--ink3);margin-top:3px;}
 .spawn-dl-grid{display:grid;grid-template-columns:1fr 140px;gap:5px 10px;align-items:center;margin-top:6px;}
 .spawn-dl-lbl{font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .spawn-dl-inp{padding:5px 8px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;background:var(--cream);color:var(--ink);width:100%;}
@@ -1476,6 +1496,11 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
       <span class="nav-icon" style="font-size:15px;">🔍</span>
       Audit Trail
     </div>
+    <div class="nav-item" id="nav-deviation" onclick="go('deviation')">
+      <span class="nav-icon" style="font-size:15px;">📊</span>
+      Deviation Report
+      <span class="nav-badge hot" id="badge-deviation" style="display:none;"></span>
+    </div>
     <div class="nav-item" id="nav-notifications" onclick="go('notifications')">
       <span class="nav-icon" style="font-size:15px;">🔔</span>
       Notifications
@@ -2111,6 +2136,9 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
           <div style="font-size:11px;color:var(--ink3);margin-bottom:14px;">Drop reference images, inspiration, briefs — anything not tied to a specific flow. Shared with the whole team.</div>
           <div id="scratchpad-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;"></div>
         </div>
+
+        <!-- DEVIATION REPORT -->
+        <div class="panel" id="panel-deviation"></div>
 
         <!-- NOTIFICATIONS -->
         <div class="panel" id="panel-notifications">
@@ -3608,11 +3636,13 @@ function startListeners() {
       if (currentPanel === 'today') renderToday();
       if (currentPanel === 'home') renderHome();
       document.getElementById('badge-today').textContent = TODAY_FLOWS.length;
+      updateDeviationBadge();
       // Re-render after short delay to ensure templates are loaded
       setTimeout(() => {
         if (currentPanel === 'today') renderToday();
         if (currentPanel === 'home') renderHome();
         document.getElementById('badge-today').textContent = TODAY_FLOWS.length;
+        updateDeviationBadge();
         // Start background chat trackers after flows load so loggedInMember is set
         initAllChannelTrackers();
         listenForDMInbox();
@@ -3866,7 +3896,7 @@ function go(panel){
       if(btn)btn.querySelectorAll('span').forEach(s=>s.style.cssText='');
     }
   }
-  const titles={home:'Dashboard',today:"Today's Flows",tasks:'Ad-hoc Tasks',log:'Activity Log',flows:'Flow Templates',analytics:'Analytics',notifications:'Notifications',workload:'Team Workload',regular:'Regular Tasks',weekly:'Weekly Plan',chat:'Team Chat',audit:'Audit Trail',calendar:'Content Calendar',campaigns:'Campaigns',onboarding:'Getting Started',performance:'Post Performance',reels:'Reels & Videos',scratchpad:'Media Scratchpad'};
+  const titles={home:'Dashboard',today:"Today's Flows",tasks:'Ad-hoc Tasks',log:'Activity Log',flows:'Flow Templates',analytics:'Analytics',notifications:'Notifications',workload:'Team Workload',regular:'Regular Tasks',weekly:'Weekly Plan',chat:'Team Chat',audit:'Audit Trail',calendar:'Content Calendar',campaigns:'Campaigns',onboarding:'Getting Started',performance:'Post Performance',reels:'Reels & Videos',scratchpad:'Media Scratchpad',deviation:'Deviation Report'};
   document.getElementById('page-title').textContent=titles[panel]||panel;
   updateMobFab(panel);
   closeSide();
@@ -3883,6 +3913,7 @@ function go(panel){
   if(panel==='performance'){ renderPerformance(); return; }
   if(panel==='reels'){ loadMetaConfig(); renderIgAllPanel(); renderReelsPanel(); return; }
   if(panel==='scratchpad'){ renderScratchpad(); return; }
+  if(panel==='deviation'){ renderDeviationReport(); return; }
   refresh();
 }
 
@@ -4500,22 +4531,39 @@ async function setStepDeadline(flowId, stepIdx, dateVal) {
 }
 
 // ── Check step deadlines on login ─────────
-function checkStepDeadlines() {
+async function checkStepDeadlines() {
   if (!loggedInMember || !TODAY_FLOWS.length) return;
   const today = new Date().toISOString().slice(0, 10);
   const cacheKey = 'sd_dlchk_' + today + '_' + loggedInMember.name;
   if (localStorage.getItem(cacheKey)) return;
-  TODAY_FLOWS.forEach(f => {
-    if (getFlowStatus(f) === 'done') return;
+  // Only managers/head write audit entries to avoid duplicate writes from every member
+  const canWriteAudit = loggedInMember.role === 'manager' || loggedInMember.role === 'head';
+  let flowsDirty = false;
+  for (const f of TODAY_FLOWS) {
+    if (getFlowStatus(f) === 'done') continue;
     const si = f.currentStep;
     const dl = (f.stepDeadlines || [])[si];
-    if (!dl) return;
+    if (!dl) continue;
     const owner = (f.stepOwners || [])[si] || '';
     const isRelevant = loggedInMember.name === owner ||
       loggedInMember.role === 'manager' || loggedInMember.role === 'head';
-    if (!isRelevant) return;
+    if (!isRelevant) continue;
     const daysLeft = Math.ceil((new Date(dl) - new Date(today)) / 86400000);
     const stepName = (f.stepNames || [])[si] || 'Step';
+    // Write one audit entry per missed deadline (dedup by flow+step+deadline key on the flow itself)
+    if (daysLeft < 0 && canWriteAudit) {
+      const missKey = si + '_' + dl;
+      if (!(f._missedDlLogged || {})[missKey]) {
+        const daysOverdue = Math.abs(daysLeft);
+        await auditLog('deadline_missed',
+          `🔴 Deadline missed — "${stepName}" in "${f.title}" was due ${dl}. ${daysOverdue}d overdue. Assignee: ${owner || 'Unassigned'}`,
+          { flowId: f.id, flowTitle: f.title, stepIdx: si, stepName, assignee: owner, deadline: dl, daysOverdue }
+        );
+        if (!f._missedDlLogged) f._missedDlLogged = {};
+        f._missedDlLogged[missKey] = true;
+        flowsDirty = true;
+      }
+    }
     if (daysLeft < 0) {
       pushNotif({ title: `🔴 Overdue — ${f.title}`, body: `"${stepName}" was due ${dl}. ${Math.abs(daysLeft)}d overdue.`, icon:'🔴', type:'blocked', tag:'dl-' + f.id + '-' + si });
     } else if (daysLeft === 0) {
@@ -4523,8 +4571,10 @@ function checkStepDeadlines() {
     } else if (daysLeft === 1) {
       pushNotif({ title: `⏰ Due tomorrow — ${f.title}`, body: `"${stepName}" is due tomorrow.`, icon:'⏰', type:'turn', tag:'dl-' + f.id + '-' + si });
     }
-  });
+  }
+  if (flowsDirty) await fbSaveFlows();
   localStorage.setItem(cacheKey, '1');
+  updateDeviationBadge();
 }
 
 function areSubtasksDone(f, stepIdx) {
@@ -4772,6 +4822,7 @@ function flowCardHTML(f) {
         </div>
         <div class="flow-meta">
           <span class="flow-status-pill ${statusCls}">${statusLabel}</span>
+          ${(() => { const _od = (f.stepDeadlines||[])[curStepIdx]; return (_od && _od < new Date().toISOString().slice(0,10) && status !== 'done') ? '<span class="flow-overdue-badge">🔴 Overdue</span>' : ''; })()}
           <div class="platform-row">${platChips(f.platforms)}</div>
           ${f.startedAt ? `<span class="flow-tat">⏱ ${formatElapsed(f.startedAt)}</span>` : ''}
           ${(() => {
@@ -7955,7 +8006,8 @@ const AUDIT_ICONS = {
   approved:     { icon:'✓', bg:'#EAF3DE' },
   step_flagged: { icon:'🚩', bg:'#FDEAEA' },
   flag_cleared: { icon:'✅', bg:'#EAF3DE' },
-  deadline_set: { icon:'📅', bg:'#FFF7ED' },
+  deadline_set:    { icon:'📅', bg:'#FFF7ED' },
+  deadline_missed: { icon:'🔴', bg:'#FEF2F2' },
 };
 
 async function auditLog(type, description, meta = {}) {
@@ -7985,6 +8037,150 @@ function initAuditListener() {
         .sort((a, b) => (b.ts || 0) - (a.ts || 0));
       if (currentPanel === 'audit') renderAudit();
     }, err => console.warn('Audit listener error:', err));
+}
+
+// ── Deviation badge update ─────────────────
+function updateDeviationBadge() {
+  const badge = document.getElementById('badge-deviation');
+  if (!badge) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const count = TODAY_FLOWS.filter(f => {
+    if (getFlowStatus(f) === 'done') return false;
+    const dl = (f.stepDeadlines || [])[f.currentStep];
+    return dl && dl < today;
+  }).length;
+  badge.textContent = count;
+  badge.style.display = count ? '' : 'none';
+}
+
+// ── Deviation Report ───────────────────────
+function renderDeviationReport() {
+  const panel = document.getElementById('panel-deviation');
+  if (!panel) return;
+
+  if (!loggedInMember || loggedInMember.role === 'member') {
+    panel.innerHTML = `<div class="dev-empty">📊 Deviation Report is only available to managers and head.</div>`;
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  // ── Current overdue items from live flows ─
+  const overdue = [];
+  TODAY_FLOWS.forEach(f => {
+    if (getFlowStatus(f) === 'done') return;
+    const si = f.currentStep;
+    const dl = (f.stepDeadlines || [])[si];
+    if (!dl || dl >= today) return;
+    const daysOverdue = Math.ceil((new Date(today) - new Date(dl)) / 86400000);
+    overdue.push({
+      flowId: f.id, flowTitle: f.title,
+      stepName: (f.stepNames || [])[si] || `Step ${si+1}`,
+      assignee: (f.stepOwners || [])[si] || 'Unassigned',
+      deadline: dl, daysOverdue,
+    });
+  });
+  overdue.sort((a, b) => b.daysOverdue - a.daysOverdue);
+
+  // ── History from audit log ─────────────────
+  const history = AUDIT_ENTRIES
+    .filter(e => e.type === 'deadline_missed')
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+  // ── Per-person summary ─────────────────────
+  const personMap = {};
+  const addPerson = (name, daysOverdue) => {
+    if (!name || name === 'Unassigned') return;
+    if (!personMap[name]) personMap[name] = { count: 0, total: 0 };
+    personMap[name].count++;
+    personMap[name].total += daysOverdue || 0;
+  };
+  overdue.forEach(o => addPerson(o.assignee, o.daysOverdue));
+  history.forEach(e => addPerson(e.meta?.assignee || '', e.meta?.daysOverdue || 0));
+  const persons = Object.entries(personMap)
+    .map(([name, s]) => ({ name, count: s.count, avg: s.count ? Math.round(s.total / s.count) : 0 }))
+    .sort((a, b) => b.count - a.count);
+  const worst = persons[0];
+
+  updateDeviationBadge();
+
+  const fmtDate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
+  const fmtTs = ts => ts ? new Date(ts).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
+
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:var(--ff-head);font-size:18px;font-weight:800;">📊 Deviation Report</div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:2px;">Missed deadlines, delays, and accountability</div>
+      </div>
+      <button class="btn btn-sm" onclick="renderDeviationReport()" style="font-size:11px;">↺ Refresh</button>
+    </div>
+
+    <div class="dev-summary-row">
+      <div class="dev-stat-card">
+        <div class="dev-stat-num" style="color:${overdue.length ? '#dc2626' : '#059669'}">${overdue.length}</div>
+        <div class="dev-stat-lbl">Currently overdue</div>
+      </div>
+      <div class="dev-stat-card">
+        <div class="dev-stat-num">${history.length}</div>
+        <div class="dev-stat-lbl">Missed deadlines (total)</div>
+      </div>
+      <div class="dev-stat-card">
+        <div class="dev-stat-num" style="font-size:18px;">${worst ? worst.name : '—'}</div>
+        <div class="dev-stat-lbl">${worst ? `Most delays (${worst.count})` : 'No delays recorded'}</div>
+      </div>
+    </div>
+
+    <div class="dev-section-title">🔴 Currently Overdue</div>
+    ${overdue.length ? `
+    <div style="overflow-x:auto;">
+      <table class="dev-table">
+        <thead><tr>
+          <th>Flow</th><th>Step</th><th>Assignee</th><th>Deadline</th><th>Days Overdue</th>
+        </tr></thead>
+        <tbody>
+          ${overdue.map(o => `<tr>
+            <td><strong>${o.flowTitle}</strong></td>
+            <td>${o.stepName}</td>
+            <td><span class="av av-sm ${AV[o.assignee]||'av-a'}" style="display:inline-block;vertical-align:middle;margin-right:5px;">${o.assignee!=='Unassigned'?ini(o.assignee):'?'}</span>${o.assignee}</td>
+            <td>${fmtDate(o.deadline)}</td>
+            <td><span class="dev-overdue-days">${o.daysOverdue}d</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : `<div class="dev-empty">✅ No overdue steps right now.</div>`}
+
+    <div class="dev-section-title">📅 History — All Missed Deadlines</div>
+    ${history.length ? `
+    <div style="overflow-x:auto;">
+      <table class="dev-table">
+        <thead><tr>
+          <th>Date Detected</th><th>Flow</th><th>Step</th><th>Assignee</th><th>Deadline</th><th>Delay</th>
+        </tr></thead>
+        <tbody>
+          ${history.map(e => `<tr>
+            <td style="color:var(--ink3);font-size:11px;">${fmtTs(e.ts)}</td>
+            <td><strong>${e.meta?.flowTitle || '—'}</strong></td>
+            <td>${e.meta?.stepName || '—'}</td>
+            <td>${e.meta?.assignee || e.actor || '—'}</td>
+            <td>${fmtDate(e.meta?.deadline)}</td>
+            <td><span class="dev-overdue-days">${e.meta?.daysOverdue ?? '?'}d</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : `<div class="dev-empty" style="padding:16px 0;">No historical missed deadlines yet. They'll appear here automatically.</div>`}
+
+    <div class="dev-section-title">👤 Per-Person Summary</div>
+    ${persons.length ? `
+    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+      ${persons.map((p, i) => `
+        <div class="dev-person-card${i===0?' dev-person-worst':''}">
+          <div class="av ${AV[p.name]||'av-a'}">${ini(p.name)}</div>
+          <div class="dev-person-name">${p.name}</div>
+          <div class="dev-person-stat">${p.count} missed · avg ${p.avg}d late</div>
+        </div>`).join('')}
+    </div>` : `<div class="dev-empty" style="padding:16px 0;">No delay data yet.</div>`}
+  `;
 }
 
 function renderAudit() {
