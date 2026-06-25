@@ -9168,6 +9168,9 @@ async function loadCustomChannels() {
   try {
     const snap = await db.collection('customChannels').get();
     CUSTOM_CHANNELS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // Refresh list and start tracking newly loaded groups
+    renderChannelList();
+    initAllChannelTrackers();
   } catch(e) { console.warn('loadCustomChannels:', e); }
 }
 
@@ -9196,7 +9199,7 @@ function getChannelMembers(roomId) {
 
 function canAccessChannel(roomId) {
   if (!loggedInMember) return false;
-  if (loggedInMember.role === 'head') return true; // Head sees all
+  if (loggedInMember.role === 'head' || loggedInMember.role === 'viewer') return true; // Head/viewer sees all
   if (roomId === 'general') return true;            // General is always open
   const members = getChannelMembers(roomId);
   // If no members set yet, only managers/head can see it
@@ -9455,7 +9458,7 @@ function switchRoom(roomId) {
 let _cmEditing = null; // roomId currently being edited
 
 function openChannelManager(roomId) {
-  _cmEditing = roomId || CHAT_ROOMS.find(r => r.id !== 'general')?.id || CHAT_ROOMS[0].id;
+  _cmEditing = roomId || getAllRooms().find(r => r.id !== 'general')?.id || CHAT_ROOMS[0].id;
   renderChannelManager();
   document.getElementById('channel-manager-modal').style.display = 'flex';
 }
@@ -9465,14 +9468,14 @@ function closeChannelManager() {
 }
 
 function renderChannelManager() {
-  // Tab buttons
-  document.getElementById('cm-tabs').innerHTML = CHAT_ROOMS.filter(r => r.id !== 'general').map(r =>
+  // Tab buttons — include custom groups
+  document.getElementById('cm-tabs').innerHTML = getAllRooms().filter(r => r.id !== 'general').map(r =>
     `<button class="cm-tab${_cmEditing === r.id ? ' active' : ''}" onclick="selectCmChannel('${r.id}')">
       ${r.icon} ${r.label}
     </button>`
   ).join('');
 
-  const room = CHAT_ROOMS.find(r => r.id === _cmEditing);
+  const room = getAllRooms().find(r => r.id === _cmEditing);
   document.getElementById('cm-channel-title').textContent = `${room?.icon || ''} ${room?.label || ''} — Members`;
   document.getElementById('cm-channel-desc').textContent = room?.desc || '';
 
@@ -9482,7 +9485,7 @@ function renderChannelManager() {
 
   document.getElementById('cm-member-list').innerHTML = eligible.map(m => {
     const isMember = currentMembers.includes(m.name);
-    const isHead = m.role === 'Head';
+    const isHead = m.role === 'head';
     return `<div class="cm-member-row${isMember ? ' selected' : ''}" onclick="${isHead ? '' : `toggleCmMember('${m.name}')`}" style="${isHead ? 'opacity:0.6;cursor:default;' : 'cursor:pointer;'}">
       <div class="av av-sm ${AV[m.name]||'av-a'}" style="width:30px;height:30px;font-size:11px;">${ini(m.name)}</div>
       <div class="cm-member-info">
@@ -9513,8 +9516,8 @@ function toggleCmMember(name) {
 async function saveCmChanges() {
   const btn = document.getElementById('cm-save-btn');
   if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
-  // Save all non-general channels
-  for (const r of CHAT_ROOMS.filter(x => x.id !== 'general')) {
+  // Save all non-general channels including custom groups
+  for (const r of getAllRooms().filter(x => x.id !== 'general')) {
     await saveChannelMembers(r.id, CHANNEL_MEMBERS[r.id] || []);
   }
   if (btn) { btn.textContent = 'Saved ✓'; setTimeout(() => { btn.textContent = 'Save Changes'; btn.disabled = false; }, 1500); }

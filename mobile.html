@@ -881,6 +881,8 @@ a{text-decoration:none;color:inherit;}
   min-height:48px;
 }
 .sheet-input:focus{border-color:rgba(0,36,62,0.3);background:var(--white);}
+.mob-ng-emoji{font-size:22px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:2px solid transparent;cursor:pointer;transition:border-color 0.15s;}
+.mob-ng-emoji.selected{border-color:var(--navy);background:var(--cream2);}
 .sheet-textarea{resize:none;min-height:88px;line-height:1.5;}
 .sheet-select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -1298,6 +1300,43 @@ a{text-decoration:none;color:inherit;}
   <div class="sheet-actions">
     <button class="sheet-btn-cancel" onclick="closeSheet()">Cancel</button>
     <button class="sheet-btn-primary" id="ni-save-btn" onclick="saveNewIdea()">Save Idea</button>
+  </div>
+</div>
+
+<!-- New Group Sheet -->
+<div class="sheet" id="sheet-new-group">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title">New Group</span>
+    <button class="sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:14px;">
+    <div class="sheet-field" style="padding:0;">
+      <label class="sheet-label">Group Name <span style="color:var(--coral);">*</span></label>
+      <input id="mob-ng-name" type="text" class="sheet-input" maxlength="30" placeholder="e.g. Design Team"/>
+    </div>
+    <div class="sheet-field" style="padding:0;">
+      <label class="sheet-label">Description <span style="font-weight:400;color:var(--ink3);font-size:11px;">(optional)</span></label>
+      <input id="mob-ng-desc" type="text" class="sheet-input" maxlength="80" placeholder="What's this group for?"/>
+    </div>
+    <div class="sheet-field" style="padding:0;">
+      <label class="sheet-label">Icon</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="mob-ng-emoji-row">
+        <span class="mob-ng-emoji selected" onclick="selectMobNgEmoji('💬',this)">💬</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('🔥',this)">🔥</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('💡',this)">💡</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('📢',this)">📢</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('🎯',this)">🎯</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('✅',this)">✅</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('⚡',this)">⚡</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('🚀',this)">🚀</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('🎨',this)">🎨</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('📊',this)">📊</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('🤝',this)">🤝</span>
+        <span class="mob-ng-emoji" onclick="selectMobNgEmoji('📱',this)">📱</span>
+      </div>
+    </div>
+    <button class="btn btn-coral" onclick="createMobNewGroup()">Create Group</button>
   </div>
 </div>
 
@@ -2862,19 +2901,41 @@ function openChatRoom(roomId, title, type, subtitle) {
     });
 }
 
+let _mobNgEmoji = '💬';
+
 function openMobNewGroup() {
-  const name = prompt('Group name:');
-  if (!name || !name.trim()) return;
+  _mobNgEmoji = '💬';
+  const nameEl = document.getElementById('mob-ng-name');
+  const descEl = document.getElementById('mob-ng-desc');
+  if (nameEl) nameEl.value = '';
+  if (descEl) descEl.value = '';
+  // Reset emoji selection
+  document.querySelectorAll('.mob-ng-emoji').forEach(el => {
+    el.classList.toggle('selected', el.textContent === '💬');
+  });
+  openSheet('sheet-new-group');
+}
+
+function selectMobNgEmoji(e, el) {
+  _mobNgEmoji = e;
+  document.querySelectorAll('.mob-ng-emoji').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function createMobNewGroup() {
+  const name = (document.getElementById('mob-ng-name')?.value || '').trim();
+  if (!name) { showToast('Enter a group name.', 'warn'); return; }
+  const desc = (document.getElementById('mob-ng-desc')?.value || '').trim();
   const id = 'grp_' + name.toLowerCase().replace(/[^a-z0-9]/g,'_').slice(0,20) + '_' + Date.now().toString(36);
-  const channel = { id, label: name.trim(), icon: '💬', desc: 'Custom group', custom: true };
-  if (db) {
-    db.collection('customChannels').doc(id).set(channel).then(() => {
-      CHAT_ROOMS.push(channel);
-      renderChatList();
-      initMobChannelTrackers();
-      showToast('Group created!', 'ok');
-    }).catch(e => showToast('Error: ' + e.message, 'err'));
-  }
+  const channel = { id, label: name, icon: _mobNgEmoji, desc: desc || 'Custom group', custom: true, createdBy: currentMember?.name || '' };
+  if (!db) { showToast('Not connected.', 'err'); return; }
+  db.collection('customChannels').doc(id).set(channel).then(() => {
+    CHAT_ROOMS.push(channel);
+    closeSheet();
+    renderChatList();
+    initMobChannelTrackers();
+    showToast(`Group "${name}" created!`, 'ok');
+  }).catch(e => showToast('Error: ' + e.message, 'err'));
 }
 
 function closeChatRoom() {
