@@ -1304,6 +1304,20 @@ a{text-decoration:none;color:inherit;}
   </div>
 </div>
 
+<!-- Rename Flow Sheet -->
+<div class="sheet" id="sheet-rename-flow">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title">Rename Flow</span>
+    <button class="sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:14px;">
+    <input id="mob-rename-input" type="text" class="sheet-input" maxlength="80" placeholder="Flow name"/>
+    <input type="hidden" id="mob-rename-flow-id"/>
+    <button class="btn btn-coral" onclick="saveMobRename()">Save</button>
+  </div>
+</div>
+
 <!-- New Group Sheet -->
 <div class="sheet" id="sheet-new-group">
   <div class="sheet-handle"></div>
@@ -1444,8 +1458,8 @@ const db   = firebase.firestore();
 /* ════════════════════════════════
    DATA CONSTANTS
 ════════════════════════════════ */
-const MEMBERS=[{name:'Akshay',role:'head',av:'av-c'},{name:'Chirag',role:'manager',av:'av-a'},{name:'Anamika',role:'manager',av:'av-b'},{name:'Shivam',role:'member',av:'av-d'},{name:'Sandeep',role:'member',av:'av-e'},{name:'Shantanu',role:'member',av:'av-a'},{name:'Deepanshu',role:'member',av:'av-c'},{name:'Harsh',role:'member',av:'av-d'},{name:'Pawan',role:'member',av:'av-b'},{name:'Ria',role:'member',av:'av-b'},{name:'Isha',role:'member',av:'av-e'},{name:'Tamanna',role:'member',av:'av-a'},{name:'Rochelle',role:'approver',av:'av-f'},{name:'Anirudh',role:'approver',av:'av-g'},{name:'Susant',role:'approver',av:'av-h'},{name:'Nasita',role:'approver',av:'av-i'},{name:'Sakshi',role:'member',av:'av-d'}];
-const EMAIL_TO_MEMBER={'akshay.raje@oneinsure.com':{name:'Akshay',role:'head',av:'av-c'},'chirag.bhoir@oneinsure.com':{name:'Chirag',role:'manager',av:'av-a'},'anamika.patil@oneinsure.com':{name:'Anamika',role:'manager',av:'av-b'},'shivam.kumar@oneinsure.com':{name:'Shivam',role:'member',av:'av-d'},'sandeep.gawade@oneinsure.com':{name:'Sandeep',role:'member',av:'av-e'},'shantanu.tiwari@oneinsure.com':{name:'Shantanu',role:'member',av:'av-a'},'deepanshu.sharma@oneinsure.com':{name:'Deepanshu',role:'member',av:'av-c'},'harsh.das@oneinsure.com':{name:'Harsh',role:'member',av:'av-d'},'pawan.sonar@oneinsure.com':{name:'Pawan',role:'member',av:'av-b'},'ria.panchal@oneinsure.com':{name:'Ria',role:'member',av:'av-b'},'isha.upadhye@oneinsure.com':{name:'Isha',role:'member',av:'av-e'},'tamanna.shaikh@oneinsure.com':{name:'Tamanna',role:'member',av:'av-a'},'rochelle.mascarenhas@oneinsure.com':{name:'Rochelle',role:'approver',av:'av-f'},'anirudh.baardwaj@oneinsure.com':{name:'Anirudh',role:'approver',av:'av-g'},'susant.padhi@oneinsure.com':{name:'Susant',role:'approver',av:'av-h'},'nasita.londhe@oneinsure.com':{name:'Nasita',role:'approver',av:'av-i'},'sakshi.bhadarge@oneinsure.com':{name:'Sakshi',role:'member',av:'av-d'},'admin@oneinsure.com':{name:'Admin',role:'viewer',av:'av-c'}};
+const MEMBERS=[{name:'Akshay',role:'head',av:'av-c'},{name:'Chirag',role:'manager',av:'av-a'},{name:'Anamika',role:'manager',av:'av-b'},{name:'Shivam',role:'member',av:'av-d'},{name:'Sandip',role:'member',av:'av-e'},{name:'Shantanu',role:'member',av:'av-a'},{name:'Deepanshu',role:'member',av:'av-c'},{name:'Harsh',role:'member',av:'av-d'},{name:'Pawan',role:'member',av:'av-b'},{name:'Ria',role:'member',av:'av-b'},{name:'Isha',role:'member',av:'av-e'},{name:'Tamanna',role:'member',av:'av-a'},{name:'Rochelle',role:'approver',av:'av-f'},{name:'Anirudh',role:'approver',av:'av-g'},{name:'Susant',role:'approver',av:'av-h'},{name:'Nasita',role:'approver',av:'av-i'},{name:'Sakshi',role:'member',av:'av-d'}];
+const EMAIL_TO_MEMBER={'akshay.raje@oneinsure.com':{name:'Akshay',role:'head',av:'av-c'},'chirag.bhoir@oneinsure.com':{name:'Chirag',role:'manager',av:'av-a'},'anamika.patil@oneinsure.com':{name:'Anamika',role:'manager',av:'av-b'},'shivam.kumar@oneinsure.com':{name:'Shivam',role:'member',av:'av-d'},'sandip.gawde@oneinsure.com':{name:'Sandip',role:'member',av:'av-e'},'shantanu.tiwari@oneinsure.com':{name:'Shantanu',role:'member',av:'av-a'},'deepanshu.sharma@oneinsure.com':{name:'Deepanshu',role:'member',av:'av-c'},'harsh.das@oneinsure.com':{name:'Harsh',role:'member',av:'av-d'},'pawan.sonar@oneinsure.com':{name:'Pawan',role:'member',av:'av-b'},'ria.panchal@oneinsure.com':{name:'Ria',role:'member',av:'av-b'},'isha.upadhye@oneinsure.com':{name:'Isha',role:'member',av:'av-e'},'tamanna.shaikh@oneinsure.com':{name:'Tamanna',role:'member',av:'av-a'},'rochelle.mascarenhas@oneinsure.com':{name:'Rochelle',role:'approver',av:'av-f'},'anirudh.baardwaj@oneinsure.com':{name:'Anirudh',role:'approver',av:'av-g'},'susant.padhi@oneinsure.com':{name:'Susant',role:'approver',av:'av-h'},'nasita.londhe@oneinsure.com':{name:'Nasita',role:'approver',av:'av-i'},'sakshi.bhadarge@oneinsure.com':{name:'Sakshi',role:'member',av:'av-d'},'admin@oneinsure.com':{name:'Admin',role:'viewer',av:'av-c'}};
 const CHAT_ROOMS=[{id:'general',label:'General',icon:'🌐',desc:'Team announcements & chat'},{id:'editing',label:'Editing',icon:'✂️',desc:'Video & image editing'},{id:'ideas',label:'Ideas',icon:'💡',desc:'Brainstorming & concepts'},{id:'compliance',label:'Compliance',icon:'⚖️',desc:'Approvals & compliance'},{id:'tasks',label:'Tasks',icon:'✅',desc:'Task coordination'},{id:'leads',label:'Leads',icon:'🎯',desc:'Leads & pipeline'}];
 const APPROVERS=[
   {name:'Akshay',  av:'av-c',email:'akshay.raje@oneinsure.com'},
@@ -2555,12 +2569,17 @@ function getMobDriveIcon(mimeType) {
   return '📄';
 }
 
-async function renameMobFlow(flowId) {
+function renameMobFlow(flowId) {
   const f = allFlows.find(x => x.id === flowId);
   if (!f) return;
-  const newName = prompt('Rename flow:', f.title || '');
-  if (newName === null) return;
-  const trimmed = newName.trim();
+  document.getElementById('mob-rename-flow-id').value = flowId;
+  document.getElementById('mob-rename-input').value = f.title || '';
+  openSheet('sheet-rename-flow');
+}
+
+async function saveMobRename() {
+  const flowId = document.getElementById('mob-rename-flow-id').value;
+  const trimmed = (document.getElementById('mob-rename-input').value || '').trim();
   if (!trimmed) { showToast('Name cannot be empty.', 'warn'); return; }
   try {
     const snap = await db.collection('flows').doc('active').get();
