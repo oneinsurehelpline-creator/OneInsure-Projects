@@ -4097,6 +4097,14 @@ function renderHome() {
   `;
 }
 
+// Who can spawn flows and edit flow templates
+const FLOW_MANAGERS = ['Anamika', 'Chirag', 'Shivam'];
+function canManageFlows() {
+  if (!loggedInMember) return false;
+  if (loggedInMember.role === 'manager' || loggedInMember.role === 'head') return true;
+  return FLOW_MANAGERS.includes(loggedInMember.name);
+}
+
 function renderToday(){
   const today=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
   // Show active flow count, not just today's date — flows persist until completed
@@ -4107,10 +4115,9 @@ function renderToday(){
       ? `${today} · ${activeCount} active${doneCount ? ', ' + doneCount + ' done' : ''}`
       : today;
 
-  // Show/hide spawn button — managers and head only
-  const isManager = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
+  // Show/hide spawn button
   const spawnBtn = document.getElementById('spawn-flows-btn');
-  if (spawnBtn) spawnBtn.style.display = isManager ? '' : 'none';
+  if (spawnBtn) spawnBtn.style.display = canManageFlows() ? '' : 'none';
 
   const done=TODAY_FLOWS.filter(f=>getFlowStatus(f)==='done').length;
   const active=TODAY_FLOWS.filter(f=>getFlowStatus(f)==='active').length;
@@ -4333,8 +4340,8 @@ function getTemplateSteps(templateId) {
 }
 
 async function spawnFlows(template) {
-  if (!loggedInMember || (loggedInMember.role !== 'manager' && loggedInMember.role !== 'head')) {
-    toast('Only managers and head can spawn flows.', 'warn'); return;
+  if (!canManageFlows()) {
+    toast('You do not have permission to spawn flows.', 'warn'); return;
   }
   // If a specific template passed (e.g. from templates panel), spawn directly via modal
   openSpawnModal(template);
@@ -6165,7 +6172,7 @@ function pushFromLog(){
 let _editingFlowId = null;
 
 function renderFlowTemplates() {
-  const canEdit = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
+  const canEdit = canManageFlows();
 
   const newBtn = document.getElementById('new-flow-btn');
   if (newBtn) newBtn.style.display = canEdit ? '' : 'none';
