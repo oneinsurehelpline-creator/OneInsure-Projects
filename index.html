@@ -3167,6 +3167,7 @@ function applyLoggedInUser() {
   // Map head→manager for app role logic, but show Head chip
   const appRole = loggedInMember.role === 'head' ? 'manager' : loggedInMember.role === 'approver' ? 'viewer' : loggedInMember.role;
   setRole(appRole);
+  loadNotifData(); // reload with user-specific localStorage key now that loggedInMember is set
   const chip = document.getElementById('role-chip');
   if (chip) {
     const labels = { head:'Head', manager:'Manager', member:'Member', viewer:'Viewer', approver:'Approver' };
@@ -3662,6 +3663,7 @@ function startListeners() {
         // Start background chat trackers after flows load so loggedInMember is set
         initAllChannelTrackers();
         listenForDMInbox();
+        listenForMyNotifs();
         // Check step deadlines once per day after flows are loaded
         checkStepDeadlines();
       }, 800);
@@ -10662,14 +10664,52 @@ let morningTimerId = null, eodTimerId = null;
 let prevFlowSteps = {};
 let isFirstFlowLoad = true;
 
+// User-specific localStorage key so different users on the same browser don't share history
+function _notifKey() { return 'sd_notif_hist_' + (loggedInMember?.name || 'anon'); }
+
 function loadNotifData() {
   try {
-    NOTIF_HISTORY = JSON.parse(localStorage.getItem('sd_notif_hist') || '[]');
+    NOTIF_HISTORY = JSON.parse(localStorage.getItem(_notifKey()) || '[]');
     const p = JSON.parse(localStorage.getItem('sd_notif_prefs') || 'null');
     if (p) NOTIF_PREFS = p;
   } catch(e) {}
   // Show ticker for any unread notifications carried over from previous session
   setTimeout(updateNotifTicker, 500);
+}
+
+// Write a cross-user notification to Firestore so the recipient picks it up when they open the app
+async function sendFirestoreNotif(toName, { title, body, icon = '📋', type = 'info', tag = null } = {}) {
+  if (!fbReady || !db || !toName) return;
+  if (toName === loggedInMember?.name) return; // local pushNotif() handles same-user case
+  try {
+    await db.collection('user_notifs').add({
+      to: toName, title, body, icon, type, tag,
+      ts: Date.now(),
+      sentBy: loggedInMember?.name || 'System',
+      read: false,
+    });
+  } catch(e) { console.warn('sendFirestoreNotif failed:', e); }
+}
+
+let _myNotifsUnsub = null;
+// Listen for notifications sent to the current user from other users' browsers
+function listenForMyNotifs() {
+  if (!fbReady || !db || !loggedInMember) return;
+  if (_myNotifsUnsub) return;
+  const cutoff = Date.now() - 48 * 3600 * 1000; // only last 48 hours
+  _myNotifsUnsub = db.collection('user_notifs')
+    .where('to', '==', loggedInMember.name)
+    .where('read', '==', false)
+    .where('ts', '>', cutoff)
+    .onSnapshot(snap => {
+      snap.docChanges().forEach(change => {
+        if (change.type !== 'added') return;
+        const n = change.doc.data();
+        if (n.sentBy === loggedInMember.name) return; // skip self-sent
+        pushNotif({ title: n.title, body: n.body, icon: n.icon, type: n.type, tag: n.tag });
+        change.doc.ref.update({ read: true }).catch(() => {});
+      });
+    }, err => console.warn('listenForMyNotifs:', err));
 }
 
 async function saveNotifPrefs() {
@@ -10819,7 +10859,7 @@ function dismissNotifTicker() {
   if (ticker) ticker.classList.remove('show');
   // Mark all as read
   NOTIF_HISTORY.forEach(n => { n.read = true; });
-  localStorage.setItem('sd_notif_hist', JSON.stringify(NOTIF_HISTORY));
+  localStorage.setItem(_notifKey(), JSON.stringify(NOTIF_HISTORY));
   const pip = document.getElementById('notif-pip');
   if (pip) pip.classList.remove('show');
   document.getElementById('badge-notif').textContent = '';
@@ -10841,7 +10881,7 @@ function pushNotif({ title, body, icon='📋', type='info', tag=null, silent=fal
   const entry = { id: Date.now(), title, body, icon, type, time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}), read: false };
   NOTIF_HISTORY.unshift(entry);
   if (NOTIF_HISTORY.length > 50) NOTIF_HISTORY = NOTIF_HISTORY.slice(0, 50);
-  localStorage.setItem('sd_notif_hist', JSON.stringify(NOTIF_HISTORY));
+  localStorage.setItem(_notifKey(), JSON.stringify(NOTIF_HISTORY));
 
   // Update pip
   const pip = document.getElementById('notif-pip');
@@ -10886,12 +10926,14 @@ function pushNotif({ title, body, icon='📋', type='info', tag=null, silent=fal
 // ── Specific notification triggers ─────────
 function notifyMyTurn(stepName, flowTitle, owner) {
   if (!NOTIF_PREFS.turn) return;
-  pushNotif({
-    title: `📲 Your turn — ${stepName}`,
-    body: `"${flowTitle}" is now waiting on you.`,
-    icon: '📲', type: 'turn', tag: 'turn-' + flowTitle,
-  });
-  // Email only goes to approvers — step-advance emails for regular members use in-app notifications only
+  const notif = { title: `📲 Your turn — ${stepName}`, body: `"${flowTitle}" is now waiting on you.`, icon: '📲', type: 'turn', tag: 'turn-' + flowTitle };
+  if (owner && owner !== loggedInMember?.name) {
+    // Recipient is someone else — write to Firestore so their browser picks it up
+    sendFirestoreNotif(owner, notif);
+  } else {
+    // It's the current user's own step (or no owner set)
+    pushNotif(notif);
+  }
 }
 
 function notifyBlocked(taskTitle, assignee) {
@@ -10914,12 +10956,12 @@ function notifyFlowPushed(stepName, flowTitle, pushedBy) {
 
 function notifyTaskAssigned(taskTitle, assignee) {
   if (!NOTIF_PREFS.assigned) return;
-  pushNotif({
-    title: `📋 New task assigned to ${assignee}`,
-    body: taskTitle,
-    icon: '📋', type: 'assigned',
-  });
-  // Email reserved for approvers only — task assignments use in-app notifications
+  const notif = { title: `📋 New task assigned to you`, body: taskTitle, icon: '📋', type: 'assigned' };
+  if (assignee && assignee !== loggedInMember?.name) {
+    sendFirestoreNotif(assignee, notif);
+  } else {
+    pushNotif(notif);
+  }
 }
 
 function notifyMorning() {
@@ -11089,7 +11131,7 @@ function testNotification() {
 
 function clearNotifHistory() {
   NOTIF_HISTORY = [];
-  localStorage.setItem('sd_notif_hist', '[]');
+  localStorage.setItem(_notifKey(), '[]');
   const pip = document.getElementById('notif-pip');
   if (pip) pip.classList.remove('show');
   document.getElementById('badge-notif').textContent = '0';
