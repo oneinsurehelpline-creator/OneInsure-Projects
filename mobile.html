@@ -1843,7 +1843,21 @@ function stopListeners() {
 function startListeners() {
   let _prevMyTurnIds = new Set();
   flowsUnsub = db.collection('flows').doc('active').onSnapshot(snap => {
-    allFlows = snap.exists ? (snap.data().flows || []).map(deserializeFlowFromFirestore) : [];
+    const rawFlows = snap.exists ? (snap.data().flows || []).map(deserializeFlowFromFirestore) : [];
+    // Members only see flows they are a part of; managers/head see all
+    const r = currentMember?.role;
+    if (r === 'head' || r === 'manager') {
+      allFlows = rawFlows;
+    } else if (r === 'member') {
+      const name = currentMember?.name || '';
+      allFlows = rawFlows.filter(f =>
+        (f.stepOwners || []).includes(name) ||
+        (f.approvalRoutees || []).includes(name) ||
+        Object.values(f.subAssignees || {}).includes(name)
+      );
+    } else {
+      allFlows = rawFlows;
+    }
     renderFlows();
     updateTodayStats();
     mobCheckStepDeadlines();
