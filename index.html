@@ -163,6 +163,16 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .flow-tab-badge.done{background:var(--green-mid,#22c55e);}
 .completed-flows-header{display:flex;align-items:center;gap:10px;padding:8px 0 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink3);}
 .completed-flows-header::after{content:'';flex:1;height:1px;background:var(--border);}
+.flow-bucket{margin-bottom:28px;}
+.flow-bucket-header{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink3);padding:6px 0 10px;border-bottom:2px solid var(--border2);margin-bottom:4px;}
+.flow-bucket-count{background:var(--cream3);color:var(--ink3);font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;}
+.flow-bucket-cards{display:flex;flex-direction:column;}
+/* ── Flow type filter tabs ── */
+.flow-type-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.ftype-tab{display:flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);font-size:12px;font-weight:600;cursor:pointer;color:var(--ink3);transition:all 0.13s;white-space:nowrap;}
+.ftype-tab:hover{border-color:var(--ink3);color:var(--ink);}
+.ftype-tab.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.ftype-tab .ftype-count{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(0,0,0,0.12);}
 .flow-card{background:var(--white);border:1px solid rgba(0,0,0,0.10);border-left-width:8px;border-top-width:4px;border-radius:var(--radxl);overflow:hidden;transition:box-shadow 0.2s;box-shadow:0 3px 14px rgba(0,0,0,0.07);}
 .flow-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.13);}
 .my-turn-card{border-color:var(--amber);border-width:2px;border-left-width:8px;border-top-width:4px;box-shadow:0 0 0 3px rgba(245,158,11,0.12),0 3px 14px rgba(0,0,0,0.07);}
@@ -203,6 +213,25 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .task-card:hover{border-color:var(--border2);box-shadow:var(--shadow);}
 .task-card.sel{border-color:var(--coral);border-width:1.5px;}
 .task-card.blocked{border-left:3px solid var(--red);}
+/* ── Kanban board ── */
+.kanban-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:12px;align-items:flex-start;}
+.kanban-col{flex:0 0 220px;min-width:220px;background:var(--cream);border-radius:var(--radl);overflow:hidden;}
+.kanban-col-header{display:flex;align-items:center;gap:6px;padding:9px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid var(--border);}
+.kanban-col-body{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:80px;}
+.kanban-col-count{background:rgba(0,0,0,0.08);color:inherit;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:auto;}
+.kanban-col.k-todo .kanban-col-header{background:#f0f4ff;color:#3b5bdb;}
+.kanban-col.k-inprogress .kanban-col-header{background:#fff8e1;color:#e67700;}
+.kanban-col.k-review .kanban-col-header{background:#f3eeff;color:#7048e8;}
+.kanban-col.k-blocked .kanban-col-header{background:#fff0f0;color:#c92a2a;}
+.kanban-col.k-done .kanban-col-header{background:#ebfbee;color:#2f9e44;}
+.k-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 11px;cursor:pointer;transition:box-shadow 0.12s;font-size:12px;}
+.k-card:hover{box-shadow:var(--shadow);border-color:var(--border2);}
+.k-card.blocked{border-left:3px solid var(--red);}
+.k-card-title{font-size:12px;font-weight:600;line-height:1.35;margin-bottom:7px;font-family:var(--ff-head);}
+.k-card-meta{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.task-view-toggle{display:flex;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--cream);}
+.tvt-btn{padding:5px 12px;background:none;border:none;cursor:pointer;font-size:11px;font-weight:600;color:var(--ink3);transition:background 0.13s;}
+.tvt-btn.active{background:var(--white);color:var(--ink);}
 .tc-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
 .tc-title{font-size:13px;font-weight:500;flex:1;line-height:1.35;font-family:var(--ff-head);}
 .sp{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;letter-spacing:0.03em;}
@@ -592,7 +621,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .cnt-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
 .cnt-body{flex:1;min-width:0;}
 .cnt-title{font-size:12px;font-weight:700;color:rgba(255,255,255,0.55);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cnt-msg{font-size:14px;font-weight:500;color:#fff;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.cnt-msg{font-size:14px;font-weight:500;color:#fff;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;}
 .cnt-close{flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.4);font-size:16px;cursor:pointer;padding:0;line-height:1;margin-top:1px;}
 .cnt-close:hover{color:#fff;}
 /* ── DASHBOARD ── */
@@ -619,37 +648,46 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .home-action-badge.amber{background:#d97706;}
 .home-empty-row{font-size:13px;color:var(--ink3);padding:10px 0;text-align:center;}
 /* ── CHAT ── */
-/* ── CHAT PANEL (WhatsApp-style) ── */
-.chat-panel{display:flex;flex:1;min-height:0;height:100%;gap:0;background:#e5ddd5;border-radius:var(--radl);overflow:hidden;border:1px solid var(--border);}
-.chat-sidebar{width:300px;flex-shrink:0;background:#fff;display:flex;flex-direction:column;padding:0;overflow:hidden;border-right:1px solid #e9edef;}
-.chat-sidebar-header{background:#128C7E;padding:13px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.chat-sidebar-header-title{font-size:16px;font-weight:700;color:#fff;flex:1;}
+.chat-panel{display:flex;flex:1;min-height:0;height:100%;background:#efeae2;border-radius:var(--radl);overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 16px rgba(0,0,0,0.07);}
+
+/* Sidebar */
+.chat-sidebar{width:315px;flex-shrink:0;background:#fff;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #e9edef;}
+.chat-sidebar-header{background:#128C7E;padding:14px 16px 12px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.chat-sidebar-header-title{font-size:17px;font-weight:700;color:#fff;flex:1;letter-spacing:-0.01em;}
+.chat-sidebar-search{padding:8px 12px;background:#f0f2f5;border-bottom:1px solid #e9edef;flex-shrink:0;}
+.chat-sidebar-search-inner{display:flex;align-items:center;gap:8px;background:#fff;border-radius:22px;padding:7px 13px;border:1px solid #e9edef;}
+.chat-sidebar-search-inner input{flex:1;border:none;outline:none;font-size:13px;font-family:var(--ff-body);color:#111;background:transparent;}
+.chat-sidebar-search-inner input::placeholder{color:#aab5bc;}
+.chat-sidebar-search-inner svg,.chat-sidebar-search-inner .chat-search-icon{flex-shrink:0;color:#aab5bc;}
 .chat-sidebar-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#e9edef transparent;}
 .chat-sidebar-scroll::-webkit-scrollbar{width:4px;}
 .chat-sidebar-scroll::-webkit-scrollbar-thumb{background:#e9edef;border-radius:4px;}
-.chat-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8696a0;padding:10px 16px 4px;background:#f0f2f5;}
-/* WhatsApp-style contact/channel row */
-.chat-room-row{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid #f5f5f5;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
+.chat-section-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8696a0;padding:10px 16px 4px;background:#f0f2f5;}
+.chat-room-row{display:flex;align-items:center;gap:11px;padding:9px 14px;cursor:pointer;transition:background 0.12s;border-bottom:1px solid #f5f5f5;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
 .chat-room-row:hover{background:#f5f5f5;}
 .chat-room-row.active{background:#ebebeb;}
 .chat-room-row.muted .chat-room-name{opacity:0.55;}
-.chat-room-avatar{width:40px;height:40px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:#fff;font-weight:700;}
+.chat-room-avatar{width:42px;height:42px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff;font-weight:700;}
 .chat-room-body{flex:1;min-width:0;}
 .chat-room-name{font-size:14px;font-weight:600;color:#111;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chat-room-preview{font-size:12px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chat-room-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
 .chat-room-time{font-size:11px;color:#667781;white-space:nowrap;}
 .chat-room-badge{background:#25D366;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;}
-/* Keep legacy classes used in DM list */
-.chat-dm-btn{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid #f0f0f0;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
+.chat-dm-btn{display:flex;align-items:center;gap:11px;padding:8px 14px;cursor:pointer;transition:background 0.12s;border-bottom:1px solid #f5f5f5;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
 .chat-dm-btn:hover{background:#f5f5f5;}
 .chat-dm-btn.active{background:#ebebeb;}
-.chat-dm-unread{background:var(--coral);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;}
+.chat-dm-unread{background:#25D366;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+/* Online status dot on DM avatar */
+.chat-av-online{position:relative;flex-shrink:0;}
+.chat-av-online::after{content:'';position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#25D366;border:2px solid #fff;}
+.chat-av-online.offline::after{background:#aab5bc;}
 .chat-tick{font-size:12px;margin-left:3px;letter-spacing:-1px;color:#8696a0;}
 .chat-tick.delivered{color:#8696a0;}
-.chat-tick.read{color:#53bdeb;opacity:1;}
+.chat-tick.read{color:#53bdeb;}
 .room-mute-btn{background:none;border:none;cursor:pointer;font-size:11px;opacity:0.4;padding:0 2px;margin-left:auto;flex-shrink:0;transition:opacity 0.13s;}
 .room-mute-btn:hover{opacity:1;}
+/* Message-area search bar (teal stripe, toggled via .show) */
 .chat-search-bar{padding:8px 14px;border-bottom:1px solid #e9edef;background:#128C7E;display:none;}
 .chat-search-bar.show{display:flex;gap:8px;align-items:center;}
 .chat-search-input{flex:1;padding:7px 12px;border:none;border-radius:20px;font-size:13px;font-family:var(--ff-body);outline:none;background:#fff;color:#111;}
@@ -658,82 +696,93 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .chat-search-count{font-size:11px;color:rgba(255,255,255,0.8);white-space:nowrap;}
 .chat-msg.search-hidden{display:none;}
 .chat-msg.search-match .chat-bubble{outline:2px solid #25D366;outline-offset:2px;}
-.typing-indicator{padding:4px 16px 2px;font-size:11px;color:#8696a0;min-height:20px;display:flex;align-items:center;gap:5px;}
+/* Typing indicator */
+.typing-indicator{padding:4px 16px 2px;font-size:11px;color:#8696a0;min-height:20px;display:flex;align-items:center;gap:5px;background:transparent;}
 .typing-dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:#8696a0;animation:tdot 1.2s infinite;margin:0 1px;}
 .typing-dots span:nth-child(2){animation-delay:0.2s;}
 .typing-dots span:nth-child(3){animation-delay:0.4s;}
 @keyframes tdot{0%,80%,100%{transform:scale(0.7);opacity:0.4;}40%{transform:scale(1);opacity:1;}}
-.chat-main{flex:1;display:flex;flex-direction:column;min-width:0;background:#e5ddd5;}
-/* WhatsApp-style chat header */
-.chat-header{padding:10px 16px;border-bottom:none;background:#128C7E;display:flex;align-items:center;gap:12px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
-.chat-header-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:700;flex-shrink:0;}
+/* Main area */
+.chat-main{flex:1;display:flex;flex-direction:column;min-width:0;background:#efeae2;position:relative;}
+.chat-header{padding:10px 16px;background:#128C7E;display:flex;align-items:center;gap:12px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:2;}
+.chat-header-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:700;flex-shrink:0;}
 .chat-header-info{flex:1;min-width:0;}
 .chat-header-title{font-size:15px;font-weight:700;color:#fff;line-height:1.2;}
-.chat-header-meta{font-size:11px;color:rgba(255,255,255,0.75);}
-.chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding:10px 16px 14px;}
-.chat-msg{display:flex;gap:8px;align-items:flex-end;margin-bottom:2px;}
+.chat-header-meta{font-size:11px;color:rgba(255,255,255,0.75);margin-top:1px;}
+/* Message scroll area */
+.chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:1px;padding:12px 16px 10px;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,0.12) transparent;}
+.chat-messages::-webkit-scrollbar{width:5px;}
+.chat-messages::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.14);border-radius:4px;}
+/* Scroll-to-bottom button */
+.chat-scroll-bottom{position:absolute;bottom:82px;right:18px;width:38px;height:38px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.24);cursor:pointer;font-size:17px;color:#128C7E;display:none;align-items:center;justify-content:center;z-index:10;transition:box-shadow 0.13s,transform 0.13s;}
+.chat-scroll-bottom.show{display:flex;}
+.chat-scroll-bottom:hover{box-shadow:0 4px 16px rgba(0,0,0,0.28);transform:translateY(-1px);}
+/* Messages */
+.chat-msg{display:flex;gap:7px;align-items:flex-end;margin-bottom:2px;position:relative;}
 .chat-msg.mine{flex-direction:row-reverse;}
 .chat-msg.consecutive{margin-bottom:1px;}
 .chat-msg.consecutive .chat-av-wrap{visibility:hidden;}
-.chat-av-wrap{width:30px;height:30px;flex-shrink:0;}
-.chat-bubble-wrap{display:flex;flex-direction:column;max-width:65%;gap:1px;}
+.chat-av-wrap{width:32px;height:32px;flex-shrink:0;}
+.chat-bubble-wrap{display:flex;flex-direction:column;max-width:65%;gap:1px;position:relative;}
 .chat-msg.mine .chat-bubble-wrap{align-items:flex-end;}
-/* WhatsApp-style bubbles */
-.chat-bubble{padding:7px 12px 5px;font-size:13.5px;line-height:1.5;word-break:break-word;position:relative;}
-.chat-msg:not(.mine) .chat-bubble{background:#fff;color:#111;border-radius:0 12px 12px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.12);}
-.chat-msg.mine .chat-bubble{background:#dcf8c6;color:#111;border-radius:12px 12px 0 12px;box-shadow:0 1px 2px rgba(0,0,0,0.12);}
+/* Bubbles */
+.chat-bubble{padding:8px 13px 6px;font-size:13.5px;line-height:1.5;word-break:break-word;position:relative;animation:msgIn 0.14s ease-out;}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px) scale(0.98);}to{opacity:1;transform:none;}}
+.chat-msg:not(.mine) .chat-bubble{background:#fff;color:#111;border-radius:0 12px 12px 12px;box-shadow:0 1px 3px rgba(0,0,0,0.09);}
+.chat-msg.mine .chat-bubble{background:#d9fdd3;color:#111;border-radius:12px 12px 0 12px;box-shadow:0 1px 3px rgba(0,0,0,0.09);}
 .chat-msg.consecutive:not(.mine) .chat-bubble{border-radius:4px 12px 12px 4px;}
 .chat-msg.consecutive.mine .chat-bubble{border-radius:12px 4px 4px 12px;}
-.chat-sender-name{font-size:11px;font-weight:700;color:#075E54;margin-bottom:2px;padding-left:2px;}
+.chat-sender-name{font-size:12px;font-weight:700;color:#075E54;margin-bottom:3px;padding-left:2px;}
 .chat-msg.mine .chat-sender-name{display:none;}
-.chat-meta{font-size:10px;color:#8696a0;padding:0 1px;text-align:right;line-height:1.4;}
+.chat-meta{font-size:10.5px;color:#8696a0;text-align:right;line-height:1.4;padding:0 2px;display:flex;align-items:center;justify-content:flex-end;gap:3px;}
+.chat-edited-badge{font-size:10px;color:#aab5bc;font-style:italic;}
 .chat-tag{font-size:10px;padding:2px 9px;border-radius:6px;background:rgba(0,0,0,0.06);color:#667781;font-weight:600;margin-bottom:4px;display:inline-block;}
 .chat-msg.mine .chat-tag{background:rgba(0,0,0,0.08);color:#667781;}
 /* File cards */
-.chat-file-card{display:flex;align-items:center;gap:9px;padding:8px 12px;background:rgba(0,0,0,0.05);border-radius:10px;margin-bottom:4px;cursor:pointer;transition:background 0.13s;}
-.chat-msg:not(.mine) .chat-file-card{background:rgba(0,0,0,0.05);}
-.chat-msg:not(.mine) .chat-file-card:hover{background:rgba(0,0,0,0.09);}
-.chat-msg.mine .chat-file-card:hover{background:rgba(0,0,0,0.09);}
-.chat-file-icon{font-size:22px;line-height:1;}
+.chat-file-card{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(0,0,0,0.05);border-radius:10px;margin-bottom:4px;cursor:pointer;transition:background 0.13s;}
+.chat-msg:not(.mine) .chat-file-card:hover,.chat-msg.mine .chat-file-card:hover{background:rgba(0,0,0,0.09);}
+.chat-file-icon{font-size:24px;line-height:1;}
 .chat-file-info{flex:1;min-width:0;}
 .chat-file-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chat-file-size{font-size:10px;opacity:0.65;margin-top:1px;}
 .chat-file-open{font-size:10px;font-weight:700;opacity:0.7;flex-shrink:0;}
-/* Date separator — WhatsApp pill style */
-.chat-date-sep{text-align:center;padding:8px 0;display:flex;align-items:center;justify-content:center;}
-.chat-date-sep span{background:rgba(225,244,252,0.92);color:#54656f;font-size:11px;font-weight:600;padding:4px 12px;border-radius:7px;box-shadow:0 1px 1px rgba(0,0,0,0.06);}
+/* Date separator */
+.chat-date-sep{text-align:center;padding:10px 0 6px;display:flex;align-items:center;justify-content:center;}
+.chat-date-sep span{background:rgba(225,244,252,0.95);color:#54656f;font-size:11px;font-weight:600;padding:4px 14px;border-radius:7px;box-shadow:0 1px 2px rgba(0,0,0,0.09);letter-spacing:0.01em;}
 /* Input area */
-.chat-input-wrapper{padding:8px 12px;background:#f0f2f5;border-top:1px solid #e9edef;flex-shrink:0;}
-.chat-attach-preview{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#e1f3fb;border-radius:8px;margin-bottom:8px;font-size:12px;color:#128C7E;}
+.chat-input-wrapper{padding:8px 12px 10px;background:#f0f2f5;border-top:1px solid #e9edef;flex-shrink:0;}
+.chat-attach-preview{display:flex;align-items:center;gap:8px;padding:7px 12px;background:#e1f3fb;border-radius:8px;margin-bottom:8px;font-size:12px;color:#128C7E;border:1px solid #b8dff0;}
 .chat-attach-preview-name{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chat-attach-remove{background:none;border:none;cursor:pointer;color:#128C7E;font-size:14px;padding:0 2px;}
 .chat-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
-.chat-tag-select{font-size:11px;padding:4px 8px;border:1px solid #e9edef;border-radius:20px;background:#fff;font-family:var(--ff-body);outline:none;color:#54656f;cursor:pointer;}
-.chat-tool-btn{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid #e9edef;background:#fff;cursor:pointer;font-family:var(--ff-body);color:#54656f;transition:all 0.13s;}
+.chat-tag-select{font-size:11px;padding:5px 10px;border:1px solid #e9edef;border-radius:20px;background:#fff;font-family:var(--ff-body);outline:none;color:#54656f;cursor:pointer;transition:border-color 0.12s;}
+.chat-tag-select:focus{border-color:#128C7E;}
+.chat-tool-btn{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid #e9edef;background:#fff;cursor:pointer;font-family:var(--ff-body);color:#54656f;transition:all 0.13s;}
 .chat-tool-btn:hover{border-color:#128C7E;color:#128C7E;}
 .chat-input-row{display:flex;gap:8px;align-items:flex-end;}
-.chat-input{flex:1;padding:10px 14px;border:none;border-radius:22px;font-size:13.5px;font-family:var(--ff-body);resize:none;outline:none;min-height:44px;max-height:160px;line-height:1.4;background:#fff;overflow-y:auto;box-shadow:0 1px 2px rgba(0,0,0,0.08);}
+.chat-input{flex:1;padding:10px 15px;border:none;border-radius:22px;font-size:13.5px;font-family:var(--ff-body);resize:none;outline:none;min-height:44px;max-height:160px;line-height:1.45;background:#fff;overflow-y:auto;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.chat-input:focus{box-shadow:0 1px 5px rgba(0,0,0,0.12);}
 .chat-edit-wrap{display:flex;flex-direction:column;gap:6px;margin:4px 0;}
 .chat-edit-input{width:100%;min-height:72px;max-height:200px;padding:10px 12px;border:2px solid #128C7E;border-radius:12px;font-size:13px;font-family:var(--ff-body);resize:vertical;outline:none;line-height:1.5;background:#fff;}
 .chat-edit-actions{display:flex;gap:6px;}
-.chat-attach-btn{width:42px;height:42px;background:transparent;border:none;border-radius:50%;cursor:pointer;font-size:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#54656f;transition:background 0.1s;}
+.chat-attach-btn{width:42px;height:42px;background:#fff;border:none;border-radius:50%;cursor:pointer;font-size:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#54656f;transition:background 0.12s;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
 .chat-attach-btn:hover{background:#e9edef;}
-.chat-send-btn{width:42px;height:42px;background:#128C7E;color:#fff;border:none;border-radius:50%;cursor:pointer;font-size:18px;flex-shrink:0;transition:background 0.13s;display:flex;align-items:center;justify-content:center;}
-.chat-send-btn:hover{background:#075E54;}
-.chat-send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.chat-send-btn{width:42px;height:42px;background:#128C7E;color:#fff;border:none;border-radius:50%;cursor:pointer;font-size:18px;flex-shrink:0;transition:background 0.13s,transform 0.1s;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(18,140,126,0.35);}
+.chat-send-btn:hover{background:#075E54;transform:scale(1.04);}
+.chat-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
 .chat-uploading{font-size:11px;color:#8696a0;padding:4px 8px;display:flex;align-items:center;gap:6px;}
-/* Inline media in chat */
-.chat-img{max-width:260px;max-height:200px;border-radius:8px;display:block;cursor:zoom-in;object-fit:cover;}
+/* Inline media */
+.chat-img{max-width:260px;max-height:200px;border-radius:8px;display:block;cursor:zoom-in;object-fit:cover;transition:opacity 0.1s;}
+.chat-img:hover{opacity:0.92;}
 .chat-video{max-width:280px;border-radius:8px;display:block;outline:none;}
-.chat-media-lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;}
+.chat-media-lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:fadeIn 0.18s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 .chat-media-lightbox img{max-width:92vw;max-height:90vh;border-radius:8px;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,0.5);}
 .chat-media-lightbox video{max-width:92vw;max-height:85vh;border-radius:8px;outline:none;}
 .chat-media-close{position:absolute;top:18px;right:22px;font-size:28px;color:white;cursor:pointer;line-height:1;opacity:0.8;}
 .chat-media-close:hover{opacity:1;}
-.chat-file-link{display:flex;align-items:center;gap:9px;padding:8px 12px;background:rgba(0,0,0,0.05);border-radius:10px;margin-bottom:4px;cursor:pointer;transition:background 0.13s;text-decoration:none;color:inherit;}
-.chat-msg:not(.mine) .chat-file-link{background:rgba(0,0,0,0.05);}
-.chat-msg:not(.mine) .chat-file-link:hover{background:rgba(0,0,0,0.09);}
-.chat-msg.mine .chat-file-link:hover{background:rgba(0,0,0,0.09);}
+.chat-file-link{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(0,0,0,0.05);border-radius:10px;margin-bottom:4px;cursor:pointer;transition:background 0.13s;text-decoration:none;color:inherit;}
+.chat-msg:not(.mine) .chat-file-link:hover,.chat-msg.mine .chat-file-link:hover{background:rgba(0,0,0,0.09);}
 /* ── APPROVER DEEP-LINK MODAL ── */
 #dl-approver-overlay{position:fixed;inset:0;z-index:99999;background:#0f1923;overflow-y:auto;display:none;}
 .dl-wrap{max-width:680px;margin:0 auto;padding:40px 24px 60px;}
@@ -770,28 +819,18 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .dl-open-full{display:block;text-align:center;margin-top:32px;font-size:13px;color:rgba(255,255,255,0.35);cursor:pointer;text-decoration:none;}
 .dl-open-full:hover{color:rgba(255,255,255,0.7);}
 .dl-no-files{font-size:13px;color:rgba(255,255,255,0.3);font-style:italic;}
-/* ── DIRECT MESSAGES (WhatsApp-style — uses .chat-dm-btn from above) ── */
-.chat-dm-btn{display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid #f5f5f5;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
-.chat-dm-btn:hover{background:#f5f5f5;}
-.chat-dm-btn.active{background:#ebebeb;}
-.chat-dm-unread{background:#25D366;color:#fff;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
-/* Legacy room-body classes used in some templates */
+/* ── DIRECT MESSAGES / LEGACY ── */
 .room-icon{font-size:15px;flex-shrink:0;}
 .room-body{flex:1;min-width:0;}
 .room-name{font-size:14px;font-weight:600;color:#111;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .room-preview{font-size:12px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .room-unread{background:#25D366;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;}
-/* Legacy .chat-room-btn still used for keyboard nav */
 .chat-room-btn{display:none;}
-.chat-room-btn.has-unread .room-name{font-weight:700;color:#fff;}
-.chat-room-btn.has-unread .room-preview{color:rgba(255,255,255,0.6);}
-.chat-room-btn.active .room-name{font-weight:600;}
 .room-count{font-size:10px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:1px 6px;border-radius:10px;flex-shrink:0;}
 .chat-manage-btn{opacity:0.6;font-size:12px!important;}
 .chat-manage-btn:hover{opacity:1;}
-/* New Group button in sidebar */
-.chat-new-group-btn{width:100%;text-align:left;padding:7px 12px;border-radius:8px;border:1.5px dashed rgba(255,255,255,0.18);background:transparent;cursor:pointer;font-family:var(--ff-body);color:rgba(255,255,255,0.4);font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;margin-top:6px;transition:all 0.13s;}
-.chat-new-group-btn:hover{border-color:rgba(255,255,255,0.4);color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.06);}
+.chat-new-group-btn{width:100%;text-align:left;padding:9px 14px;border:none;background:transparent;cursor:pointer;font-family:var(--ff-body);color:#128C7E;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;transition:background 0.12s;border-bottom:1px solid #f5f5f5;}
+.chat-new-group-btn:hover{background:#f5f5f5;}
 /* New-group modal */
 .ng-emoji-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
 .ng-emoji{padding:4px 8px;border-radius:8px;border:1.5px solid var(--border2);background:var(--cream2);cursor:pointer;font-size:16px;transition:all 0.12s;}
@@ -1079,8 +1118,6 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .mention-chip{display:inline-flex;align-items:center;gap:3px;background:var(--blue-light);color:var(--blue-dark);padding:1px 6px;border-radius:10px;font-size:12px;font-weight:600;}
 .chat-msg .mention-chip{background:rgba(0,176,255,0.18);color:var(--blue);}
 .chat-msg.mine .mention-chip{background:rgba(255,255,255,0.25);color:rgba(255,255,255,0.9);}
-.chat-attach-btn{padding:8px 10px;background:var(--cream2);border:1.5px solid var(--border2);border-radius:var(--radl);cursor:pointer;font-size:16px;line-height:1;flex-shrink:0;transition:background 0.13s;}
-.chat-attach-btn:hover{background:var(--cream3);}
 .chat-file-preview{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--blue-light);border-radius:var(--rad);font-size:11px;color:var(--blue-dark);margin-bottom:6px;}
 
 /* ── POLLS ── */
@@ -1094,23 +1131,82 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .poll-voted{font-size:10px;color:var(--green);font-weight:600;}
 .poll-opt-input{font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--cream2);color:var(--ink);font-family:var(--ff-body);outline:none;width:100%;}
 
+/* ── REPLY PREVIEW (composer) ── */
+.chat-reply-preview{display:flex;align-items:stretch;gap:10px;padding:8px 12px;background:#fff;border-radius:8px;margin-bottom:8px;border-left:3px solid #128C7E;box-shadow:0 1px 3px rgba(0,0,0,0.07);}
+.chat-reply-bar{width:3px;background:#128C7E;border-radius:2px;flex-shrink:0;display:none;}
+.chat-reply-body{flex:1;min-width:0;}
+.chat-reply-sender{font-size:12px;font-weight:700;color:#128C7E;margin-bottom:2px;}
+.chat-reply-text{font-size:12px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-reply-close{background:none;border:none;cursor:pointer;font-size:16px;color:#aab5bc;padding:0 2px;flex-shrink:0;align-self:center;}
+.chat-reply-close:hover{color:#667781;}
+/* ── MESSAGE HIGHLIGHT (scroll-to) ── */
+@keyframes msgHighlight{0%{background:rgba(37,211,102,0.22);}100%{background:transparent;}}
+.chat-msg.msg-highlight .chat-bubble{animation:msgHighlight 1.6s ease-out;}
+/* ── QUOTED MESSAGE (in bubble) ── */
+.chat-quote{background:rgba(0,0,0,0.06);border-left:3px solid #128C7E;border-radius:4px 8px 8px 4px;padding:6px 10px;margin-bottom:6px;cursor:pointer;transition:background 0.12s;}
+.chat-msg.mine .chat-quote{background:rgba(0,0,0,0.08);border-left-color:#075E54;}
+.chat-quote:hover{background:rgba(0,0,0,0.1);}
+.chat-quote-sender{font-size:11px;font-weight:700;color:#128C7E;margin-bottom:2px;}
+.chat-msg.mine .chat-quote-sender{color:#075E54;}
+.chat-quote-text{font-size:12px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;}
 /* ── REACTIONS ── */
 .chat-reactions{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
-.reaction-chip{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:20px;border:1px solid var(--border);background:var(--white);font-size:12px;cursor:pointer;transition:all 0.1s;}
+.reaction-chip{display:inline-flex;align-items:center;gap:2px;padding:2px 8px;border-radius:20px;border:1px solid var(--border);background:var(--white);font-size:12px;cursor:pointer;transition:all 0.1s;}
 .reaction-chip:hover{border-color:var(--blue);background:var(--blue-light);}
 .reaction-chip.mine{border-color:var(--blue);background:var(--blue-light);}
 .reaction-count{font-size:10px;font-weight:700;color:var(--ink3);}
-.chat-action-row{display:flex;gap:6px;opacity:0;transition:opacity 0.15s;margin-top:2px;align-items:center;}
-.chat-msg:hover .chat-action-row{opacity:1;}
-.chat-react-btn{font-size:11px;padding:2px 6px;background:none;border:1px solid var(--border);border-radius:10px;cursor:pointer;color:var(--ink3);}
-.chat-react-btn:hover{background:var(--cream2);}
-.chat-action-sep{width:1px;height:14px;background:var(--border);margin:0 2px;}
-.chat-edit-btn{font-size:11px;padding:2px 7px;background:none;border:1px solid var(--border);border-radius:10px;cursor:pointer;color:var(--ink3);}
+/* Message action row — floating hover pill above bubble */
+.chat-action-row{display:flex;gap:3px;align-items:center;opacity:0;pointer-events:none;transition:opacity 0.14s,transform 0.12s;transform:translateY(4px);position:absolute;top:-36px;background:#fff;border-radius:22px;padding:4px 8px;box-shadow:0 2px 10px rgba(0,0,0,0.18);z-index:5;white-space:nowrap;}
+.chat-msg:not(.mine) .chat-action-row{left:40px;}
+.chat-msg.mine .chat-action-row{right:0;}
+.chat-msg:hover .chat-action-row{opacity:1;pointer-events:auto;transform:translateY(0);}
+.chat-react-btn{font-size:14px;padding:2px 4px;background:none;border:none;border-radius:6px;cursor:pointer;color:var(--ink3);transition:background 0.1s,transform 0.1s;}
+.chat-react-btn:hover{background:var(--cream2);transform:scale(1.18);}
+.chat-action-sep{width:1px;height:14px;background:var(--border);margin:0 3px;}
+.chat-edit-btn{font-size:12px;padding:3px 8px;background:none;border:none;border-radius:10px;cursor:pointer;color:var(--ink3);font-family:var(--ff-body);font-weight:600;transition:background 0.1s;}
 .chat-edit-btn:hover{background:var(--cream2);color:var(--ink);}
-.chat-del-btn{font-size:11px;padding:2px 7px;background:none;border:1px solid transparent;border-radius:10px;cursor:pointer;color:var(--ink3);}
-.chat-del-btn:hover{background:#fef2f2;border-color:#fecaca;color:var(--red);}
+.chat-del-btn{font-size:12px;padding:3px 8px;background:none;border:none;border-radius:10px;cursor:pointer;color:var(--ink3);font-family:var(--ff-body);font-weight:600;transition:background 0.1s;}
+.chat-del-btn:hover{background:#fef2f2;color:var(--red);}
 .chat-edit-wrap{display:flex;gap:6px;margin-top:4px;align-items:center;}
 .chat-edit-input{flex:1;border:1px solid var(--navy);border-radius:10px;padding:5px 10px;font-size:13px;font-family:var(--ff-body);outline:none;}
+/* Drag-and-drop overlay */
+.chat-drop-overlay{position:absolute;inset:0;background:rgba(18,140,126,0.12);border:3px dashed #128C7E;border-radius:var(--radl);z-index:50;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;pointer-events:none;}
+.chat-drop-overlay.show{display:flex;}
+.chat-drop-icon{font-size:52px;line-height:1;}
+.chat-drop-text{font-size:16px;font-weight:700;color:#128C7E;}
+/* Keyboard hint */
+.chat-input-hint{font-size:10px;color:#aab5bc;text-align:right;padding:3px 2px 1px;letter-spacing:0.01em;user-select:none;}
+/* Unread divider */
+.chat-unread-div{display:flex;align-items:center;gap:8px;padding:8px 0 4px;margin:4px 0;}
+.chat-unread-div::before,.chat-unread-div::after{content:'';flex:1;height:1px;background:rgba(37,211,102,0.35);}
+.chat-unread-div span{font-size:11px;color:#25D366;font-weight:700;white-space:nowrap;padding:3px 12px;background:rgba(37,211,102,0.08);border-radius:20px;border:1px solid rgba(37,211,102,0.25);}
+/* Expanded emoji picker */
+.chat-emoji-pop{position:absolute;bottom:calc(100% + 4px);background:#fff;border-radius:14px;padding:8px;box-shadow:0 4px 20px rgba(0,0,0,0.18);z-index:20;display:none;flex-wrap:wrap;gap:2px;width:198px;}
+.chat-msg:not(.mine) .chat-emoji-pop{left:40px;}
+.chat-msg.mine .chat-emoji-pop{right:0;}
+.chat-emoji-pop.show{display:flex;}
+.chat-emoji-pop-btn{font-size:18px;padding:3px 4px;border:none;background:none;border-radius:6px;cursor:pointer;transition:background 0.1s,transform 0.1s;}
+.chat-emoji-pop-btn:hover{background:var(--cream2);transform:scale(1.18);}
+/* Context menu */
+.chat-ctx-menu{position:fixed;background:#fff;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,0.18);z-index:9001;min-width:164px;overflow:hidden;animation:fadeIn 0.1s ease;}
+.chat-ctx-item{padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--ink);font-family:var(--ff-body);border:none;background:none;width:100%;text-align:left;transition:background 0.1s;}
+.chat-ctx-item:hover{background:var(--cream2);}
+.chat-ctx-item.danger{color:var(--red);}
+/* Send button mic/send toggle */
+.chat-send-btn.mic-mode{background:#8696a0;}
+.chat-send-btn.mic-mode:hover{background:#667781;transform:none;}
+
+/* ── TASKS PANEL TABS ── */
+.tasks-tab-bar{display:flex;gap:0;border-bottom:2px solid var(--border2);margin:-4px 0 16px;}
+.tasks-tab{padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;border:none;border-bottom:3px solid transparent;color:var(--ink3);background:none;font-family:var(--ff-body);margin-bottom:-2px;transition:color 0.15s,border-color 0.15s;}
+.tasks-tab.active{color:var(--coral);border-bottom-color:var(--coral);}
+/* Inline kanban card actions */
+.k-card-actions{display:flex;gap:5px;margin-top:8px;padding-top:7px;border-top:1px solid var(--border);align-items:center;}
+.k-status-select{flex:1;font-size:11px;padding:3px 5px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);cursor:pointer;}
+.k-push-btn{font-size:11px;padding:4px 9px;background:var(--navy);color:white;border:none;border-radius:var(--rad);cursor:pointer;font-family:var(--ff-body);font-weight:600;white-space:nowrap;flex-shrink:0;}
+.k-push-btn:hover{opacity:0.85;}
+/* Overdue task highlight */
+.task-overdue-badge{font-size:10px;padding:1px 6px;border-radius:10px;background:#fef2f2;color:var(--red);font-weight:700;border:1px solid #fecaca;}
 
 /* ── POST PERFORMANCE ── */
 .perf-table{width:100%;border-collapse:collapse;font-size:12px;}
@@ -1260,6 +1356,8 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
     flex-shrink:0;
   }
   .chat-sidebar-header { padding:10px 14px; flex-shrink:0; }
+  .chat-sidebar-search { display:none; }
+  .chat-scroll-bottom { bottom:76px; }
   .chat-sidebar-scroll { flex-direction:row; display:flex; overflow-x:auto; overflow-y:hidden; flex:none; }
   .chat-sidebar-scroll::-webkit-scrollbar { display:none; }
   .chat-section-label { display:none; }
@@ -1434,13 +1532,13 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
       Today's Flows
       <span class="nav-badge hot" id="badge-today">3</span>
     </div>
-    <div class="nav-item" id="nav-tasks" onclick="go('tasks')">
+    <div class="nav-item" id="nav-tasks" onclick="go('tasks');setTasksTab('tasks')">
       <span class="nav-icon" style="font-size:15px;">✅</span>
-      Ad-hoc Tasks
+      Tasks
       <span class="nav-badge" id="badge-tasks">4</span>
     </div>
 
-    <div class="nav-item" id="nav-log" onclick="go('log')">
+    <div class="nav-item" id="nav-log" onclick="go('tasks');setTasksTab('activity')">
       <span class="nav-icon" style="font-size:15px;">✏️</span>
       Activity Log
     </div>
@@ -1602,108 +1700,124 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
               Completed <span class="flow-tab-badge done" id="ftab-done-count">0</span>
             </button>
           </div>
+          <div id="flow-type-bar" style="display:none;"></div>
           <div id="flow-summary"></div>
           <div id="flow-board" style="display:none;"></div>
           <div id="flow-board-done" style="display:none;"></div>
         </div>
 
-        <!-- AD-HOC TASKS -->
+        <!-- AD-HOC TASKS + ACTIVITY LOG (unified panel) -->
         <div class="panel" id="panel-tasks">
-          <div class="bulk-bar" id="bulk-bar">
-            <span class="bulk-count" id="bulk-count-label">0 selected</span>
-            <button class="btn btn-sm btn-teal" onclick="openBulkModal()">⚡ Bulk Actions</button>
-            <button class="btn btn-sm btn-ghost" style="color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.2);" onclick="clearBulkSelection()">✕ Clear</button>
+          <!-- Tab bar -->
+          <div class="tasks-tab-bar">
+            <button class="tasks-tab active" id="tasks-tab-tasks" onclick="setTasksTab('tasks')">📋 Tasks</button>
+            <button class="tasks-tab" id="tasks-tab-activity" onclick="setTasksTab('activity')">✏️ Activity Log</button>
           </div>
-          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-            <select id="f-status" onchange="renderTasks()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
-              <option value="">All Statuses</option>
-              <option value="todo">To Do</option><option value="inprogress">In Progress</option>
-              <option value="review">In Review</option><option value="blocked">Blocked</option><option value="done">Done</option>
-            </select>
-            <select id="f-assignee" onchange="renderTasks()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
-              <option value="">All Members</option>
-            </select>
-            <select id="f-platform" onchange="renderTasks()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
-              <option value="">All Platforms</option>
-              <option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>Twitter/X</option><option>YouTube</option><option>Reels</option>
-            </select>
-            <span style="margin-left:auto;font-size:11px;color:var(--ink3);align-self:center;" id="task-count"></span>
-            <button class="btn btn-sm btn-ghost" id="bulk-toggle-btn" onclick="toggleBulkMode()">☑ Select</button>
+
+          <!-- ─── Tasks pane ─── -->
+          <div id="tasks-pane-tasks">
+            <div class="bulk-bar" id="bulk-bar">
+              <span class="bulk-count" id="bulk-count-label">0 selected</span>
+              <button class="btn btn-sm btn-teal" onclick="openBulkModal()">⚡ Bulk Actions</button>
+              <button class="btn btn-sm btn-ghost" style="color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.2);" onclick="clearBulkSelection()">✕ Clear</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+              <select id="f-status" onchange="renderTasks()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
+                <option value="">All Statuses</option>
+                <option value="todo">To Do</option><option value="inprogress">In Progress</option>
+                <option value="review">In Review</option><option value="blocked">Blocked</option><option value="done">Done</option>
+              </select>
+              <select id="f-assignee" onchange="renderTasks()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
+                <option value="">All Members</option>
+              </select>
+              <select id="f-platform" onchange="renderTasks()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
+                <option value="">All Platforms</option>
+                <option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>Twitter/X</option><option>YouTube</option><option>Reels</option>
+              </select>
+              <span style="margin-left:auto;font-size:11px;color:var(--ink3);align-self:center;" id="task-count"></span>
+              <div class="task-view-toggle">
+                <button class="tvt-btn active" id="tvt-kanban" onclick="setTaskView('kanban')">⬛ Board</button>
+                <button class="tvt-btn" id="tvt-list" onclick="setTaskView('list')">☰ List</button>
+              </div>
+              <button class="btn btn-sm btn-ghost" id="bulk-toggle-btn" onclick="toggleBulkMode()">☑ Select</button>
+            </div>
+            <div id="task-list"></div>
           </div>
-          <div id="task-list"></div>
+
+          <!-- ─── Activity pane ─── -->
+          <div id="tasks-pane-activity" style="display:none;">
+            <div class="tat-summary" id="tat-summary"></div>
+            <div class="log-form">
+              <div style="font-family:var(--ff-head);font-size:14px;font-weight:700;margin-bottom:14px;">✏️ Log Activity</div>
+              <div class="form-grid">
+                <div class="fg"><label>Team Member</label>
+                  <select id="lf-member"></select>
+                </div>
+                <div class="fg"><label>Linked To</label>
+                  <select id="lf-type">
+                    <option value="flow">Daily Flow</option>
+                    <option value="task">Ad-hoc Task</option>
+                  </select>
+                </div>
+                <div class="fg"><label>Flow / Task</label>
+                  <select id="lf-item"></select>
+                </div>
+                <div class="fg"><label>Status</label>
+                  <select id="lf-status">
+                    <option value="inprogress">In Progress</option>
+                    <option value="done">Done ✓</option>
+                    <option value="blocked">Blocked ✗</option>
+                    <option value="review">In Review</option>
+                  </select>
+                </div>
+                <div class="fg"><label>Time Spent (hrs)</label>
+                  <input type="number" id="lf-time" value="1" min="0.25" max="12" step="0.25"/>
+                </div>
+                <div class="fg"><label>Platforms</label>
+                  <select id="lf-platform" multiple style="height:60px;">
+                    <option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>Twitter/X</option><option>YouTube</option><option>Reels</option>
+                  </select>
+                </div>
+                <div class="fg fc-full"><label>Notes / Handoff Details</label>
+                  <textarea id="lf-notes" placeholder="What was done? Any blockers, context for the next person in the flow?"></textarea>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-coral" onclick="submitLog()">Log Activity</button>
+                <button class="btn btn-teal" onclick="pushFromLog()">→ Push to Next Step</button>
+                <label style="font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:4px;cursor:pointer;padding:6px 10px;border:1px dashed var(--border2);border-radius:var(--rad);">
+                  <input type="checkbox" id="lf-attach" style="width:11px;height:11px;"/> 📎 Attach File
+                </label>
+              </div>
+            </div>
+            <div class="sec-hdr" style="margin-top:4px;">
+              <span class="sec-title">Activity Feed</span>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <select id="log-filter-member" onchange="renderLog()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);"></select>
+                <select id="log-filter-type" onchange="renderLog()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
+                  <option value="">All Types</option>
+                  <option value="flow">Flows only</option>
+                  <option value="task">Tasks only</option>
+                </select>
+                <select id="log-filter-status" onchange="renderLog()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
+                  <option value="">All Statuses</option>
+                  <option value="inprogress">In Progress</option>
+                  <option value="done">Done</option>
+                  <option value="blocked">Blocked</option>
+                  <option value="review">In Review</option>
+                </select>
+                <span id="log-count" style="font-size:11px;color:var(--ink3);"></span>
+              </div>
+            </div>
+            <div id="log-list"></div>
+          </div>
         </div>
 
         <!-- PIPELINE -->
-        
 
-        <!-- ACTIVITY LOG -->
-        <div class="panel" id="panel-log">
-          <!-- TAT Summary strip -->
-          <div class="tat-summary" id="tat-summary"></div>
-          <div class="log-form">
-            <div style="font-family:var(--ff-head);font-size:14px;font-weight:700;margin-bottom:14px;">✏️ Log Activity</div>
-            <div class="form-grid">
-              <div class="fg"><label>Team Member</label>
-                <select id="lf-member"></select>
-              </div>
-              <div class="fg"><label>Linked To</label>
-                <select id="lf-type">
-                  <option value="flow">Daily Flow</option>
-                  <option value="task">Ad-hoc Task</option>
-                </select>
-              </div>
-              <div class="fg"><label>Flow / Task</label>
-                <select id="lf-item"></select>
-              </div>
-              <div class="fg"><label>Status</label>
-                <select id="lf-status">
-                  <option value="inprogress">In Progress</option>
-                  <option value="done">Done ✓</option>
-                  <option value="blocked">Blocked ✗</option>
-                  <option value="review">In Review</option>
-                </select>
-              </div>
-              <div class="fg"><label>Time Spent (hrs)</label>
-                <input type="number" id="lf-time" value="1" min="0.25" max="12" step="0.25"/>
-              </div>
-              <div class="fg"><label>Platforms</label>
-                <select id="lf-platform" multiple style="height:60px;">
-                  <option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>Twitter/X</option><option>YouTube</option><option>Reels</option>
-                </select>
-              </div>
-              <div class="fg fc-full"><label>Notes / Handoff Details</label>
-                <textarea id="lf-notes" placeholder="What was done? Any blockers, context for the next person in the flow?"></textarea>
-              </div>
-            </div>
-            <div class="form-actions">
-              <button class="btn btn-coral" onclick="submitLog()">Log Activity</button>
-              <button class="btn btn-teal" onclick="pushFromLog()">→ Push to Next Step</button>
-              <label style="font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:4px;cursor:pointer;padding:6px 10px;border:1px dashed var(--border2);border-radius:var(--rad);">
-                <input type="checkbox" id="lf-attach" style="width:11px;height:11px;"/> 📎 Attach File
-              </label>
-            </div>
-          </div>
-          <div class="sec-hdr" style="margin-top:4px;">
-            <span class="sec-title">Activity Feed</span>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <select id="log-filter-member" onchange="renderLog()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);"></select>
-              <select id="log-filter-type" onchange="renderLog()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
-                <option value="">All Types</option>
-                <option value="flow">Flows only</option>
-                <option value="task">Tasks only</option>
-              </select>
-              <select id="log-filter-status" onchange="renderLog()" style="font-size:12px;padding:5px 9px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
-                <option value="">All Statuses</option>
-                <option value="inprogress">In Progress</option>
-                <option value="done">Done</option>
-                <option value="blocked">Blocked</option>
-                <option value="review">In Review</option>
-              </select>
-              <span id="log-count" style="font-size:11px;color:var(--ink3);"></span>
-            </div>
-          </div>
-          <div id="log-list"></div>
-        </div>
+
+        <!-- ACTIVITY LOG (stub — redirects to Tasks panel → Activity tab) -->
+        <div class="panel" id="panel-log" style="display:none;"></div>
 
         <!-- CONTENT CALENDAR -->
         <div class="panel" id="panel-calendar">
@@ -1814,6 +1928,12 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                 <span class="chat-sidebar-header-title">Chats</span>
                 <button onclick="openNewDM()" title="New direct message" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#fff;">✏️</button>
               </div>
+              <div class="chat-sidebar-search">
+                <div class="chat-sidebar-search-inner">
+                  <span class="chat-search-icon" style="font-size:13px;opacity:0.5;">🔍</span>
+                  <input type="text" placeholder="Search or start new chat…" oninput="filterChatSidebar(this.value)" autocomplete="off"/>
+                </div>
+              </div>
               <div class="chat-sidebar-scroll">
                 <div class="chat-section-label">Channels</div>
                 <div id="chat-rooms"></div>
@@ -1823,6 +1943,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
             </div>
             <!-- Main chat area -->
             <div class="chat-main">
+              <div id="chat-drop-overlay" class="chat-drop-overlay"><div class="chat-drop-icon">📎</div><div class="chat-drop-text">Drop file to attach</div></div>
               <div class="chat-header">
                 <div class="chat-header-avatar" id="chat-header-avatar">G</div>
                 <div class="chat-header-info">
@@ -1841,6 +1962,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                 <button class="chat-search-clear" onclick="closeChatSearch()" title="Close">✕</button>
               </div>
               <div class="typing-indicator" id="typing-indicator"></div>
+              <button class="chat-scroll-bottom" id="chat-scroll-btn" onclick="scrollChatToBottom()" title="Scroll to bottom">↓</button>
               <div class="chat-messages" id="chat-messages">
                 <div class="empty" style="margin:auto;">
                   <div class="empty-icon">💬</div>
@@ -1850,6 +1972,14 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
               </div>
               <!-- Input area -->
               <div class="chat-input-wrapper">
+                <div id="chat-reply-preview" class="chat-reply-preview" style="display:none;">
+                  <div class="chat-reply-bar"></div>
+                  <div class="chat-reply-body">
+                    <div class="chat-reply-sender" id="chat-reply-sender"></div>
+                    <div class="chat-reply-text" id="chat-reply-text"></div>
+                  </div>
+                  <button class="chat-reply-close" onclick="cancelChatReply()" title="Cancel reply">✕</button>
+                </div>
                 <div id="chat-attach-preview" style="display:none;" class="chat-attach-preview">
                   <span>📎</span>
                   <span class="chat-attach-preview-name" id="chat-attach-name">file.jpg</span>
@@ -1878,6 +2008,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                   <div id="chat-upload-fill" style="height:100%;width:0%;background:#128C7E;border-radius:4px;transition:width 0.2s;"></div>
                 </div>
                 <div id="chat-upload-pct" style="display:none;"></div>
+                <div class="chat-input-hint">↵ Send · ⇧↵ New line · @ Mention</div>
               </div>
             </div>
           </div>
@@ -2212,11 +2343,11 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
   </div>
 </div>
 
-<!-- NEW TASK MODAL -->
+<!-- UNIFIED TASK MODAL (create + edit) -->
 <div class="overlay" id="task-modal" onclick="if(event.target===this)closeTaskModal()">
   <div class="modal">
     <div class="modal-hdr">
-      <span class="modal-title">+ New Ad-hoc Task</span>
+      <span class="modal-title" id="task-modal-title">+ New Ad-hoc Task</span>
       <button class="close-x" onclick="closeTaskModal()">×</button>
     </div>
     <div class="modal-body">
@@ -2230,16 +2361,29 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         <div class="fg"><label>Priority</label>
           <select id="nt-priority"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select>
         </div>
+        <div class="fg" id="nt-status-wrap" style="display:none;"><label>Status</label>
+          <select id="nt-status">
+            <option value="todo">To Do</option>
+            <option value="inprogress">In Progress</option>
+            <option value="review">In Review</option>
+            <option value="blocked">Blocked</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
         <div class="fg"><label>Platform(s)</label>
           <select id="nt-platform" multiple style="height:70px;">
             <option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>Twitter/X</option><option>YouTube</option><option>Reels</option>
           </select>
         </div>
-        <div class="fg"><label>Due Date</label>
-          <input type="date" id="nt-due"/>
+        <div class="fg"><label>Deadline <span style="font-size:10px;color:var(--ink3);font-weight:400;">(date &amp; time)</span></label>
+          <input type="datetime-local" id="nt-due"/>
         </div>
         <div class="fg fc-full"><label>Notes</label>
-          <textarea id="nt-notes" placeholder="Brief, references, requirements…"></textarea>
+          <textarea id="nt-notes" placeholder="Brief, references, requirements… (URLs will be clickable)"></textarea>
+        </div>
+        <div class="fg fc-full" id="nt-existing-attach-wrap" style="display:none;">
+          <label>Existing Attachments</label>
+          <div id="nt-existing-attach"></div>
         </div>
         <div class="fg fc-full">
           <label>Attach File <span style="font-size:10px;color:var(--ink3);font-weight:400;">(optional)</span></label>
@@ -2252,7 +2396,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeTaskModal()">Cancel</button>
-      <button class="btn btn-coral" onclick="createTask()">Create Task</button>
+      <button class="btn btn-coral" id="task-modal-save-btn" onclick="saveTaskModal()">Create Task</button>
     </div>
   </div>
 </div>
@@ -2397,6 +2541,17 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
           <input type="text" id="nf-name" placeholder="e.g. Story Publishing Flow, Client Report Flow…"/>
         </div>
         <div class="fg">
+          <label>Category</label>
+          <select id="nf-type">
+            <option value="Daily">Daily</option>
+            <option value="Campaign">Campaign</option>
+            <option value="Ad">Ad</option>
+            <option value="Webinar">Webinar</option>
+            <option value="Event">Event</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="fg">
           <label>Frequency</label>
           <select id="nf-freq">
             <option value="Daily">Daily</option>
@@ -2419,6 +2574,28 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
     <div class="modal-footer">
       <button class="btn" onclick="closeNewFlowModal()">Cancel</button>
       <button class="btn btn-coral" onclick="saveNewFlow()">Create Flow</button>
+    </div>
+  </div>
+</div>
+
+<!-- NUDGE MODAL — manager sends a comment/alert to a step owner -->
+<div class="overlay" id="nudge-modal" onclick="if(event.target===this)closeNudgeModal()">
+  <div class="modal" style="width:420px;">
+    <div class="modal-hdr">
+      <span class="modal-title">📨 Send Note to Step Owner</span>
+      <button class="close-x" onclick="closeNudgeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="nudge-context" style="font-size:12px;color:var(--ink2);margin-bottom:12px;padding:8px 10px;background:var(--cream);border-radius:var(--rad);"></div>
+      <div class="fg">
+        <label>Message</label>
+        <textarea id="nudge-text" rows="3" placeholder="Ask why it's stuck, request an update, set expectations…" style="width:100%;padding:8px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:13px;font-family:var(--ff-body);resize:vertical;outline:none;"></textarea>
+      </div>
+      <div id="nudge-thread" style="margin-top:10px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeNudgeModal()">Cancel</button>
+      <button class="btn btn-coral" onclick="sendNudge()">Send Alert</button>
     </div>
   </div>
 </div>
@@ -2702,10 +2879,36 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
           </select>
         </div>
       </div>
+
+      <!-- ── Create flow section ── -->
+      <div id="idea-flow-section" style="margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--border2);">
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;">
+          <input type="checkbox" id="idea-create-flow" onchange="toggleIdeaFlowFields(this.checked)"
+            style="width:15px;height:15px;accent-color:var(--coral);flex-shrink:0;"/>
+          <span style="font-size:13px;font-weight:600;color:var(--ink);">Also create a production flow for this event</span>
+        </label>
+        <div id="idea-flow-fields" style="display:none;margin-top:14px;">
+          <div class="form-grid">
+            <div class="fg fc-full">
+              <label>Flow Name</label>
+              <input type="text" id="idea-flow-name" placeholder="Name for this flow…"/>
+            </div>
+            <div class="fg fc-full">
+              <label>Flow Type / Template</label>
+              <select id="idea-flow-template" style="width:100%;">
+                <!-- populated dynamically from FLOW_TEMPLATES -->
+              </select>
+            </div>
+          </div>
+          <div id="idea-flow-existing" style="display:none;margin-top:8px;padding:8px 10px;background:var(--green-light);border-radius:var(--rad);font-size:12px;color:var(--green);font-weight:600;">
+            ✓ Flow already linked to this event
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeIdeaModal()">Cancel</button>
-      <button class="btn btn-coral" onclick="saveIdea()">Save Idea</button>
+      <button class="btn btn-coral" onclick="saveIdea()">Save</button>
     </div>
   </div>
 </div>
@@ -3040,8 +3243,8 @@ const PLAT_CLASS = {'Instagram':'plat-ig','Facebook':'plat-fb','LinkedIn':'plat-
 let _templatesLoadedFromFirestore = false; // true once Firestore has confirmed template data
 
 const FLOW_TEMPLATES = [
-  {id:'social-daily', name:'Daily Social Post', steps: JSON.parse(JSON.stringify(FLOW_STEPS)), platforms: PLATFORMS, freq:'Daily'},
-  {id:'webinar', name:'Webinar', freq:'As needed', platforms: ['LinkedIn','YouTube'],
+  {id:'social-daily', name:'Daily Social Post', type:'Daily', steps: JSON.parse(JSON.stringify(FLOW_STEPS)), platforms: PLATFORMS, freq:'Daily'},
+  {id:'webinar', name:'Webinar', type:'Webinar', freq:'As needed', platforms: ['LinkedIn','YouTube'],
    steps:[
     {id:'w-plan',    name:'Planning & Brief',        short:'Plan',   owner:'', isApproval:false, subtasks:['Define topic & speaker','Set date & time','Draft agenda','Confirm budget']},
     {id:'w-outreach',name:'Outreach & Registration', short:'Reach',  owner:'', isApproval:false, subtasks:['Create registration page','Email campaign to database','LinkedIn + social posts','WhatsApp broadcast']},
@@ -3216,7 +3419,7 @@ function applyLoggedInUser() {
     'chat':        'all',
     'notifications':'all',
     'onboarding':  'all',
-    'calendar':    'manager',
+    'calendar':    'all',
   };
   Object.entries(navRules).forEach(([panel, minRole]) => {
     const navEl = document.getElementById('nav-' + panel);
@@ -3561,7 +3764,7 @@ function startListeners() {
   unsubLogs = db.collection('logs').orderBy('createdAt', 'desc').limit(50)
     .onSnapshot(snap => {
       LOGS = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-      if (currentPanel === 'log') renderLog();
+      if (currentPanel === 'log' || (currentPanel === 'tasks' && _tasksTab === 'activity')) renderLog();
     }, err => console.error('Logs listener error:', err));
 
   // Flows — stored in 'flows/active', persist until completed/deleted regardless of date
@@ -3720,6 +3923,7 @@ function serializeFlowForFirestore(f) {
     driveFiles:    JSON.stringify(f.driveFiles    || []),
     stepTimings:   JSON.stringify(f.stepTimings   || []),
     subAssignees:  JSON.stringify(f.subAssignees  || {}),
+    stepComments:  JSON.stringify(f.stepComments  || {}),
   };
 }
 function deserializeFlowFromFirestore(f) {
@@ -3730,6 +3934,7 @@ function deserializeFlowFromFirestore(f) {
       driveFiles:    typeof f.driveFiles    === 'string' ? JSON.parse(f.driveFiles)    : (f.driveFiles    || []),
       stepTimings:   typeof f.stepTimings   === 'string' ? JSON.parse(f.stepTimings)   : (f.stepTimings   || []),
       subAssignees:  typeof f.subAssignees  === 'string' ? JSON.parse(f.subAssignees)  : (f.subAssignees  || {}),
+      stepComments:  typeof f.stepComments  === 'string' ? JSON.parse(f.stepComments)  : (f.stepComments  || {}),
     };
   } catch(e) { return f; }
 }
@@ -3846,11 +4051,28 @@ const STAGE_COL = {todo:'var(--ink3)',inprogress:'var(--amber)',review:'var(--pu
 function fmtDue(iso){
   if(!iso) return '—';
   const d=new Date(iso), now=new Date();
-  const diff=Math.round((d-now)/86400000);
-  if(diff<0) return '<span style="color:var(--red);">Overdue</span>';
-  if(diff===0) return '<span style="color:var(--amber);">Today</span>';
-  if(diff===1) return '<span style="color:var(--amber);">Tomorrow</span>';
-  return d.toLocaleDateString('en-IN',{month:'short',day:'numeric'});
+  const hasTime = iso.includes('T') && iso.length > 10;
+  const diffMs = d - now;
+  const diffH = diffMs / 3600000;
+  const diffDays = Math.floor(diffMs / 86400000);
+  if(diffMs < 0){
+    // Overdue — show how long ago
+    const overH = Math.abs(diffH);
+    if(overH < 1) return '<span style="color:var(--red);">⚠ Overdue just now</span>';
+    if(overH < 24) return `<span style="color:var(--red);">⚠ Overdue ${Math.round(overH)}h ago</span>`;
+    return `<span style="color:var(--red);">⚠ Overdue ${Math.floor(overH/24)}d ago</span>`;
+  }
+  if(hasTime && diffH < 1) return `<span style="color:var(--red);font-weight:700;">Due in ${Math.round(diffH*60)}m</span>`;
+  if(hasTime && diffH < 3) return `<span style="color:var(--amber);font-weight:700;">Due in ${Math.round(diffH)}h</span>`;
+  if(diffDays === 0){
+    const timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    return `<span style="color:var(--amber);">Today ${hasTime?timeStr:''}</span>`;
+  }
+  if(diffDays === 1){
+    const timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    return `<span style="color:var(--amber);">Tomorrow${hasTime?' '+timeStr:''}</span>`;
+  }
+  return d.toLocaleDateString('en-IN',{month:'short',day:'numeric'})+(hasTime?' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'');
 }
 
 function platChips(plats){
@@ -3885,9 +4107,37 @@ function setRole(r){
 }
 
 // ═══════════════════════════════════════════
+// TASKS TAB STATE
+// ═══════════════════════════════════════════
+let _tasksTab = 'tasks';
+function setTasksTab(tab) {
+  _tasksTab = tab;
+  document.getElementById('tasks-tab-tasks')?.classList.toggle('active', tab === 'tasks');
+  document.getElementById('tasks-tab-activity')?.classList.toggle('active', tab === 'activity');
+  const tasksPane    = document.getElementById('tasks-pane-tasks');
+  const activityPane = document.getElementById('tasks-pane-activity');
+  if (tasksPane)    tasksPane.style.display    = tab === 'tasks'    ? '' : 'none';
+  if (activityPane) activityPane.style.display = tab === 'activity' ? '' : 'none';
+  // Sync sidebar nav highlight
+  document.getElementById('nav-tasks')?.classList.toggle('active', tab === 'tasks');
+  document.getElementById('nav-log')?.classList.toggle('active',   tab === 'activity');
+  if (tab === 'activity') renderLog();
+}
+
+function linkify(text) {
+  if (!text) return '';
+  // Escape HTML first, then linkify URLs
+  const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return escaped.replace(/(https?:\/\/[^\s<>"]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:var(--navy);text-decoration:underline;word-break:break-all;">$1</a>');
+}
+
+// ═══════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════
 function go(panel){
+  // Redirect 'log' to tasks panel + activity tab
+  if (panel === 'log') { go('tasks'); setTasksTab('activity'); return; }
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('panel-'+panel).classList.add('active');
@@ -3914,7 +4164,7 @@ function go(panel){
       if(btn)btn.querySelectorAll('span').forEach(s=>s.style.cssText='');
     }
   }
-  const titles={home:'Dashboard',today:"Today's Flows",tasks:'Ad-hoc Tasks',log:'Activity Log',flows:'Flow Templates',analytics:'Analytics',notifications:'Notifications',workload:'Team Workload',regular:'Regular Tasks',weekly:'Weekly Plan',chat:'Team Chat',audit:'Audit Trail',calendar:'Content Calendar',campaigns:'Campaigns',onboarding:'Getting Started',performance:'Post Performance',reels:'Reels & Videos',scratchpad:'Media Scratchpad',deviation:'Deviation Report'};
+  const titles={home:'Dashboard',today:"Today's Flows",tasks:'Tasks & Activity',log:'Tasks & Activity',flows:'Flow Templates',analytics:'Analytics',notifications:'Notifications',workload:'Team Workload',regular:'Regular Tasks',weekly:'Weekly Plan',chat:'Team Chat',audit:'Audit Trail',calendar:'Content Calendar',campaigns:'Campaigns',onboarding:'Getting Started',performance:'Post Performance',reels:'Reels & Videos',scratchpad:'Media Scratchpad',deviation:'Deviation Report'};
   document.getElementById('page-title').textContent=titles[panel]||panel;
   updateMobFab(panel);
   closeSide();
@@ -3937,8 +4187,10 @@ function go(panel){
 
 function refresh(){
   if(currentPanel==='today') renderToday();
-  if(currentPanel==='tasks') renderTasks();
-
+  if(currentPanel==='tasks'){
+    renderTasks();
+    if(_tasksTab==='activity') renderLog();
+  }
   if(currentPanel==='log') renderLog();
   if(currentPanel==='flows') renderFlowTemplates();
   if(currentPanel==='analytics') renderAnalytics();
@@ -3948,7 +4200,7 @@ function refresh(){
 }
 
 function mainAction(){
-  if(role==='member'){go('log');return;}
+  if(role==='member'){ go('tasks'); setTasksTab('activity'); return; }
   openTaskModal();
 }
 
@@ -3977,6 +4229,12 @@ function getFlowStatus(f){
   return 'active';
 }
 
+function getFlowType(f) {
+  if (f.flowType) return f.flowType;
+  const tmpl = FLOW_TEMPLATES.find(t => t.id === f.templateId);
+  return tmpl?.type || tmpl?.name || 'Other';
+}
+
 function renderHome() {
   const el = document.getElementById('home-content');
   if (!el || !loggedInMember) return;
@@ -3992,21 +4250,28 @@ function renderHome() {
     return owner === me;
   });
 
-  // Overdue / due-soon steps
+  // Flows visible to this user (same rule as renderToday)
+  const myVisibleFlows = isManager ? TODAY_FLOWS : TODAY_FLOWS.filter(f => {
+    return (f.stepOwners || []).includes(me) ||
+           (f.approvalRoutees || []).includes(me) ||
+           Object.values(f.subAssignees || {}).includes(me);
+  });
+
+  // Overdue / due-soon steps — only within visible flows
   const today = new Date().toISOString().slice(0, 10);
-  const overdueSteps = TODAY_FLOWS.filter(f => {
+  const overdueSteps = myVisibleFlows.filter(f => {
     if (getFlowStatus(f) === 'done') return false;
     const dl = (f.stepDeadlines || [])[f.currentStep];
     return dl && dl < today;
   });
-  const dueTodaySteps = TODAY_FLOWS.filter(f => {
+  const dueTodaySteps = myVisibleFlows.filter(f => {
     if (getFlowStatus(f) === 'done') return false;
     const dl = (f.stepDeadlines || [])[f.currentStep];
     return dl === today;
   });
 
-  // Flagged steps
-  const flaggedFlows = TODAY_FLOWS.filter(f => {
+  // Flagged steps — only within visible flows
+  const flaggedFlows = myVisibleFlows.filter(f => {
     const flag = (f.stepFlags || {})[f.currentStep];
     return flag && getFlowStatus(f) !== 'done';
   });
@@ -4014,8 +4279,8 @@ function renderHome() {
   // Tasks due today or overdue — only show to the assignee or head (not all managers)
   const isHead = loggedInMember.role === 'head' || loggedInMember.role === 'viewer';
   const myTasks = TASKS.filter(t => t.status !== 'done' && !t.done && (t.assignee === me || isHead));
-  const overdueTasks = myTasks.filter(t => t.due && t.due < today);
-  const dueTodayTasks = myTasks.filter(t => t.due === today);
+  const overdueTasks  = myTasks.filter(t => t.due && new Date(t.due) < new Date());
+  const dueTodayTasks = myTasks.filter(t => t.due && t.due.slice(0,10) === today && new Date(t.due) >= new Date());
 
   // Unread counts
   const totalUnread = Object.values(CHANNEL_UNREAD).reduce((s,n)=>s+(n||0),0)
@@ -4079,7 +4344,7 @@ function renderHome() {
           <div class="home-action-title">${t.title}</div>
           <div class="home-action-meta">${t.assignee || ''}${t.due ? ' · Due '+t.due : ''}</div>
         </div>
-        ${t.due && t.due < today ? '<span class="home-action-badge">Overdue</span>' : '<span class="home-action-badge amber">Today</span>'}
+        ${t.due && new Date(t.due) < new Date() ? '<span class="home-action-badge">Overdue</span>' : '<span class="home-action-badge amber">Today</span>'}
       </div>`).join('')}` : ''}
 
     ${isManager ? `
@@ -4153,23 +4418,30 @@ function renderToday(){
       </div>`;
     return;
   }
-  // All logged-in users see all flows — step actions are separately gated by ownership
-  // Approvers only see flows at an approval step routed to them
+  // Visibility: head/manager see all; members see only flows they're involved in;
+  // approvers see only flows routed to them for approval
   const allVisible = TODAY_FLOWS.filter(f => {
     if (!loggedInMember) return false;
     const r = loggedInMember.role;
-    if (r === 'head' || r === 'manager' || r === 'member') return true;
+    if (r === 'head' || r === 'manager') return true;
+    const name = loggedInMember.name;
+    if (r === 'member') {
+      const inStepOwners = (f.stepOwners || []).includes(name);
+      const inApprovalRoutees = (f.approvalRoutees || []).includes(name);
+      const inSubAssignees = Object.values(f.subAssignees || {}).includes(name);
+      return inStepOwners || inApprovalRoutees || inSubAssignees;
+    }
     if (r === 'approver') {
       // Approvers see their pending approval flows AND any completed flows they approved
-      if (getFlowStatus(f) === 'done') return true;
+      if (getFlowStatus(f) === 'done') return (f.approvalRoutees || []).includes(name);
       const tmplSteps = getTemplateSteps(f.templateId);
       const curStep = tmplSteps[f.currentStep] || {};
       const isApprovalStep = curStep.isApproval === true ||
         curStep.name?.toLowerCase().includes('approval') ||
         curStep.name?.toLowerCase().includes('approve');
-      return isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
+      return isApprovalStep && (f.approvalRoutees || []).includes(name);
     }
-    return true;
+    return false;
   });
 
   const activeFlows    = allVisible.filter(f => getFlowStatus(f) !== 'done');
@@ -4178,6 +4450,29 @@ function renderToday(){
   // Update tab badges
   document.getElementById('ftab-active-count').textContent = activeFlows.length;
   document.getElementById('ftab-done-count').textContent   = completedFlows.length;
+
+  // Build type filter tabs — shown for both Active and Completed tabs
+  const BUCKET_ICONS = {Daily:'📆',Campaign:'🎯',Ad:'📢',Webinar:'🎤',Event:'🎉',Other:'📋'};
+  const typeBar = document.getElementById('flow-type-bar');
+  const poolForTabs = _todayTab === 'active' ? activeFlows : completedFlows;
+  if (typeBar) {
+    const typeCounts = {};
+    poolForTabs.forEach(f => {
+      const t = getFlowType(f);
+      typeCounts[t] = (typeCounts[t] || 0) + 1;
+    });
+    const types = Object.keys(typeCounts);
+    if (types.length > 1) {
+      typeBar.style.display = '';
+      typeBar.innerHTML = `<div class="flow-type-bar">
+        <button class="ftype-tab${!_flowTypeFilter ? ' active' : ''}" onclick="setFlowTypeFilter(null)">All <span class="ftype-count">${poolForTabs.length}</span></button>
+        ${types.map(t => `<button class="ftype-tab${_flowTypeFilter===t?' active':''}" onclick="setFlowTypeFilter('${t}')">${BUCKET_ICONS[t]||'📋'} ${t} <span class="ftype-count">${typeCounts[t]}</span></button>`).join('')}
+      </div>`;
+    } else {
+      typeBar.style.display = 'none';
+      typeBar.innerHTML = '';
+    }
+  }
 
   // Hide completed tab badge when zero
   const doneTabBadge = document.getElementById('ftab-done-count');
@@ -4190,50 +4485,115 @@ function renderToday(){
   document.getElementById('ftab-active')?.classList.toggle('active', _todayTab === 'active');
   document.getElementById('ftab-completed')?.classList.toggle('active', _todayTab === 'completed');
 
-  // Show/hide view-toggle (Summary/Detail — only for active tab)
+  // Show/hide view-toggle (Summary/Detail — shown for both tabs)
   const viewToggle = document.querySelector('.flow-view-toggle');
-  if (viewToggle) viewToggle.style.display = _todayTab === 'active' ? '' : 'none';
+  if (viewToggle) viewToggle.style.display = '';
 
   if (_todayTab === 'active') {
     document.getElementById('flow-board-done').style.display = 'none';
-    const visibleFlows = activeFlows;
-    document.getElementById('flow-board').innerHTML = visibleFlows.length ? visibleFlows.map(f => {
+    // Apply type filter if one is selected
+    const visibleFlows = _flowTypeFilter
+      ? activeFlows.filter(f => getFlowType(f) === _flowTypeFilter)
+      : activeFlows;
+
+    // Group by type/bucket (when showing All, group into sections; when filtered, flat list)
+    const buckets = {};
+    visibleFlows.forEach(f => {
+      const t = getFlowType(f);
+      if (!buckets[t]) buckets[t] = [];
+      buckets[t].push(f);
+    });
+    const bucketOrder = ['Daily','Campaign','Ad','Webinar','Event','Other'];
+    const sortedBuckets = Object.keys(buckets).sort((a, b) => {
+      const ai = bucketOrder.indexOf(a); const bi = bucketOrder.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
+
+    function renderFlowCard(f) {
       try { return flowCardHTML(f); }
-      catch(e) { console.error('flowCardHTML error for flow', f.id, e);
+      catch(e) {
+        console.error('flowCardHTML error for flow', f.id, e);
         const _ec = FLOW_CARD_COLORS[TODAY_FLOWS.indexOf(f) % FLOW_CARD_COLORS.length];
         return `<div class="flow-card-wrap"><div class="flow-card" style="border-left-color:${_ec};border-top-color:${_ec};"><div class="flow-header" style="background:${_ec}2a;"><div class="flow-num">#${TODAY_FLOWS.indexOf(f)+1}</div><div class="flow-info"><div class="flow-title">${f.title||'Untitled flow'}</div><div style="font-size:11px;color:var(--red);">⚠ Error rendering this flow — try refreshing.</div></div></div></div></div>`;
       }
-    }).join('') : `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No active flows right now</div><div class="empty-sub">All flows are complete! Check the Completed tab.</div></div>`;
+    }
+
+    document.getElementById('flow-board').innerHTML = visibleFlows.length
+      ? sortedBuckets.map(type => {
+          const bFlows = buckets[type];
+          const icon = BUCKET_ICONS[type] || '📋';
+          const stuckCount = bFlows.filter(f => getFlowStatus(f) === 'stuck').length;
+          const stuckBadge = stuckCount ? `<span style="background:var(--red-mid);color:white;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px;">⚠ ${stuckCount} stuck</span>` : '';
+          // When a specific type is selected, hide the bucket header (tab already says the type)
+          const header = _flowTypeFilter ? '' : `<div class="flow-bucket-header">${icon} ${type} <span class="flow-bucket-count">${bFlows.length}</span>${stuckBadge}</div>`;
+          return `<div class="flow-bucket">
+            ${header}
+            <div class="flow-bucket-cards">${bFlows.map(renderFlowCard).join('')}</div>
+          </div>`;
+        }).join('')
+      : `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No ${_flowTypeFilter||'active'} flows right now</div><div class="empty-sub">${_flowTypeFilter?`No flows of type "${_flowTypeFilter}" are active.`:'All flows are complete! Check the Completed tab.'}</div></div>`;
     renderFlowSummary(visibleFlows);
 
   } else {
-    // Completed tab — hide active board and summary
+    // Completed tab — hide active board
     document.getElementById('flow-board').style.display = 'none';
-    document.getElementById('flow-summary').style.display = 'none';
+
+    // Apply type filter to completed flows
+    const visibleCompleted = _flowTypeFilter
+      ? completedFlows.filter(f => getFlowType(f) === _flowTypeFilter)
+      : completedFlows;
+
+    // Group completed flows by bucket (same pattern as active)
+    const dBuckets = {};
+    visibleCompleted.forEach(f => {
+      const t = getFlowType(f);
+      if (!dBuckets[t]) dBuckets[t] = [];
+      dBuckets[t].push(f);
+    });
+    const bucketOrder = ['Daily','Campaign','Ad','Webinar','Event','Other'];
+    const sortedDBuckets = Object.keys(dBuckets).sort((a, b) => {
+      const ai = bucketOrder.indexOf(a); const bi = bucketOrder.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
+
     const doneBoard = document.getElementById('flow-board-done');
-    doneBoard.style.display = '';
-    doneBoard.innerHTML = completedFlows.length ? completedFlows.map(f => {
-      try { return flowCardHTML(f); }
-      catch(e) {
-        const _ec = FLOW_CARD_COLORS[TODAY_FLOWS.indexOf(f) % FLOW_CARD_COLORS.length];
-        return `<div class="flow-card-wrap"><div class="flow-card" style="border-left-color:${_ec};border-top-color:${_ec};"><div class="flow-header" style="background:${_ec}2a;"><div class="flow-info"><div class="flow-title">${f.title||'Untitled flow'}</div></div></div></div></div>`;
-      }
-    }).join('') : `<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">No completed flows yet</div><div class="empty-sub">Flows will appear here once all steps are marked done.</div></div>`;
-    return; // skip the setFlowView call below since completed uses its own board
+    doneBoard.innerHTML = visibleCompleted.length
+      ? sortedDBuckets.map(type => {
+          const bFlows = dBuckets[type];
+          const icon = BUCKET_ICONS[type] || '📋';
+          const header = _flowTypeFilter ? '' : `<div class="flow-bucket-header">${icon} ${type} <span class="flow-bucket-count">${bFlows.length}</span></div>`;
+          return `<div class="flow-bucket">
+            ${header}
+            <div class="flow-bucket-cards">${bFlows.map(f => {
+              try { return flowCardHTML(f); }
+              catch(e) {
+                const _ec = FLOW_CARD_COLORS[TODAY_FLOWS.indexOf(f) % FLOW_CARD_COLORS.length];
+                return `<div class="flow-card-wrap"><div class="flow-card" style="border-left-color:${_ec};border-top-color:${_ec};"><div class="flow-header" style="background:${_ec}2a;"><div class="flow-info"><div class="flow-title">${f.title||'Untitled flow'}</div></div></div></div></div>`;
+              }
+            }).join('')}</div>
+          </div>`;
+        }).join('')
+      : `<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">No ${_flowTypeFilter||'completed'} flows yet</div><div class="empty-sub">${_flowTypeFilter?`No completed flows of type "${_flowTypeFilter}".`:'Flows will appear here once all steps are marked done.'}</div></div>`;
+
+    renderFlowSummary(visibleCompleted);
   }
 }
 
 // Members default to Detail (they need to act), Managers default to Summary (they need overview)
 let _flowView = null; // null = auto-set on first render
 let _todayTab = 'active'; // 'active' | 'completed'
+let _flowTypeFilter = null; // null = All, or a type string like 'Daily'
 
 function setTodayTab(tab) {
   _todayTab = tab;
+  _flowTypeFilter = null; // reset type filter when switching Active/Completed
   document.getElementById('ftab-active')?.classList.toggle('active', tab === 'active');
   document.getElementById('ftab-completed')?.classList.toggle('active', tab === 'completed');
-  // Show/hide the view-toggle and spawn btn (only relevant for active tab)
-  const viewToggle = document.querySelector('.flow-view-toggle');
-  if (viewToggle) viewToggle.style.display = tab === 'active' ? '' : 'none';
+  renderToday();
+}
+
+function setFlowTypeFilter(type) {
+  _flowTypeFilter = type; // null = All
   renderToday();
 }
 
@@ -4241,10 +4601,13 @@ function setFlowView(view) {
   _flowView = view;
   document.getElementById('fvt-summary')?.classList.toggle('active', view === 'summary');
   document.getElementById('fvt-detail')?.classList.toggle('active', view === 'detail');
-  // Only apply view toggle when on active tab
+  document.getElementById('flow-summary').style.display = view === 'summary' ? '' : 'none';
   if (_todayTab === 'active') {
-    document.getElementById('flow-summary').style.display = view === 'summary' ? '' : 'none';
-    document.getElementById('flow-board').style.display   = view === 'detail'  ? '' : 'none';
+    document.getElementById('flow-board').style.display     = view === 'detail' ? '' : 'none';
+    document.getElementById('flow-board-done').style.display = 'none';
+  } else {
+    document.getElementById('flow-board-done').style.display = view === 'detail' ? '' : 'none';
+    document.getElementById('flow-board').style.display     = 'none';
   }
 }
 
@@ -4322,7 +4685,7 @@ function renderFlowSummary(flows) {
     <tbody>${rows}</tbody>
   </table>`;
 
-  // Auto-detect default view if not set
+  // Members default to Detail (they need to act on their step); Managers/head default to Summary overview
   if (_flowView === null) {
     _flowView = (loggedInMember?.role === 'member' || loggedInMember?.role === 'approver') ? 'detail' : 'summary';
   }
@@ -4473,6 +4836,7 @@ async function confirmSpawn() {
   const newFlow = {
     id: 'f_' + Date.now(),
     templateId: tmpl.id,
+    flowType: tmpl.type || tmpl.name || 'Other',
     title,
     platforms: tmpl.platforms || [],
     currentStep: 0,
@@ -4543,6 +4907,62 @@ async function clearFlowStepFlag(flowId, stepIdx) {
   renderToday();
   openFlowStep(flowId, stepIdx);
   toast('Flag cleared.', 'ok');
+}
+
+// ── Nudge / step comment system ──────────────
+let _nudgeFlowId = null, _nudgeStepIdx = null;
+
+function openNudgeModal(flowId, stepIdx) {
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  _nudgeFlowId = flowId; _nudgeStepIdx = stepIdx;
+  const owner = (f.subAssignees||{})[stepIdx] || (f.stepOwners||[])[stepIdx] || 'the step owner';
+  const stepName = (f.stepNames||[])[stepIdx] || `Step ${stepIdx+1}`;
+  document.getElementById('nudge-context').innerHTML =
+    `<strong>${f.title}</strong> &mdash; ${stepName}<br><span style="color:var(--ink3);">Owner: ${owner}</span>`;
+  document.getElementById('nudge-text').value = '';
+  // Show existing thread
+  const comments = ((f.stepComments||{})[stepIdx] || []);
+  document.getElementById('nudge-thread').innerHTML = comments.length
+    ? `<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;">Previous notes</div>` +
+      comments.map(c => `<div class="comment-item"><span style="font-weight:600;">${c.by}</span> <span style="font-size:10px;color:var(--ink3);">${new Date(c.at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span><div style="margin-top:2px;">${c.text}</div></div>`).join('')
+    : '';
+  document.getElementById('nudge-modal').classList.add('open');
+  setTimeout(() => document.getElementById('nudge-text').focus(), 100);
+}
+
+function closeNudgeModal() {
+  document.getElementById('nudge-modal').classList.remove('open');
+  _nudgeFlowId = null; _nudgeStepIdx = null;
+}
+
+async function sendNudge() {
+  if (!_nudgeFlowId || _nudgeStepIdx === null) return;
+  const text = document.getElementById('nudge-text').value.trim();
+  if (!text) { toast('Enter a message.', 'warn'); return; }
+  const f = TODAY_FLOWS.find(x => x.id === _nudgeFlowId);
+  if (!f) return;
+  const by = loggedInMember?.name || 'Manager';
+  const comment = { by, text, at: new Date().toISOString() };
+  if (!f.stepComments) f.stepComments = {};
+  if (!f.stepComments[_nudgeStepIdx]) f.stepComments[_nudgeStepIdx] = [];
+  f.stepComments[_nudgeStepIdx].push(comment);
+  await fbSaveFlows();
+  const owner = (f.subAssignees||{})[_nudgeStepIdx] || (f.stepOwners||[])[_nudgeStepIdx];
+  const stepName = (f.stepNames||[])[_nudgeStepIdx] || `Step ${_nudgeStepIdx+1}`;
+  if (owner) {
+    sendFirestoreNotif(owner, {
+      title: `📨 Note from ${by} — ${f.title}`,
+      body: text,
+      icon: '📨',
+      type: 'nudge',
+      tag: `nudge-${_nudgeFlowId}-${_nudgeStepIdx}`
+    });
+  }
+  auditLog('step_nudge', `${by} sent a note on "${f.title}" / ${stepName}${owner?' to '+owner:''}`, { flowId: f.id, flowTitle: f.title, stepIdx: _nudgeStepIdx, owner, text });
+  closeNudgeModal();
+  renderToday();
+  toast(`Note sent${owner?' to '+owner:''}!`, 'ok');
 }
 
 async function setStepDeadline(flowId, stepIdx, dateVal) {
@@ -4891,6 +5311,7 @@ function flowCardHTML(f) {
         ${status!=='done'
           ? `Current: <span class="current-step-name">${curStep.name}</span> → <span style="font-size:11px;">${subAssignee||curStep.owner||'<span style="color:var(--amber);">Unassigned</span>'}</span>` +
             ((f.stepFlags||{})[curStepIdx] ? ' <span class="step-flag-badge">🚩</span>' : '') +
+            (((f.stepComments||{})[curStepIdx]||[]).length ? ` <span style="font-size:10px;background:var(--amber-light);color:#b45309;padding:1px 6px;border-radius:8px;font-weight:600;">💬 ${(f.stepComments[curStepIdx]).length}</span>` : '') +
             (_stepDeadlineChip(f, curStepIdx) ? ' ' + _stepDeadlineChip(f, curStepIdx) : '')
           : '<span style="color:var(--green);font-weight:600;">✓ All steps complete!</span>'}
       </div>
@@ -4902,8 +5323,10 @@ function flowCardHTML(f) {
           ${!subtasksDone ? 'disabled style="opacity:0.35;cursor:not-allowed;background:var(--coral);color:white;border-color:var(--coral);font-weight:700;padding:8px 20px;font-size:13px;"' : ''}>
           ✓ Mark Step Done
         </button>` : `<span style="font-size:11px;color:var(--ink3);">⏳ Waiting for <strong>${subAssignee||curStep.owner||'owner'}</strong></span>`}
+        ${isManager && (subAssignee||curStep.owner) ? `<button class="btn btn-sm btn-ghost" style="border-color:var(--amber);color:#b45309;" onclick="openNudgeModal('${f.id}',${curStepIdx})">📨 Nudge</button>` : ''}
         <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
       ` : status !== 'done' && isApprovalStep ? `
+        ${isManager ? `<button class="btn btn-sm btn-ghost" style="border-color:var(--amber);color:#b45309;" onclick="openNudgeModal('${f.id}',${curStepIdx})">📨 Nudge</button>` : ''}
         <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
       ` : ''}
     </div>
@@ -5193,6 +5616,16 @@ function taskCardHTML(t){
   const bulkCheck = _bulkMode
     ? `<input type="checkbox" class="bulk-check" ${isSel?'checked':''} onclick="event.stopPropagation();toggleTaskSelect('${t.id}')" style="width:15px;height:15px;cursor:pointer;accent-color:var(--coral);flex-shrink:0;"/>`
     : '';
+  const isManager  = role === 'manager' || role === 'head';
+  const isAssignee = loggedInMember && t.assignee === loggedInMember.name;
+  const canAct     = isManager || isAssignee;
+  const inlineStatus = canAct ? `<select class="k-status-select" style="flex:0 0 120px;" onclick="event.stopPropagation()" onchange="setTaskStatus(${t.id},this.value);event.stopPropagation()">
+    <option value="todo"${t.status==='todo'?' selected':''}>To Do</option>
+    <option value="inprogress"${t.status==='inprogress'?' selected':''}>In Progress</option>
+    <option value="review"${t.status==='review'?' selected':''}>In Review</option>
+    <option value="blocked"${t.status==='blocked'?' selected':''}>Blocked</option>
+    <option value="done"${t.status==='done'?' selected':''}>Done</option>
+  </select>` : `<span class="sp ${SC[t.status]||'sp-todo'}">${SL[t.status]||t.status}</span>`;
   return `<div class="task-card${t.id===selectedId?' sel':''}${t.status==='blocked'?' blocked':''}${isSel?' sel':''}"
     onclick="${_bulkMode?`toggleTaskSelect('${t.id}')`:`openTask('${t.id}')`}"
     style="${isSel?'border-color:var(--coral);border-width:2px;':''}"
@@ -5200,7 +5633,7 @@ function taskCardHTML(t){
     <div class="tc-top">
       ${bulkCheck}
       <span class="tc-title">${t.title}</span>
-      <span class="sp ${SC[t.status]||'sp-todo'}">${SL[t.status]||t.status}</span>
+      ${inlineStatus}
     </div>
     <div class="tc-meta">
       <span class="meta-chip"><div class="av av-sm ${AV[t.assignee]||'av-a'}">${ini(t.assignee)}</div>${t.assignee}</span>
@@ -5227,6 +5660,59 @@ function getVisibleTasks() {
   return TASKS.filter(t => t.assignee === loggedInMember.name);
 }
 
+let _taskView = 'kanban'; // 'kanban' | 'list'
+
+function setTaskView(v) {
+  _taskView = v;
+  document.getElementById('tvt-kanban')?.classList.toggle('active', v === 'kanban');
+  document.getElementById('tvt-list')?.classList.toggle('active', v === 'list');
+  renderTasks();
+}
+
+function kanbanTaskCardHTML(t) {
+  const isSel = _bulkSelected.has(t.id);
+  const bulkCheck = _bulkMode
+    ? `<input type="checkbox" class="bulk-check" ${isSel?'checked':''} onclick="event.stopPropagation();toggleTaskSelect('${t.id}')" style="width:14px;height:14px;cursor:pointer;accent-color:var(--coral);flex-shrink:0;"/>`
+    : '';
+  const commentCount = (t.comments||[]).length;
+  const attachCount  = (t.attachments||[]).length;
+  const isManager  = role === 'manager' || role === 'head';
+  const isAssignee = loggedInMember && t.assignee === loggedInMember.name;
+  const canAct     = isManager || isAssignee;
+  const NEXT = {todo:'inprogress',inprogress:'review',review:'done'};
+  const NEXT_LABEL = {todo:'▶ Start',inprogress:'◎ Review',review:'✓ Done'};
+  const canPush = canAct && NEXT[t.status];
+  // Build inline actions row (stop click propagation so card click doesn't open side panel)
+  const actionsHTML = canAct ? `<div class="k-card-actions" onclick="event.stopPropagation()">
+    <select class="k-status-select" onchange="setTaskStatus(${t.id},this.value);event.stopPropagation()">
+      <option value="todo"${t.status==='todo'?' selected':''}>To Do</option>
+      <option value="inprogress"${t.status==='inprogress'?' selected':''}>In Progress</option>
+      <option value="review"${t.status==='review'?' selected':''}>In Review</option>
+      <option value="blocked"${t.status==='blocked'?' selected':''}>Blocked</option>
+      <option value="done"${t.status==='done'?' selected':''}>Done</option>
+    </select>
+    ${canPush?`<button class="k-push-btn" onclick="pushTask(${t.id});event.stopPropagation()">${NEXT_LABEL[t.status]}</button>`:''}
+  </div>` : '';
+  return `<div class="k-card${t.status==='blocked'?' blocked':''}${isSel?' sel':''}"
+    onclick="${_bulkMode?`toggleTaskSelect('${t.id}')`:`openTask('${t.id}')`}"
+    style="${isSel?'border-color:var(--coral);border-width:2px;':''}"
+  >
+    <div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:5px;">
+      ${bulkCheck}
+      <span class="k-card-title" style="flex:1;">${t.title}</span>
+      <span class="prio-dot pd-${t.priority}" style="flex-shrink:0;margin-top:4px;" title="${t.priority} priority"></span>
+    </div>
+    <div class="k-card-meta">
+      <span class="meta-chip"><div class="av av-sm ${AV[t.assignee]||'av-a'}" style="width:16px;height:16px;font-size:8px;">${ini(t.assignee)}</div>${t.assignee.split(' ')[0]}</span>
+      <span class="meta-chip">📅 ${fmtDue(t.due)}</span>
+      ${commentCount?`<span class="meta-chip" title="${commentCount} comment${commentCount!==1?'s':''}">💬 ${commentCount}</span>`:''}
+      ${attachCount?`<span class="meta-chip" title="${attachCount} attachment${attachCount!==1?'s':''}">📎 ${attachCount}</span>`:''}
+    </div>
+    ${t.progress>0?`<div class="prog-wrap" style="margin-top:6px;"><div class="prog-bar" style="width:${t.progress}%"></div></div>`:''}
+    ${actionsHTML}
+  </div>`;
+}
+
 function renderTasks(){
   // Populate assignee filter with only visible team members
   const assigneeSel = document.getElementById('f-assignee');
@@ -5240,15 +5726,42 @@ function renderTasks(){
   const fa=document.getElementById('f-assignee').value;
   const fp=document.getElementById('f-platform').value;
   let list = getVisibleTasks();
-  if(fs) list=list.filter(t=>t.status===fs);
   if(fa) list=list.filter(t=>t.assignee===fa);
   if(fp) list=list.filter(t=>(t.platforms||[]).includes(fp));
-  document.getElementById('task-count').textContent=list.length+' task'+(list.length!==1?'s':'');
   // Badge only counts own open tasks
   const myOpen = getVisibleTasks().filter(t=>t.status!=='done').length;
   document.getElementById('badge-tasks').textContent = myOpen || '';
-  document.getElementById('task-list').innerHTML=list.length?list.map(taskCardHTML).join(''):
-    `<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">No tasks here</div><div class="empty-sub">${loggedInMember?.role==='member'?'Tasks assigned to you will appear here.':'Adjust filters or create a new task.'}</div></div>`;
+
+  if (_taskView === 'kanban') {
+    // In kanban mode the status filter limits which columns are shown
+    const COLS = [
+      {key:'todo',      label:'To Do',      cls:'k-todo',      icon:'○'},
+      {key:'inprogress',label:'In Progress', cls:'k-inprogress',icon:'▶'},
+      {key:'review',    label:'In Review',   cls:'k-review',    icon:'◎'},
+      {key:'blocked',   label:'Blocked',     cls:'k-blocked',   icon:'⊘'},
+      {key:'done',      label:'Done',        cls:'k-done',      icon:'✓'},
+    ];
+    const activeCols = fs ? COLS.filter(c => c.key === fs) : COLS;
+    const totalShown = activeCols.reduce((n,c)=>n+(list.filter(t=>t.status===c.key).length),0);
+    document.getElementById('task-count').textContent = totalShown + ' task' + (totalShown!==1?'s':'');
+    const emptyCol = `<div style="font-size:11px;color:var(--ink3);text-align:center;padding:16px 8px;">No tasks</div>`;
+    document.getElementById('task-list').innerHTML = `<div class="kanban-board">
+      ${activeCols.map(col => {
+        const colTasks = list.filter(t => t.status === col.key);
+        return `<div class="kanban-col ${col.cls}">
+          <div class="kanban-col-header">${col.icon} ${col.label}<span class="kanban-col-count">${colTasks.length}</span></div>
+          <div class="kanban-col-body">
+            ${colTasks.length ? colTasks.map(kanbanTaskCardHTML).join('') : emptyCol}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else {
+    if(fs) list=list.filter(t=>t.status===fs);
+    document.getElementById('task-count').textContent=list.length+' task'+(list.length!==1?'s':'');
+    document.getElementById('task-list').innerHTML=list.length?list.map(taskCardHTML).join(''):
+      `<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">No tasks here</div><div class="empty-sub">${loggedInMember?.role==='member'?'Tasks assigned to you will appear here.':'Adjust filters or create a new task.'}</div></div>`;
+  }
 }
 
 function openTask(id){
@@ -5315,7 +5828,7 @@ function openTask(id){
       ${canEdit?`<div style="display:flex;align-items:center;gap:8px;"><input type="range" min="0" max="100" value="${t.progress}" style="flex:1;" oninput="updProg(${t.id},this.value)"/><span id="pv-${t.id}" style="font-size:12px;font-weight:600;min-width:32px;">${t.progress}%</span></div>`
       :`<div style="height:5px;background:var(--cream3);border-radius:3px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:${t.progress}%;background:var(--coral);border-radius:3px;"></div></div>`}
     </div>
-    ${t.notes?`<div class="dp-sec"><div class="dp-label">Notes</div><div style="font-size:12px;line-height:1.5;color:var(--ink2);">${t.notes}</div></div>`:''}
+    ${t.notes?`<div class="dp-sec"><div class="dp-label">Notes</div><div style="font-size:12px;line-height:1.5;color:var(--ink2);">${linkify(t.notes)}</div></div>`:''}
     ${(t.attachments||[]).length?`<div class="dp-sec"><div class="dp-label">📎 Attachments</div>${t.attachments.map(a=>`<div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:18px;">${getDriveIcon(a.mimeType)}</span><a href="${a.url}" target="_blank" style="font-size:12px;color:var(--navy);text-decoration:none;font-weight:500;">${a.name}</a><span style="font-size:10px;color:var(--ink3);">by ${a.addedBy}</span></div>`).join('')}</div>`:''}
     <div class="divider"></div>
     <div class="dp-label" style="margin-bottom:6px;">Status History</div>
@@ -5332,8 +5845,8 @@ function openTask(id){
     </div>` : ''}
     ${canEdit?`<div class="divider"></div>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      ${isManager?`<button class="btn btn-coral" onclick="openEditTask(${t.id})">&#9999;&#65039; Edit Task</button>`:''}
-      <button class="btn" onclick="go('log')">&#128221; Log Activity</button>
+      ${isManager?`<button class="btn btn-coral" onclick="openTaskModal(${t.id})">&#9999;&#65039; Edit Task</button>`:''}
+      <button class="btn" onclick="go('tasks');setTasksTab('activity')">&#128221; Log Activity</button>
       ${isManager?`<button class="btn" style="border-color:var(--red);color:var(--red);" onclick="delTask(${t.id})">&times; Delete</button>`:''}
     </div>`:''}  `;
   document.getElementById('side-panel').classList.add('open');
@@ -5388,57 +5901,18 @@ async function delTask(id){
 }
 
 let _editingTaskId = null;
+
 function openEditTask(id) {
-  const t = TASKS.find(x => x.id === id);
-  if (!t) return;
-  _editingTaskId = id;
-
-  document.getElementById('et-title').value = t.title || '';
-  document.getElementById('et-priority').value = t.priority || 'med';
-  document.getElementById('et-status').value = t.status || 'todo';
-  document.getElementById('et-due').value = t.due || '';
-  document.getElementById('et-notes').value = t.notes || '';
-
-  // Populate assignee — managers can reassign within their team, head can reassign to anyone
-  const assigneeSel = document.getElementById('et-assignee');
-  const r = loggedInMember?.role;
-  let assignable;
-  if (r === 'head') {
-    assignable = MEMBERS.filter(m => m.role !== 'approver');
-  } else if (r === 'manager') {
-    assignable = MEMBERS.filter(m => m.name === loggedInMember.name || m.reportsTo === loggedInMember.name);
-  } else {
-    assignable = MEMBERS.filter(m => m.name === loggedInMember?.name);
-  }
-  assigneeSel.innerHTML = assignable.map(m =>
-    `<option value="${m.name}"${m.name === t.assignee ? ' selected' : ''}>${m.name}</option>`
-  ).join('');
-
-  document.getElementById('edit-task-modal').style.display = 'flex';
+  // Redirect to unified modal
+  openTaskModal(id);
 }
 
 function closeEditTask() {
-  document.getElementById('edit-task-modal').style.display = 'none';
-  _editingTaskId = null;
+  closeTaskModal();
 }
 
 async function saveEditTask() {
-  const t = TASKS.find(x => x.id === _editingTaskId);
-  if (!t) return;
-  const title = document.getElementById('et-title').value.trim();
-  if (!title) { toast('Title cannot be empty.', 'warn'); return; }
-  t.title    = title;
-  t.assignee = document.getElementById('et-assignee').value;
-  t.priority = document.getElementById('et-priority').value;
-  t.status   = document.getElementById('et-status').value;
-  t.due      = document.getElementById('et-due').value;
-  t.notes    = document.getElementById('et-notes').value.trim();
-  await fbSaveTask(t);
-  closeEditTask();
-  renderTasks();
-  if (selectedId === _editingTaskId) openTask(_editingTaskId);
-  toast('Task updated!', 'ok');
-  auditLog('task_edited', `Edited task "${t.title}"`, { task: t.title, assignee: t.assignee });
+  await saveTaskModal();
 }
 
 
@@ -6078,7 +6552,7 @@ function logEntryHTML(l) {
         ${l.step?`<span style="font-size:10px;background:var(--cream2);padding:2px 7px;border-radius:4px;color:var(--ink3);">${l.step}</span>`:''}
         <span class="log-time">${l.when}</span>
       </div>
-      <div class="log-note">${l.note}</div>
+      <div class="log-note">${linkify(l.note)}</div>
       <div class="chip-row">
         <span class="sp ${SC[l.status]||'sp-todo'}" style="font-size:10px;">${SL[l.status]||l.status}</span>
         <span class="chip">⏱ ${l.timeH}h</span>
@@ -6450,9 +6924,10 @@ function saveNewFlow() {
   const platsEl = document.getElementById('nf-platforms');
   const platforms = Array.from(platsEl.selectedOptions).map(o => o.value);
   const freq = document.getElementById('nf-freq').value;
+  const type = document.getElementById('nf-type').value;
   const newFlow = {
     id: 'flow_'+Date.now(),
-    name, freq,
+    name, freq, type,
     platforms: platforms.length ? platforms : PLATFORMS,
     steps: validSteps.map((s, i) => ({ id: s.id, name: s.name.trim(), short: s.name.trim().substring(0,6), owner: s.owner })),
   };
@@ -6465,81 +6940,170 @@ function saveNewFlow() {
 }
 
 // ═══════════════════════════════════════════
-// NEW TASK MODAL
+// UNIFIED TASK MODAL (create + edit)
 // ═══════════════════════════════════════════
-function openTaskModal(){
-  if(role==='viewer'){toast('Viewers cannot create tasks.','warn');return;}
-  const d=new Date(); d.setDate(d.getDate()+5);
-  document.getElementById('nt-due').value=d.toISOString().split('T')[0];
+function openTaskModal(id = null){
+  if (!id && role === 'viewer') { toast('Viewers cannot create tasks.', 'warn'); return; }
+  _editingTaskId = id || null;
+  const isEdit = id != null;
+  const t = isEdit ? TASKS.find(x => x.id === id) : null;
 
-  // Populate assignee dropdown per role
+  // Title + button label
+  document.getElementById('task-modal-title').textContent = isEdit ? '✏️ Edit Task' : '+ New Ad-hoc Task';
+  document.getElementById('task-modal-save-btn').textContent = isEdit ? 'Save Changes' : 'Create Task';
+
+  // Status field only visible when editing
+  const statusWrap = document.getElementById('nt-status-wrap');
+  if (statusWrap) statusWrap.style.display = isEdit ? '' : 'none';
+
+  // Populate assignee per role
   const assigneeSel = document.getElementById('nt-assignee');
   const r = loggedInMember?.role;
   let assignableMembers;
   if (r === 'head') {
-    // Head can assign to anyone (except approvers)
     assignableMembers = MEMBERS.filter(m => m.role !== 'approver');
   } else if (r === 'manager') {
-    // Manager can assign to themselves + direct reports
-    assignableMembers = MEMBERS.filter(m =>
-      m.name === loggedInMember.name || m.reportsTo === loggedInMember.name
-    );
+    assignableMembers = MEMBERS.filter(m => m.name === loggedInMember.name || m.reportsTo === loggedInMember.name);
   } else {
-    // Member can only assign to themselves
     assignableMembers = MEMBERS.filter(m => m.name === loggedInMember?.name);
   }
+  const defaultAssignee = t?.assignee || loggedInMember?.name;
   assigneeSel.innerHTML = assignableMembers.map(m =>
-    `<option value="${m.name}"${m.name === loggedInMember?.name ? ' selected' : ''}>${m.name}</option>`
+    `<option value="${m.name}"${m.name === defaultAssignee ? ' selected' : ''}>${m.name}</option>`
   ).join('');
   assigneeSel.disabled = assignableMembers.length <= 1;
 
+  if (isEdit && t) {
+    document.getElementById('nt-title').value    = t.title    || '';
+    document.getElementById('nt-priority').value = t.priority || 'med';
+    document.getElementById('nt-status').value   = t.status   || 'todo';
+    // Normalise to datetime-local format (YYYY-MM-DDTHH:MM)
+    const dueVal = t.due
+      ? (t.due.includes('T') ? t.due.slice(0, 16) : t.due + 'T09:00')
+      : '';
+    document.getElementById('nt-due').value   = dueVal;
+    document.getElementById('nt-notes').value = t.notes || '';
+
+    // Show existing attachments
+    const existingWrap = document.getElementById('nt-existing-attach-wrap');
+    const existingDiv  = document.getElementById('nt-existing-attach');
+    const attachments  = t.attachments || [];
+    if (attachments.length && existingWrap) {
+      existingWrap.style.display = '';
+      existingDiv.innerHTML = attachments.map(a =>
+        `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+          <span style="font-size:18px;">${getDriveIcon(a.mimeType)}</span>
+          <a href="${a.url}" target="_blank" style="font-size:12px;color:var(--navy);text-decoration:none;font-weight:500;">${a.name}</a>
+          <span style="font-size:10px;color:var(--ink3);">by ${a.addedBy}</span>
+        </div>`
+      ).join('');
+    } else if (existingWrap) {
+      existingWrap.style.display = 'none';
+    }
+  } else {
+    document.getElementById('nt-title').value    = '';
+    document.getElementById('nt-priority').value = 'med';
+    document.getElementById('nt-notes').value    = '';
+    // Default deadline: 5 days from now at 6 PM
+    const d = new Date();
+    d.setDate(d.getDate() + 5);
+    d.setHours(18, 0, 0, 0);
+    document.getElementById('nt-due').value = d.toISOString().slice(0, 16);
+    const existingWrap = document.getElementById('nt-existing-attach-wrap');
+    if (existingWrap) existingWrap.style.display = 'none';
+  }
+
+  // Reset file input
+  const fi = document.getElementById('nt-file');
+  if (fi) fi.value = '';
+  document.getElementById('nt-file-label').textContent = 'Choose file…';
+
   document.getElementById('task-modal').classList.add('open');
 }
+
 function closeTaskModal(){
   document.getElementById('task-modal').classList.remove('open');
+  _editingTaskId = null;
   const fi = document.getElementById('nt-file');
   if (fi) fi.value = '';
   const fl = document.getElementById('nt-file-label');
   if (fl) fl.textContent = 'Choose file…';
 }
-async function createTask(){
-  const title=document.getElementById('nt-title').value.trim();
-  if(!title){toast('Enter a task title.','warn');return;}
-  const platsEl=document.getElementById('nt-platform');
-  const platforms=Array.from(platsEl.selectedOptions).map(o=>o.value);
-  const taskId = Date.now();
-  // Upload attachment if provided
-  let attachments = [];
+
+async function saveTaskModal(){
+  const title = document.getElementById('nt-title').value.trim();
+  if (!title) { toast('Enter a task title.', 'warn'); return; }
+  const platsEl   = document.getElementById('nt-platform');
+  const platforms = Array.from(platsEl.selectedOptions).map(o => o.value);
+  const dueVal    = document.getElementById('nt-due').value; // datetime-local string
+
+  // Handle file upload
+  let newAttachment = null;
   const fileInput = document.getElementById('nt-file');
   if (fileInput?.files?.length) {
-    const file = fileInput.files[0];
+    const file   = fileInput.files[0];
+    const taskId = _editingTaskId || Date.now();
     try {
       toast('Uploading attachment…', '');
       const storageRef = firebase.storage().ref(`task_attachments/${taskId}/${file.name}`);
       await storageRef.put(file);
       const url = await storageRef.getDownloadURL();
-      attachments = [{ name: file.name, url, mimeType: file.type, addedBy: loggedInMember?.name || '', addedAt: new Date().toLocaleDateString('en-IN') }];
+      newAttachment = { name: file.name, url, mimeType: file.type, addedBy: loggedInMember?.name || '', addedAt: new Date().toLocaleDateString('en-IN') };
     } catch(e) { console.warn('Attachment upload failed:', e); }
   }
-  const t={
-    id: taskId, title,
-    status:'todo',
-    priority:document.getElementById('nt-priority').value,
-    assignee:document.getElementById('nt-assignee').value,
-    platforms: platforms.length?platforms:['Instagram'],
-    due:document.getElementById('nt-due').value,
-    timeLogged:0,
-    notes:document.getElementById('nt-notes').value.trim(),
-    progress:0, comments:[], attachments,
-  };
-  TASKS.unshift(t);
-  await fbSaveTask(t);
-  auditLog('task_created', `Created task "${t.title}" assigned to ${t.assignee}`, { task: t.title, assignee: t.assignee, priority: t.priority });
-  notifyTaskAssigned(t.title, t.assignee);
-  closeTaskModal();
-  toast(`Task created for ${t.assignee}!`,'ok');
-  refresh();
+
+  if (_editingTaskId) {
+    // ── Edit mode ──
+    const t = TASKS.find(x => x.id === _editingTaskId);
+    if (!t) return;
+    const prevStatus = t.status;
+    t.title    = title;
+    t.assignee = document.getElementById('nt-assignee').value;
+    t.priority = document.getElementById('nt-priority').value;
+    t.status   = document.getElementById('nt-status').value;
+    t.due      = dueVal;
+    t.notes    = document.getElementById('nt-notes').value.trim();
+    if (newAttachment) {
+      if (!Array.isArray(t.attachments)) t.attachments = [];
+      t.attachments.push(newAttachment);
+    }
+    if (t.status !== prevStatus) {
+      if (!Array.isArray(t.statusHistory)) t.statusHistory = [];
+      t.statusHistory.push({ from: prevStatus, to: t.status, by: loggedInMember?.name || 'Unknown', at: Date.now() });
+    }
+    await fbSaveTask(t);
+    closeTaskModal();
+    renderTasks();
+    if (selectedId === _editingTaskId) openTask(_editingTaskId);
+    toast('Task updated!', 'ok');
+    auditLog('task_edited', `Edited task "${t.title}"`, { task: t.title, assignee: t.assignee });
+  } else {
+    // ── Create mode ──
+    const taskId     = Date.now();
+    const attachments = newAttachment ? [newAttachment] : [];
+    const t = {
+      id: taskId, title,
+      status: 'todo',
+      priority: document.getElementById('nt-priority').value,
+      assignee: document.getElementById('nt-assignee').value,
+      platforms: platforms.length ? platforms : ['Instagram'],
+      due: dueVal,
+      timeLogged: 0,
+      notes: document.getElementById('nt-notes').value.trim(),
+      progress: 0, comments: [], attachments,
+    };
+    TASKS.unshift(t);
+    await fbSaveTask(t);
+    auditLog('task_created', `Created task "${t.title}" assigned to ${t.assignee}`, { task: t.title, assignee: t.assignee, priority: t.priority });
+    notifyTaskAssigned(t.title, t.assignee);
+    closeTaskModal();
+    toast(`Task created for ${t.assignee}!`, 'ok');
+    refresh();
+  }
 }
+
+// Keep createTask as alias for backwards compatibility
+async function createTask(){ await saveTaskModal(); }
 
 // ═══════════════════════════════════════════
 // ANALYTICS
@@ -6908,7 +7472,53 @@ function openIdeaModal(ideaId) {
   const campSel = document.getElementById('idea-campaign');
   campSel.innerHTML = '<option value="">— No Campaign —</option>' +
     CAMPAIGNS.map(c=>`<option value="${c.id}"${c.id===idea?.campaignId?' selected':''}>${c.name}</option>`).join('');
+
+  // ── Flow creation section ──
+  const flowCb    = document.getElementById('idea-create-flow');
+  const flowFields = document.getElementById('idea-flow-fields');
+  const flowExisting = document.getElementById('idea-flow-existing');
+  const alreadyLinked = !!(idea?.linkedFlowId);
+  flowCb.checked = false;
+  flowFields.style.display = 'none';
+  // Hide flow section when editing an idea that already has a linked flow
+  if (alreadyLinked) {
+    flowExisting.style.display = '';
+    flowFields.style.display = '';
+    flowCb.checked = true;
+    flowCb.disabled = true;
+  } else {
+    flowExisting.style.display = 'none';
+    flowCb.disabled = false;
+  }
+  // Populate template dropdown
+  const tmplSel = document.getElementById('idea-flow-template');
+  tmplSel.innerHTML = FLOW_TEMPLATES.map(t =>
+    `<option value="${t.id}">${t.name}${t.type && t.type !== t.name ? ' (' + t.type + ')' : ''}</option>`
+  ).join('');
+  // Pre-fill flow name from idea title
+  document.getElementById('idea-flow-name').value = idea?.title || '';
+  // Wire title input to auto-update flow name while user types (only for new ideas)
+  if (!ideaId) {
+    document.getElementById('idea-title').oninput = function() {
+      if (!document.getElementById('idea-create-flow').checked) return;
+      const fn = document.getElementById('idea-flow-name');
+      if (!fn._userEdited) fn.value = this.value;
+    };
+    document.getElementById('idea-flow-name').oninput = function() { this._userEdited = true; };
+  }
+
   document.getElementById('idea-modal').classList.add('open');
+}
+
+function toggleIdeaFlowFields(checked) {
+  const fields = document.getElementById('idea-flow-fields');
+  fields.style.display = checked ? '' : 'none';
+  if (checked) {
+    // Sync flow name from current title if not yet user-edited
+    const fn = document.getElementById('idea-flow-name');
+    if (!fn._userEdited) fn.value = document.getElementById('idea-title').value;
+    document.getElementById('idea-flow-name').focus();
+  }
 }
 
 function closeIdeaModal() {
@@ -6919,8 +7529,55 @@ function closeIdeaModal() {
 async function saveIdea() {
   const title = document.getElementById('idea-title').value.trim();
   if (!title) { toast('Please enter a title.','warn'); return; }
+
+  // ── Flow creation check ──
+  const createFlow = document.getElementById('idea-create-flow').checked;
+  const existingIdea = _editingIdeaId ? CONTENT_IDEAS.find(i=>i.id===_editingIdeaId) : null;
+  const alreadyLinked = !!(existingIdea?.linkedFlowId);
+
+  let linkedFlowId = existingIdea?.linkedFlowId || null;
+  // Determine the idea ID now so the flow can reference it
+  const ideaId = _editingIdeaId || ('idea_' + Date.now());
+
+  if (createFlow && !alreadyLinked) {
+    const flowName = document.getElementById('idea-flow-name').value.trim() || title;
+    const templateId = document.getElementById('idea-flow-template').value;
+    const tmpl = FLOW_TEMPLATES.find(t => t.id === templateId);
+    if (!tmpl) { toast('Selected flow template not found.', 'warn'); return; }
+    const steps = tmpl.steps && tmpl.steps.length ? JSON.parse(JSON.stringify(tmpl.steps)) : [];
+    if (!steps.length) { toast('Template has no steps. Edit the template first.', 'warn'); return; }
+    const newFlow = {
+      id: 'f_' + Date.now(),
+      templateId: tmpl.id,
+      flowType: tmpl.type || tmpl.name || 'Other',
+      title: flowName,
+      platforms: tmpl.platforms || [],
+      currentStep: 0,
+      stepStatuses: steps.map((_, i) => i === 0 ? 'active' : 'pending'),
+      stepOwners: steps.map(s => s.owner || ''),
+      stepNames: steps.map(s => s.name || ''),
+      stepIsApproval: steps.map(s => s.isApproval === true || /approv/i.test(s.name || '')),
+      notes: steps.map(() => ''),
+      subtaskChecks: steps.map(s => (s.subtasks || []).map(() => false)),
+      driveFiles: steps.map(() => []),
+      stepTimings: steps.map((_, i) => ({ startedAt: i === 0 ? Date.now() : null, completedAt: null })),
+      startedAt: Date.now(),
+      assignedSteps: {},
+      stuck: false,
+      stepDeadlines: steps.map(() => ''),
+      stepFlags: {},
+      linkedIdeaId: ideaId,
+    };
+    linkedFlowId = newFlow.id;
+    TODAY_FLOWS.push(newFlow);
+    await fbSaveFlows();
+    auditLog('flow_spawned', `Spawned flow "${flowName}" from calendar event "${title}"`, { template: tmpl.name });
+    toast(`Flow "${flowName}" created!`, 'ok');
+    renderToday();
+  }
+
   const idea = {
-    id: _editingIdeaId || 'idea_'+Date.now(),
+    id: ideaId,
     title,
     cat:      document.getElementById('idea-cat').value,
     platform: document.getElementById('idea-platform').value,
@@ -6930,7 +7587,8 @@ async function saveIdea() {
     status:   document.getElementById('idea-status').value,
     owner:    document.getElementById('idea-owner').value,
     campaignId: document.getElementById('idea-campaign').value,
-    createdAt: _editingIdeaId ? (CONTENT_IDEAS.find(i=>i.id===_editingIdeaId)?.createdAt||Date.now()) : Date.now(),
+    createdAt: existingIdea?.createdAt || Date.now(),
+    ...(linkedFlowId ? { linkedFlowId } : {}),
   };
   if (_editingIdeaId) {
     const idx = CONTENT_IDEAS.findIndex(i=>i.id===_editingIdeaId);
@@ -7220,6 +7878,13 @@ function saveEmailConfig() {
   if (!serviceId||!templateId||!publicKey) { toast('All three fields are required.','warn'); return; }
   EMAIL_CONFIG = { serviceId, templateId, publicKey, enabled:true };
   localStorage.setItem('sd_email_config', JSON.stringify(EMAIL_CONFIG));
+  // Also persist to Firestore so all devices/browsers pick it up automatically
+  if (fbReady && db) {
+    db.collection('config').doc('extended').set(
+      { emailConfig: EMAIL_CONFIG },
+      { merge: true }
+    ).catch(e => console.warn('Could not save email config to Firestore:', e));
+  }
   initEmailJS();
   closeEmailConfig();
   updateEmailStatusChip();
@@ -7237,7 +7902,14 @@ function updateEmailStatusChip() {
 }
 
 async function sendEmailNotification(toEmail, toName, subject, message, flowName, stepName) {
-  if (!EMAIL_CONFIG.enabled || !EMAIL_CONFIG.publicKey || !window.emailjs) return;
+  if (!EMAIL_CONFIG.enabled || !EMAIL_CONFIG.publicKey) {
+    console.warn('Email not configured — skipping email to', toEmail);
+    return;
+  }
+  if (!window.emailjs) {
+    console.warn('EmailJS library not loaded yet — skipping email to', toEmail);
+    return;
+  }
   if (!toEmail) return;
   try {
     await window.emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, {
@@ -7252,6 +7924,7 @@ async function sendEmailNotification(toEmail, toName, subject, message, flowName
     console.log(`Email sent to ${toEmail}`);
   } catch(e) {
     console.warn('EmailJS send failed:', e);
+    toast(`Email to ${toName||toEmail} failed — check email config`, 'warn');
   }
 }
 
@@ -7359,6 +8032,13 @@ async function loadExtended() {
         FILE_VERSIONS    = d.fileVersions    || {};
         POST_PERFORMANCE = d.postPerformance || [];
         SCRATCHPAD_FILES = d.scratchpadFiles || [];
+        // Sync email config across all devices — whoever last saved it wins
+        if (d.emailConfig && d.emailConfig.publicKey && !EMAIL_CONFIG.enabled) {
+          EMAIL_CONFIG = d.emailConfig;
+          localStorage.setItem('sd_email_config', JSON.stringify(EMAIL_CONFIG));
+          initEmailJS();
+          updateEmailStatusChip();
+        }
         if (currentPanel === 'workload')     renderWorkload();
         if (currentPanel === 'calendar')     renderCalendar();
         if (currentPanel === 'campaigns')    renderCampaigns();
@@ -8860,6 +9540,154 @@ function fmtChatTime(ts) {
   return d.toLocaleDateString([], {day:'numeric', month:'short'});
 }
 
+// Relative timestamp for message bubbles (short form with full tooltip)
+function relChatTime(msg) {
+  let ts;
+  if (msg.sentAt?.toMillis) ts = msg.sentAt.toMillis();
+  else if (msg.loggedAt) ts = msg.loggedAt;
+  else return msg.time || '';
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+  const t = msg.sentAt?.toDate ? msg.sentAt.toDate() : new Date(ts);
+  return t.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+}
+function fullChatDateTime(msg) {
+  if (msg.sentAt?.toDate) {
+    const d = msg.sentAt.toDate();
+    return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  }
+  if (msg.loggedAt) return new Date(msg.loggedAt).toLocaleString('en-IN');
+  return '';
+}
+
+// ── Draft saving — persist unsent text per room ──
+let _chatDrafts = {};
+function _saveDraft() {
+  const inp = document.getElementById('chat-input');
+  if (!inp) return;
+  const key = currentDM?.roomId || currentRoom || '';
+  if (key) _chatDrafts[key] = inp.value;
+}
+function _restoreDraft() {
+  const inp = document.getElementById('chat-input');
+  if (!inp) return;
+  const key = currentDM?.roomId || currentRoom || '';
+  inp.value = _chatDrafts[key] || '';
+  inp.style.height = 'auto';
+  if (inp.value) inp.style.height = Math.min(inp.scrollHeight, 160) + 'px';
+  _updateSendBtn();
+}
+
+// ── Send button mic/send toggle ──
+function _updateSendBtn() {
+  const inp = document.getElementById('chat-input');
+  const btn = document.getElementById('chat-send-btn');
+  if (!inp || !btn) return;
+  const hasContent = inp.value.trim().length > 0 || _chatAttachPending;
+  btn.innerHTML = hasContent ? '➤' : '🎤';
+  btn.classList.toggle('mic-mode', !hasContent);
+}
+
+// ── Expanded emoji picker ──
+const CHAT_EMOJI_SET = ['👍','❤️','😂','🔥','😮','😢','🙏','💯','👏','🎉','✅','💪','😍','🤔','😅','🥳','👀','🚀','💡','✨'];
+function openEmojiPicker(msgId, btn) {
+  // Close any already-open picker
+  document.querySelectorAll('.chat-emoji-pop.show').forEach(p => { if (p.dataset.for !== msgId) p.classList.remove('show'); });
+  let picker = btn.closest('.chat-bubble-wrap').querySelector('.chat-emoji-pop');
+  if (!picker) {
+    picker = document.createElement('div');
+    picker.className = 'chat-emoji-pop';
+    picker.dataset.for = msgId;
+    picker.innerHTML = CHAT_EMOJI_SET.map(e =>
+      `<button class="chat-emoji-pop-btn" onclick="toggleReaction('${msgId}','${e}');this.closest('.chat-emoji-pop').classList.remove('show');">${e}</button>`
+    ).join('');
+    btn.closest('.chat-bubble-wrap').appendChild(picker);
+  }
+  picker.classList.toggle('show');
+}
+
+// ── Copy message text ──
+function copyChatMsg(msgId) {
+  const msg = CHAT_MESSAGES.find(m => m.id === msgId);
+  if (!msg?.text) return;
+  navigator.clipboard?.writeText(msg.text).then(() => toast('Copied!', 'ok')).catch(() => {});
+}
+
+// ── Right-click context menu ──
+let _ctxMsgId = null;
+function showChatCtxMenu(msgId, e, isMine) {
+  e.preventDefault();
+  _ctxMsgId = msgId;
+  const msg = CHAT_MESSAGES.find(m => m.id === msgId);
+  const menu = document.getElementById('chat-ctx-menu');
+  if (!menu) return;
+  const canEdit = isMine && msg?.text;
+  const canDelete = isMine || role === 'head' || role === 'manager';
+  menu.innerHTML = `
+    <button class="chat-ctx-item" onclick="startChatReply('${msgId}');closeChatCtxMenu()">↩ Reply</button>
+    ${msg?.text ? `<button class="chat-ctx-item" onclick="copyChatMsg('${msgId}');closeChatCtxMenu()">📋 Copy text</button>` : ''}
+    ${canEdit ? `<button class="chat-ctx-item" onclick="startEditChatMsg('${msgId}');closeChatCtxMenu()">✏️ Edit</button>` : ''}
+    ${canDelete ? `<button class="chat-ctx-item danger" onclick="deleteChatMsg('${msgId}');closeChatCtxMenu()">🗑 Delete</button>` : ''}
+  `;
+  menu.style.display = 'block';
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = e.clientX, y = e.clientY;
+  menu.style.left = '0'; menu.style.top = '0'; // temp to measure
+  const mw = menu.offsetWidth || 164, mh = menu.offsetHeight || 120;
+  menu.style.left = Math.min(x, vw - mw - 8) + 'px';
+  menu.style.top  = Math.min(y, vh - mh - 8) + 'px';
+  setTimeout(() => document.addEventListener('click', closeChatCtxMenu, {once:true}), 0);
+}
+function closeChatCtxMenu() {
+  const menu = document.getElementById('chat-ctx-menu');
+  if (menu) menu.style.display = 'none';
+  _ctxMsgId = null;
+}
+
+// ── Clipboard paste + drag-drop (called once per initChat) ──
+function initChatExtras() {
+  const inp = document.getElementById('chat-input');
+  if (inp && !inp._pasteInited) {
+    inp._pasteInited = true;
+    inp.addEventListener('paste', e => {
+      const items = Array.from(e.clipboardData?.items || []);
+      const imageItem = items.find(i => i.type.startsWith('image/'));
+      if (!imageItem) return;
+      e.preventDefault();
+      const file = imageItem.getAsFile();
+      if (!file) return;
+      _chatAttachPending = file;
+      const nameEl = document.getElementById('chat-attach-name');
+      const prevEl = document.getElementById('chat-attach-preview');
+      if (nameEl) nameEl.textContent = 'pasted-image.png';
+      if (prevEl) prevEl.style.display = 'flex';
+      _updateSendBtn();
+      toast('Image pasted — press Send to share', 'ok');
+    });
+  }
+  const main = document.querySelector('.chat-main');
+  const overlay = document.getElementById('chat-drop-overlay');
+  if (main && overlay && !main._dropInited) {
+    main._dropInited = true;
+    main.addEventListener('dragenter', e => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); overlay.classList.add('show'); } });
+    main.addEventListener('dragover', e => e.preventDefault());
+    main.addEventListener('dragleave', e => { if (!main.contains(e.relatedTarget)) overlay.classList.remove('show'); });
+    main.addEventListener('drop', e => {
+      e.preventDefault();
+      overlay.classList.remove('show');
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      _chatAttachPending = file;
+      const nameEl = document.getElementById('chat-attach-name');
+      const prevEl = document.getElementById('chat-attach-preview');
+      if (nameEl) nameEl.textContent = file.name;
+      if (prevEl) prevEl.style.display = 'flex';
+      _updateSendBtn();
+    });
+  }
+}
+
 function getDMRoomId(user1, user2) {
   // Stable room ID regardless of who initiates
   return 'dm_' + [user1, user2].sort().join('_').replace(/\s+/g, '_');
@@ -8867,6 +9695,7 @@ function getDMRoomId(user1, user2) {
 
 function openDM(otherUser) {
   if (!loggedInMember) return;
+  _saveDraft(); // save draft for current room before switching
   currentDM = {
     roomId: getDMRoomId(loggedInMember.name, otherUser),
     otherUser
@@ -8949,15 +9778,18 @@ function renderDMList() {
     const lastMsg = DM_LAST[roomId];
     const preview = lastMsg ? ((lastMsg.sender === loggedInMember.name ? 'You: ' : '') + (lastMsg.text || '📎')).slice(0, 36) : 'Tap to chat';
     const timeStr = lastMsg ? fmtChatTime(lastMsg.loggedAt) : '';
+    const isOnline = m.status === 'online';
     return `<button class="chat-dm-btn${isActive?' active':''}" onclick="openDM('${m.name}')">
-      <div class="av ${avClass}" style="width:38px;height:38px;border-radius:50%;font-size:14px;flex-shrink:0;">${ini(m.name)}</div>
+      <div class="chat-av-online${isOnline?'':' offline'}">
+        <div class="av ${avClass}" style="width:40px;height:40px;border-radius:50%;font-size:14px;flex-shrink:0;">${ini(m.name)}</div>
+      </div>
       <div class="chat-room-body">
-        <div class="chat-room-name" style="font-size:13px;">${m.name}</div>
-        <div class="chat-room-preview" style="font-size:11px;">${preview}</div>
+        <div class="chat-room-name" style="${unread?'font-weight:700;color:#111;':''}">${m.name}</div>
+        <div class="chat-room-preview">${preview}</div>
       </div>
       <div class="chat-room-meta">
-        ${timeStr ? `<div class="chat-room-time" style="font-size:10px;">${timeStr}</div>` : ''}
-        ${unread ? `<div class="chat-room-badge" style="font-size:10px;min-width:17px;height:17px;">${unread}</div>` : ''}
+        ${timeStr ? `<div class="chat-room-time">${timeStr}</div>` : ''}
+        ${unread ? `<div class="chat-dm-unread">${unread > 99 ? '99+' : unread}</div>` : ''}
       </div>
     </button>`;
   }).join('');
@@ -9156,18 +9988,18 @@ function renderChannelList() {
     return `<button class="chat-room-row${isActive?' active':''}${isMuted?' muted':''}" onclick="switchRoom('${r.id}')">
       <div class="chat-room-avatar" style="background:${avatarColors[colorIdx]};font-size:22px;">${r.icon}</div>
       <div class="chat-room-body">
-        <div class="chat-room-name">${isMuted ? '🔇 ' : ''}<b>${r.label}</b></div>
+        <div class="chat-room-name" style="${unread&&!isMuted?'font-weight:700;color:#111;':''}">${isMuted?'🔇 ':''}${r.label}</div>
         <div class="chat-room-preview">${preview}</div>
       </div>
       <div class="chat-room-meta">
-        ${timeStr ? `<div class="chat-room-time">${timeStr}</div>` : ''}
+        ${timeStr ? `<div class="chat-room-time" style="${unread&&!isMuted?'color:#128C7E;font-weight:600;':''}">${timeStr}</div>` : ''}
         ${unread && !isMuted ? `<div class="chat-room-badge">${unread > 99 ? '99+' : unread}</div>` : ''}
       </div>
     </button>`;
   }).join('');
-  el.innerHTML += `<button class="chat-room-row" onclick="openNewGroup()" style="opacity:0.65;justify-content:center;gap:8px;padding:11px 16px;font-size:13px;color:#128C7E;font-weight:600;">＋ New Group</button>`;
+  el.innerHTML += `<button class="chat-new-group-btn" onclick="openNewGroup()">＋ New Group</button>`;
   if (isManager) {
-    el.innerHTML += `<button class="chat-room-row" onclick="openChannelManager()" style="opacity:0.65;justify-content:center;gap:8px;padding:11px 16px;font-size:13px;color:#667781;">⚙️ Manage Channels</button>`;
+    el.innerHTML += `<button class="chat-new-group-btn" onclick="openChannelManager()" style="color:#667781;font-weight:500;font-size:12px;">⚙️ Manage Channels</button>`;
   }
 }
 
@@ -9221,12 +10053,41 @@ function canAccessChannel(roomId) {
 let _mentionSearch = null; // active @mention query
 let _mentionStart = -1;
 let _chatAttachPending = null;
+let _chatReplyTo = null; // { id, sender, text, fileUrl, fileName }
+
+function startChatReply(msgId) {
+  const msg = CHAT_MESSAGES.find(m => m.id === msgId);
+  if (!msg) return;
+  _chatReplyTo = {
+    id: msg.id,
+    sender: msg.sender,
+    text: msg.text || (msg.fileName ? '📎 ' + msg.fileName : '') || '(attachment)',
+    fileUrl: msg.fileUrl || '',
+    fileName: msg.fileName || ''
+  };
+  const preview = document.getElementById('chat-reply-preview');
+  if (preview) {
+    document.getElementById('chat-reply-sender').textContent = _chatReplyTo.sender;
+    document.getElementById('chat-reply-text').textContent = (_chatReplyTo.text || '').slice(0, 80);
+    preview.style.display = 'flex';
+  }
+  document.getElementById('chat-input')?.focus();
+}
+
+function cancelChatReply() {
+  _chatReplyTo = null;
+  const preview = document.getElementById('chat-reply-preview');
+  if (preview) preview.style.display = 'none';
+}
 
 function chatInputHandler(e) {
   const input = e.target;
   input.style.height = 'auto';
   input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+  _updateSendBtn();
   if (currentDM) _sendTyping();
+  const key = currentDM?.roomId || currentRoom || '';
+  if (key) _chatDrafts[key] = input.value;
   const val = input.value;
   const pos = input.selectionStart;
   // Detect @ trigger
@@ -9322,6 +10183,7 @@ function clearChatAttach() {
   _chatAttachPending = null;
   const preview = document.getElementById('chat-attach-preview');
   if (preview) preview.style.display = 'none';
+  _updateSendBtn();
 }
 
 function chatAttachFile(event) {
@@ -9334,6 +10196,7 @@ function chatAttachFile(event) {
   const nameEl = document.getElementById('chat-attach-name');
   if (preview) preview.style.display = 'flex';
   if (nameEl) nameEl.textContent = file.name;
+  _updateSendBtn();
 }
 
 function initChat() {
@@ -9399,7 +10262,7 @@ function renderChat() {
     if (avatarEl) { avatarEl.textContent = ini(other); avatarEl.style.background = 'rgba(255,255,255,0.25)'; }
     trackDMRecent(other);
   } else {
-    const rm = CHAT_ROOMS.find(r => r.id === currentRoom) || CHAT_ROOMS[0];
+    const rm = getAllRooms().find(r => r.id === currentRoom) || CHAT_ROOMS[0];
     document.getElementById('chat-header-title').textContent = rm?.label || 'Chat';
     const chMembers = getChannelMembers(currentRoom);
     const memberStr = currentRoom === 'general'
@@ -9443,10 +10306,13 @@ function renderChat() {
   if (inputWrapper) inputWrapper.style.display = canPost ? '' : 'none';
 
   initChat();
+  initChatExtras();
+  _restoreDraft();
 }
 
 function switchRoom(roomId) {
   if (!canAccessChannel(roomId)) { toast("You're not a member of this channel.", 'warn'); return; }
+  _saveDraft(); // save unsent text before leaving
   if (_partnerReadListener) { _partnerReadListener(); _partnerReadListener = null; }
   if (_typingListener) { _typingListener(); _typingListener = null; }
   _clearTyping();
@@ -9465,9 +10331,13 @@ function switchRoom(roomId) {
 
 // ── CHANNEL MANAGER MODAL ──
 let _cmEditing = null; // roomId currently being edited
+let _cmDirty = new Set(); // channels actually modified in this session — only these get saved
 
 function openChannelManager(roomId) {
   _cmEditing = roomId || getAllRooms().find(r => r.id !== 'general')?.id || CHAT_ROOMS[0].id;
+  _cmDirty = new Set(); // reset dirty set each time the modal opens
+  // Refresh from Firestore before opening so we have latest state
+  loadChannelMembers().then(() => renderChannelManager());
   renderChannelManager();
   document.getElementById('channel-manager-modal').style.display = 'flex';
 }
@@ -9519,16 +10389,22 @@ function toggleCmMember(name) {
   if (idx >= 0) members.splice(idx, 1);
   else members.push(name);
   CHANNEL_MEMBERS[_cmEditing] = members;
+  _cmDirty.add(_cmEditing); // mark this channel as modified
   renderChannelManager();
 }
 
 async function saveCmChanges() {
+  if (!_cmDirty.size) {
+    closeChannelManager();
+    return;
+  }
   const btn = document.getElementById('cm-save-btn');
   if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
-  // Save all non-general channels including custom groups
-  for (const r of getAllRooms().filter(x => x.id !== 'general')) {
-    await saveChannelMembers(r.id, CHANNEL_MEMBERS[r.id] || []);
+  // Only save channels that were actually modified in this session — never overwrite untouched channels
+  for (const roomId of _cmDirty) {
+    await saveChannelMembers(roomId, CHANNEL_MEMBERS[roomId] || []);
   }
+  _cmDirty.clear();
   if (btn) { btn.textContent = 'Saved ✓'; setTimeout(() => { btn.textContent = 'Save Changes'; btn.disabled = false; }, 1500); }
   closeChannelManager();
   renderChat();
@@ -9675,26 +10551,44 @@ function renderChatMessages() {
     el.innerHTML = `<div class="empty" style="margin:auto;"><div class="empty-icon">💬</div><div class="empty-title">No messages yet</div><div class="empty-sub">Be the first to say something!</div></div>`;
     return;
   }
+  // Infer partner's read time from their own messages — if they replied, they read everything before that reply
+  let effectivePartnerReadAt = _partnerReadAt;
+  if (currentDM?.otherUser) {
+    CHAT_MESSAGES.forEach(m => {
+      if (m.sender === currentDM.otherUser) {
+        const ts = m.sentAt?.toMillis?.() || m.loggedAt || 0;
+        if (ts > effectivePartnerReadAt) effectivePartnerReadAt = ts;
+      }
+    });
+  }
   let lastDate = '';
   let lastSender = '';
+  const roomKey2 = currentRoom || currentDM?.roomId || '';
+  const lastReadTs = _getLastRead(roomKey2) || 0;
+  let unreadInserted = false;
   el.innerHTML = CHAT_MESSAGES.map((msg, idx) => {
     const isMine = msg.sender === loggedInMember?.name;
     const msgDate = msg.sentAt?.toDate ? msg.sentAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : 'Today';
     let dateSep = '';
     if (msgDate !== lastDate) { dateSep = `<div class="chat-date-sep"><span>${msgDate}</span></div>`; lastDate = msgDate; lastSender = ''; }
-    const timeStr = msg.sentAt?.toDate
-      ? msg.sentAt.toDate().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
-      : msg.time || '';
+    const timeStr = relChatTime(msg);
+    const timeFull = fullChatDateTime(msg);
     const isConsecutive = msg.sender === lastSender && !dateSep;
+    // Unread divider — show once before the first unread message from others
+    let unreadDiv = '';
+    if (!unreadInserted && !isMine && lastReadTs > 0) {
+      const msgTs = msg.sentAt?.toMillis?.() || msg.loggedAt || 0;
+      if (msgTs > lastReadTs) { unreadDiv = `<div class="chat-unread-div"><span>↓ New messages</span></div>`; unreadInserted = true; }
+    }
     lastSender = msg.sender;
 
     // Poll rendering
-    if (msg.type === 'poll') return `${dateSep}<div class="chat-msg${isMine?' mine':''}">
+    if (msg.type === 'poll') return `${unreadDiv}${dateSep}<div class="chat-msg${isMine?' mine':''}" data-msg-id="${msg.id}">
       <div class="chat-av-wrap"><div class="av av-sm ${AV[msg.sender]||'av-a'}">${isMine?'':ini(msg.sender)}</div></div>
       <div class="chat-bubble-wrap">
         ${!isMine&&!isConsecutive?`<div class="chat-sender-name">${msg.sender}</div>`:''}
         <div class="poll-card">${renderPollCard(msg)}</div>
-        <div class="chat-meta">${timeStr}</div>
+        <div class="chat-meta"><span title="${timeFull}">${timeStr}</span></div>
       </div>
     </div>`;
 
@@ -9752,25 +10646,80 @@ function renderChatMessages() {
         </span>`).join('')}
     </div>` : '';
 
-    return `${dateSep}<div class="chat-msg${isMine?' mine':''}${isConsecutive?' consecutive':''}">
+    return `${unreadDiv}${dateSep}<div class="chat-msg${isMine?' mine':''}${isConsecutive?' consecutive':''}" data-msg-id="${msg.id}" oncontextmenu="showChatCtxMenu('${msg.id}',event,${isMine})">
       <div class="chat-av-wrap"><div class="av av-sm ${AV[msg.sender]||'av-a'}">${ini(msg.sender)}</div></div>
       <div class="chat-bubble-wrap">
         ${!isMine&&!isConsecutive?`<div class="chat-sender-name">${msg.sender}</div>`:''}
         ${msg.tagLabel?`<div class="chat-tag">📌 ${msg.tagLabel}</div>`:''}
         ${fileHtml}
-        ${msg.text?`<div class="chat-bubble">${renderMessageText(msg.text)}</div>`:''}
-        <div class="chat-meta">${timeStr}${isMine && currentDM ? (() => { const msgTs = msg.sentAt?.toMillis?.() || msg.loggedAt || 0; const isRead = _partnerReadAt > 0 && _partnerReadAt >= msgTs - 5000; return isRead ? '<span class="chat-tick read">✓✓</span>' : '<span class="chat-tick delivered">✓✓</span>'; })() : ''}</div>
+        ${(msg.text||msg.replyTo)?`<div class="chat-bubble">
+          ${msg.replyTo?`<div class="chat-quote" onclick="scrollToMsg('${msg.replyTo.id}')">
+            <div class="chat-quote-sender">${msg.replyTo.sender}</div>
+            <div class="chat-quote-text">${(msg.replyTo.text||'📎 attachment').replace(/</g,'&lt;').replace(/>/g,'&gt;').slice(0,80)}</div>
+          </div>`:''}
+          ${msg.text?renderMessageText(msg.text):''}
+        </div>`:''}
+        <div class="chat-meta">${msg.edited?'<span class="chat-edited-badge">edited</span>':''}<span title="${timeFull}">${timeStr}</span>${isMine && currentDM ? (() => { const msgTs = msg.sentAt?.toMillis?.() || msg.loggedAt || 0; const isRead = effectivePartnerReadAt > 0 && effectivePartnerReadAt >= msgTs - 5000; return isRead ? '<span class="chat-tick read">✓✓</span>' : '<span class="chat-tick delivered">✓✓</span>'; })() : ''}</div>
         ${reactionHtml}
         <div class="chat-action-row">
           ${['👍','❤️','😂','🔥'].map(e=>`<button class="chat-react-btn" onclick="toggleReaction('${msg.id}','${e}')">${e}</button>`).join('')}
-          ${(isMine || role==='head' || role==='manager') ? `<div class="chat-action-sep"></div>` : ''}
-          ${isMine && msg.text ? `<button class="chat-edit-btn" onclick="startEditChatMsg('${msg.id}')">✏️ Edit</button>` : ''}
+          <button class="chat-react-btn" title="More reactions" onclick="openEmojiPicker('${msg.id}',this)">＋</button>
+          <div class="chat-action-sep"></div>
+          <button class="chat-edit-btn" onclick="startChatReply('${msg.id}')">↩ Reply</button>
+          ${msg.text ? `<button class="chat-edit-btn" onclick="copyChatMsg('${msg.id}')" title="Copy text">📋</button>` : ''}
+          ${isMine && msg.text ? `<button class="chat-edit-btn" onclick="startEditChatMsg('${msg.id}')">✏️</button>` : ''}
           ${(isMine || role==='head' || role==='manager') ? `<button class="chat-del-btn" onclick="deleteChatMsg('${msg.id}')">🗑</button>` : ''}
         </div>
       </div>
     </div>`;
   }).join('');
-  el.scrollTop = el.scrollHeight;
+  // First open of this room → always scroll to bottom; subsequent re-renders → only if already near bottom
+  const roomKey = currentRoom || currentDM?.roomId || '';
+  const isFirstRender = el.dataset.initRoom !== roomKey;
+  const wasNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 200;
+  if (isFirstRender || wasNearBottom) {
+    el.scrollTop = el.scrollHeight;
+    el.dataset.initRoom = roomKey;
+  }
+  initChatScrollBtn();
+}
+
+function scrollToMsg(msgId) {
+  const el = document.getElementById('chat-messages');
+  if (!el) return;
+  // Find the message element by data-msg-id; fall back to scanning action-row onclick attrs
+  const target = el.querySelector(`[data-msg-id="${msgId}"]`);
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.add('msg-highlight');
+    setTimeout(() => target.classList.remove('msg-highlight'), 1600);
+  }
+}
+
+function scrollChatToBottom() {
+  const msgs = document.getElementById('chat-messages');
+  if (msgs) { msgs.scrollTop = msgs.scrollHeight; }
+  document.getElementById('chat-scroll-btn')?.classList.remove('show');
+}
+
+function initChatScrollBtn() {
+  const msgs = document.getElementById('chat-messages');
+  const btn  = document.getElementById('chat-scroll-btn');
+  if (!msgs || !btn) return;
+  msgs.onscroll = function() {
+    const distFromBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
+    if (distFromBottom > 150) btn.classList.add('show');
+    else btn.classList.remove('show');
+  };
+}
+
+function filterChatSidebar(q) {
+  const query = (q || '').toLowerCase().trim();
+  document.querySelectorAll('.chat-room-row, .chat-dm-btn').forEach(el => {
+    const name = el.querySelector('.chat-room-name')?.textContent?.toLowerCase() || '';
+    const preview = el.querySelector('.chat-room-preview')?.textContent?.toLowerCase() || '';
+    el.style.display = (!query || name.includes(query) || preview.includes(query)) ? '' : 'none';
+  });
 }
 
 async function toggleReaction(msgId, emoji) {
@@ -9946,11 +10895,17 @@ async function sendChatMessage() {
     time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
     loggedAt: Date.now(),
     sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+    ...(_chatReplyTo ? { replyTo: _chatReplyTo } : {}),
   };
   if (input) { input.value = ''; input.style.height = '44px'; }
   if (document.getElementById('chat-tag-ref')) document.getElementById('chat-tag-ref').value = '';
   clearChatAttach();
+  cancelChatReply();
   _clearTyping();
+  // Clear draft for this room now that message is sent
+  const _draftKey = currentDM?.roomId || currentRoom || '';
+  if (_draftKey) delete _chatDrafts[_draftKey];
+  _updateSendBtn();
 
   // Notify @mentioned members
   msg.mentions.forEach(name => {
@@ -12387,5 +13342,6 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 </script>
+<div id="chat-ctx-menu" class="chat-ctx-menu" style="display:none;"></div>
 </body>
 </html>
