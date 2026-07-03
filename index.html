@@ -2506,23 +2506,23 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 <div class="overlay" id="weekly-modal" onclick="if(event.target===this)closeWeeklyModal()">
   <div class="modal">
     <div class="modal-hdr">
-      <span class="modal-title">📅 Submit Weekly Plan</span>
+      <span class="modal-title">📅 Confirm Weekly Plan</span>
       <button class="close-x" onclick="closeWeeklyModal()">×</button>
     </div>
     <div class="modal-body">
-      <div style="font-size:12px;color:var(--ink3);margin-bottom:14px;">Add the tasks you plan to complete next week and the day you'll do them.</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.5;">Your assigned tasks are auto-imported below. Add any <strong>extra goals</strong> that aren't already a task — they'll be created automatically.</div>
       <div class="fg" style="margin-bottom:12px;">
-        <label>Submitting as</label>
+        <label>Confirming as</label>
         <select id="wp-member">
           <option>Akshay</option><option>Chirag</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
         </select>
       </div>
       <div id="wp-items-list"></div>
-      <button class="btn btn-sm btn-ghost" onclick="addWpItem()" style="margin-top:6px;width:100%;">+ Add another task</button>
+      <button class="btn btn-sm btn-ghost" onclick="addWpItem()" style="margin-top:8px;width:100%;">+ Add extra goal</button>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeWeeklyModal()">Cancel</button>
-      <button class="btn btn-coral" onclick="submitWeeklyPlan()">Submit Plan</button>
+      <button class="btn btn-coral" onclick="submitWeeklyPlan()">Confirm Plan</button>
     </div>
   </div>
 </div>
@@ -8534,9 +8534,33 @@ function getWeekKey(offset = 0) {
   return mon.toISOString().split('T')[0];
 }
 
+function getWeekDateRange(weekKey) {
+  const mon = new Date(weekKey + 'T00:00:00');
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const fmt = d => d.toISOString().slice(0, 10);
+  return { start: fmt(mon), end: fmt(sun) };
+}
+
+function getDayLabel(dateStr) {
+  if (!dateStr) return 'Monday';
+  const d = new Date(dateStr);
+  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()] || 'Monday';
+}
+
+// Tasks assigned to a member that are due (or not done) within the given week
+function getTasksForMemberWeek(member, weekKey) {
+  const { start, end } = getWeekDateRange(weekKey);
+  return TASKS.filter(t =>
+    t.assignee === member &&
+    t.status !== 'done' &&
+    t.due &&
+    t.due.slice(0, 10) >= start &&
+    t.due.slice(0, 10) <= end
+  );
+}
+
 function isFriday() { return new Date().getDay() === 5; }
 function isWeeklyPlanDue() {
-  // Due every Friday
   return isFriday();
 }
 
@@ -8613,41 +8637,87 @@ function renderWeeklyContent(weekKey) {
     const isSelf = m.name === viewerName;
     const plan = getPlanForMemberWeek(m.name, weekKey);
     const submitted = !!plan;
-    const statusCls = !submitted ? (isNext ? 'ps-pending' : 'ps-overdue') : 'ps-submitted';
-    const statusLabel = !submitted ? (isNext ? 'Not submitted' : 'No plan') : 'Submitted';
+    const canTick = isSelf || viewerRole === 'head' || viewerRole === 'manager';
 
-    let bodyHtml = '';
+    // Auto-sourced tasks from TASKS (always shown regardless of submission)
+    const weekTasks = getTasksForMemberWeek(m.name, weekKey);
+    // Also include done tasks for past weeks
+    const weekTasksAll = isPast
+      ? TASKS.filter(t => {
+          const { start, end } = getWeekDateRange(weekKey);
+          return t.assignee === m.name && t.due && t.due.slice(0,10) >= start && t.due.slice(0,10) <= end;
+        })
+      : weekTasks;
+
+    const autoTasksHtml = weekTasksAll.length ? `
+      <div style="margin-bottom:${submitted&&plan?.items?.length?'10px':'0'};${submitted&&plan?.items?.length?'padding-bottom:10px;border-bottom:1px solid var(--border);':''}">
+        <div style="font-size:10px;color:var(--ink3);font-weight:700;letter-spacing:0.04em;margin-bottom:6px;display:flex;align-items:center;gap:4px;">
+          <span>🔗</span> FROM TASKS
+        </div>
+        ${weekTasksAll.map(t => {
+          const isDone = t.status === 'done';
+          const isBlocked = t.status === 'blocked';
+          const statusDot = isDone ? '✓' : isBlocked ? '⊘' : t.status === 'inprogress' ? '▶' : '○';
+          const dotStyle = isDone ? 'color:var(--green);' : isBlocked ? 'color:var(--red);' : t.status === 'inprogress' ? 'color:var(--amber);' : 'color:var(--ink3);';
+          return `<div class="plan-item" style="opacity:${isDone?0.55:1}">
+            <div style="width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${dotStyle}flex-shrink:0;">${statusDot}</div>
+            <span class="plan-task-name${isDone?' done-text':''}">
+              <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--cream2);color:var(--ink3);margin-right:4px;font-weight:600;">${SL[t.status]||t.status}</span>${t.title}
+            </span>
+            <span class="plan-task-day" style="font-size:10px;">${fmtDue(t.due)}</span>
+          </div>`;
+        }).join('')}
+      </div>` : '';
+
+    // Manually submitted plan items (extras beyond tasks)
+    let planItemsHtml = '';
     if (submitted && plan.items && plan.items.length) {
-      const doneCount = plan.items.filter(i => i.done).length;
-      const total = plan.items.length;
-      const pct = Math.round(doneCount / total * 100);
-      // Only head/manager can tick off items; members can tick their own
-      const canTick = isSelf || viewerRole === 'head' || viewerRole === 'manager';
-      bodyHtml = `
-        <div class="pmc-body">
-          ${isPast || isCurrent ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <div class="accountability-bar" style="flex:1;"><div class="acc-fill" style="width:${pct}%"></div></div>
-            <span class="acc-pct">${pct}% done (${doneCount}/${total})</span>
-          </div>` : ''}
-          ${plan.items.map((item, idx) => `
-            <div class="plan-item">
-              <div class="plan-check${item.done?' done':isPast&&!item.done?' missed':''}"
-                onclick="${canTick?`togglePlanItem('${m.name}','${weekKey}',${idx})`:''}">
-              </div>
-              <span class="plan-task-name${item.done?' done-text':''}">${item.task}</span>
-              <span class="plan-task-day">${item.day}</span>
-            </div>`).join('')}
-        </div>`;
-    } else if (submitted) {
-      bodyHtml = `<div class="pmc-body" style="font-size:12px;color:var(--ink3);">Plan submitted but no items added.</div>`;
-    } else {
-      // Only show submit button if viewing own plan and it's for next week
-      const showSubmit = isSelf && isNext;
-      bodyHtml = `<div class="pmc-body" style="font-size:12px;color:var(--ink3);padding:10px 0;">
-        No plan submitted${isNext?' yet — due this Friday.':isPast?' for this week.':' yet.'}
-        ${showSubmit?`<br/><button class="btn btn-sm btn-coral" style="margin-top:10px;" onclick="openWeeklyModalFor('${m.name}')">Submit My Plan</button>`:''}
-      </div>`;
+      const manualItems = plan.items.filter(i => !i.auto);
+      if (manualItems.length) {
+        const doneCount = manualItems.filter(i => i.done).length;
+        const total = manualItems.length;
+        const pct = Math.round(doneCount / total * 100);
+        planItemsHtml = `
+          <div>
+            <div style="font-size:10px;color:var(--ink3);font-weight:700;letter-spacing:0.04em;margin-bottom:6px;">✏️ ADDITIONAL GOALS</div>
+            ${isPast || isCurrent ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <div class="accountability-bar" style="flex:1;"><div class="acc-fill" style="width:${pct}%"></div></div>
+              <span class="acc-pct">${pct}% done (${doneCount}/${total})</span>
+            </div>` : ''}
+            ${manualItems.map((item, idx) => {
+              // Find original index in plan.items for toggling
+              const origIdx = plan.items.indexOf(item);
+              return `<div class="plan-item">
+                <div class="plan-check${item.done?' done':isPast&&!item.done?' missed':''}"
+                  onclick="${canTick?`togglePlanItem('${m.name}','${weekKey}',${origIdx})`:''}">
+                </div>
+                <span class="plan-task-name${item.done?' done-text':''}">${item.task}</span>
+                <span class="plan-task-day">${item.day}</span>
+              </div>`;
+            }).join('')}
+          </div>`;
+      }
     }
+
+    // Decide status label: submitted OR has tasks (auto-populated)
+    const hasAutoTasks = weekTasksAll.length > 0;
+    const statusCls = submitted ? 'ps-submitted' : hasAutoTasks ? 'ps-submitted' : (isNext ? 'ps-pending' : 'ps-overdue');
+    const statusLabel = submitted ? 'Submitted' : hasAutoTasks ? 'Auto-populated' : (isNext ? 'No tasks yet' : 'No plan');
+
+    const showSubmit = isSelf && isNext;
+    const noContent = !autoTasksHtml && !planItemsHtml;
+
+    const bodyHtml = `<div class="pmc-body">
+      ${autoTasksHtml}
+      ${planItemsHtml}
+      ${noContent ? `<div style="font-size:12px;color:var(--ink3);padding:8px 0;">
+        No tasks or plan for this week.
+        ${showSubmit?`<br/><button class="btn btn-sm btn-coral" style="margin-top:10px;" onclick="openWeeklyModalFor('${m.name}')">+ Add Goals</button>`:''}
+      </div>` : (showSubmit && !submitted ? `<div style="margin-top:10px;">
+        <button class="btn btn-sm btn-coral" onclick="openWeeklyModalFor('${m.name}')">+ Add Goals</button>
+        <span style="font-size:10px;color:var(--ink3);margin-left:8px;">Your tasks above are already tracked — add any extra goals here</span>
+      </div>` : '')}
+    </div>`;
 
     return `<div class="plan-member-card">
       <div class="pmc-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
@@ -8677,7 +8747,6 @@ function openWeeklyModal() {
   openWeeklyModalFor(loggedInMember ? loggedInMember.name : MEMBERS[0].name);
 }
 function openWeeklyModalFor(memberName) {
-  // Members can only submit their own plan
   if (loggedInMember && loggedInMember.role === 'member' && memberName !== loggedInMember.name) {
     toast('You can only submit your own plan', 'warn'); return;
   }
@@ -8687,23 +8756,60 @@ function openWeeklyModalFor(memberName) {
   const sel = document.getElementById('wp-member');
   if (sel) {
     sel.value = memberName;
-    // Lock dropdown to self for non-managers
     sel.disabled = loggedInMember && loggedInMember.role === 'member';
   }
-  window._wpItems = existing ? existing.items.map(i => ({task:i.task, day:i.day})) : [{task:'',day:'Monday'}];
+
+  // Auto-import tasks due next week for this member
+  const weekTasks = getTasksForMemberWeek(memberName, nextWeek);
+  const autoItems = weekTasks.map(t => ({
+    task: t.title,
+    day: getDayLabel(t.due),
+    taskId: t.id,
+    auto: true,
+    done: false,
+  }));
+
+  // Keep only the manually-added extras from any existing plan (not auto ones)
+  const manualItems = existing
+    ? existing.items.filter(i => !i.auto).map(i => ({ task: i.task, day: i.day }))
+    : [{ task: '', day: 'Monday' }];
+
+  window._wpItems = [...autoItems, ...manualItems];
   renderWpItems();
   document.getElementById('weekly-modal').classList.add('open');
 }
 
 function renderWpItems() {
-  document.getElementById('wp-items-list').innerHTML = window._wpItems.map((item, i) => `
-    <div class="plan-input-row">
-      <input type="text" placeholder="Task name…" value="${item.task}" oninput="window._wpItems[${i}].task=this.value"/>
+  const autoItems   = window._wpItems.filter(i => i.auto);
+  const manualItems = window._wpItems.filter(i => !i.auto);
+
+  let html = '';
+  if (autoItems.length) {
+    html += `<div style="font-size:10px;color:var(--ink3);font-weight:700;letter-spacing:0.04em;margin-bottom:6px;margin-top:2px;">🔗 FROM YOUR TASKS (auto-imported)</div>`;
+    html += autoItems.map(item => `
+      <div class="plan-input-row" style="opacity:0.75;background:var(--cream2);border-radius:var(--rad);padding:4px 8px;">
+        <input type="text" value="${item.task}" readonly style="flex:1;background:transparent;border:none;outline:none;font-size:12px;color:var(--ink2);cursor:default;"/>
+        <span style="font-size:11px;color:var(--ink3);padding:0 6px;white-space:nowrap;">${item.day}</span>
+        <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--border2);color:var(--ink3);">🔒 linked</span>
+      </div>`).join('');
+    if (manualItems.length || true) {
+      html += `<div style="font-size:10px;color:var(--ink3);font-weight:700;letter-spacing:0.04em;margin:10px 0 6px;">✏️ ADDITIONAL GOALS</div>`;
+    }
+  }
+
+  const manualStart = autoItems.length; // offset for window._wpItems index
+  html += manualItems.map((item, j) => {
+    const i = manualStart + j; // actual index in _wpItems
+    return `<div class="plan-input-row">
+      <input type="text" placeholder="e.g. Prepare client deck, respond to all DMs…" value="${item.task}" oninput="window._wpItems[${i}].task=this.value"/>
       <select onchange="window._wpItems[${i}].day=this.value">
         ${DAYS_OF_WEEK.map(d=>`<option${d===item.day?' selected':''}>${d}</option>`).join('')}
       </select>
-      ${window._wpItems.length > 1 ? `<button class="btn btn-sm" onclick="removeWpItem(${i})" style="padding:4px 8px;">✕</button>` : ''}
-    </div>`).join('');
+      ${manualItems.length > 1 ? `<button class="btn btn-sm" onclick="removeWpItem(${i})" style="padding:4px 8px;">✕</button>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('wp-items-list').innerHTML = html;
 }
 
 function addWpItem() {
@@ -8719,24 +8825,63 @@ function removeWpItem(idx) {
 function closeWeeklyModal() { document.getElementById('weekly-modal').classList.remove('open'); }
 
 function submitWeeklyPlan() {
-  const member = document.getElementById('wp-member').value;
-  const items = window._wpItems.filter(i => i.task.trim());
-  if (!items.length) { toast('Add at least one task', 'warn'); return; }
+  const member  = document.getElementById('wp-member').value;
   const nextWeek = getWeekKey(1);
-  // Remove any existing plan for this member/week
+
+  // Auto items are always included; manual items need at least a task name
+  const autoItems   = window._wpItems.filter(i => i.auto);
+  const manualItems = window._wpItems.filter(i => !i.auto && i.task.trim());
+
+  const allItems = [...autoItems, ...manualItems];
+  // Allow submitting even with no manual items if they have tasks (zero friction)
+  if (!allItems.length) { toast('No tasks or goals to submit.', 'warn'); return; }
+
+  // Create ad-hoc tasks for any new manual items (if they don't already exist)
+  manualItems.forEach(item => {
+    const taskTitle = item.task.trim();
+    const alreadyExists = TASKS.some(t => t.title === taskTitle && t.assignee === member);
+    if (!alreadyExists) {
+      const { start, end } = getWeekDateRange(nextWeek);
+      // Find the ISO date for the chosen day of next week
+      const dayIdx = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].indexOf(item.day);
+      const monDate = new Date(nextWeek + 'T00:00:00');
+      const dueDate = new Date(monDate);
+      dueDate.setDate(monDate.getDate() + ((dayIdx - 1 + 7) % 7));
+      dueDate.setHours(18, 0, 0, 0);
+      const newTask = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        title: taskTitle,
+        status: 'todo',
+        priority: 'med',
+        assignee: member,
+        platforms: [],
+        due: dueDate.toISOString().slice(0, 16),
+        timeLogged: 0,
+        notes: 'Created from weekly plan',
+        progress: 0, comments: [], attachments: [],
+      };
+      TASKS.unshift(newTask);
+      fbSaveTask(newTask);
+      item.taskId = newTask.id; // link back
+    }
+  });
+
+  // Save the plan (only manual extras — auto ones are derived from TASKS live)
   WEEKLY_PLANS = WEEKLY_PLANS.filter(p => !(p.member === member && p.week === nextWeek));
   WEEKLY_PLANS.push({
-    id: 'wp_'+Date.now(),
+    id: 'wp_' + Date.now(),
     member, week: nextWeek,
-    items: items.map(i => ({ task: i.task.trim(), day: i.day, done: false })),
+    items: manualItems.map(i => ({ task: i.task.trim(), day: i.day, taskId: i.taskId || null, done: false })),
+    autoCount: autoItems.length,
     submitted: true,
     submittedAt: new Date().toISOString(),
   });
   saveExtended();
-  auditLog('weekly_plan', `${member} submitted weekly plan for ${nextWeek} — ${items.length} task${items.length!==1?'s':''}`, { member, week: nextWeek, tasks: items.map(i=>i.task).join(', ') });
+  const totalCount = allItems.length;
+  auditLog('weekly_plan', `${member} confirmed weekly plan for ${nextWeek} — ${totalCount} item${totalCount!==1?'s':''} (${autoItems.length} from tasks, ${manualItems.length} extra)`, { member, week: nextWeek });
   closeWeeklyModal();
-  toast(`${member}'s plan for next week submitted!`, 'ok');
-  pushNotif({ title:`📅 Weekly plan submitted`, body:`${member} submitted their plan for next week.`, icon:'📅', type:'system' });
+  toast(`Plan confirmed! ${autoItems.length} tasks auto-tracked + ${manualItems.length} extra goal${manualItems.length!==1?'s':''} added.`, 'ok');
+  pushNotif({ title:'📅 Weekly plan confirmed', body:`${member} confirmed their plan for next week.`, icon:'📅', type:'system' });
   renderWeekly();
 }
 
