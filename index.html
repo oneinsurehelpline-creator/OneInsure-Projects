@@ -561,6 +561,11 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .at-step_done{background:var(--green-light);color:var(--green);}
 .at-step_rejected{background:var(--red-light);color:var(--red);}
 .at-flow_spawned{background:var(--blue-light);color:var(--blue-dark);}
+.at-approval_routed{background:#F3E8FF;color:#7C3AED;}
+.at-approved{background:#D1FAE5;color:#065F46;}
+.audit-approver-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;align-items:center;}
+.audit-approver-chip{display:inline-flex;align-items:center;gap:4px;background:#F3E8FF;color:#7C3AED;border:1px solid #DDD6FE;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.audit-submitted-by{display:inline-flex;align-items:center;gap:4px;background:var(--cream2);color:var(--ink3);border:1px solid var(--border);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;margin-top:4px;}
 .at-task_created{background:var(--purple-light);color:var(--purple);}
 .at-task_pushed{background:var(--teal-light);color:var(--teal);}
 .at-task_blocked{background:var(--red-light);color:var(--red);}
@@ -2022,10 +2027,13 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
             </select>
             <select id="audit-filter-type" onchange="renderAudit()" style="font-size:12px;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);">
               <option value="">All Events</option>
+              <option value="approval_routed">Sent for Approval</option>
+              <option value="approved">Approved</option>
+              <option value="step_rejected">Rejected / Sent Back</option>
               <option value="step_done">Step Completed</option>
-              <option value="step_rejected">Step Rejected</option>
               <option value="flow_spawned">Flow Spawned</option>
               <option value="task_created">Task Created</option>
+              <option value="task_edited">Task Edited</option>
               <option value="task_pushed">Task Pushed</option>
               <option value="task_blocked">Task Blocked</option>
               <option value="file_uploaded">File Uploaded</option>
@@ -5289,21 +5297,25 @@ function flowCardHTML(f) {
     ${subtaskSection}
     ${subAssignSection}
     ${driveSection}
-    ${isApprovalStep && status !== 'done' && (canRoute || canApprove) ? `
+    ${isApprovalStep && status !== 'done' && (canRoute || canApprove || isManager || (f.approvalRoutees && f.approvalRoutees.length > 0)) ? `
     <div class="approval-actions">
       <div class="approval-title">⚖️ Approval Step — ${curStep.name}</div>
       ${(f.approvalRoutees && f.approvalRoutees.length) ? `
-        <div style="margin-bottom:8px;font-size:11px;color:var(--ink3);">
-          Sent to:
-          ${f.approvalRoutees.map(name => `<span style="display:inline-flex;align-items:center;gap:4px;margin-right:4px;background:var(--purple-light);color:var(--purple);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;">
+        <div style="margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:var(--ink3);">Submitted by:</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;background:var(--cream2);color:var(--ink2);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">
+            <div class="av av-sm ${AV[curStep.owner]||'av-a'}" style="width:14px;height:14px;font-size:7px;">${ini(curStep.owner||'?')}</div>${curStep.owner||'Unknown'}
+          </span>
+          <span style="font-size:11px;color:var(--ink3);margin-left:2px;">→ Pending approval from:</span>
+          ${f.approvalRoutees.map(name => `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--purple-light);color:var(--purple);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;">
             <div class="av av-sm ${AV[name]||'av-a'}" style="width:14px;height:14px;font-size:7px;">${ini(name)}</div>${name}
           </span>`).join('')}
-        </div>` : ''}
+        </div>` : `<div style="font-size:11px;color:var(--amber);margin-bottom:8px;">⏳ Not yet sent for approval</div>`}
       <div class="approval-btns">
         ${canRoute ? `<button class="btn btn-sm" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);" onclick="openApprovalRoutingModal('${f.id}')">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}</button>` : ''}
         ${canApprove ? `
         <button class="btn-approve" onclick="approveStep('${f.id}')">✓ Approve</button>
-        <button class="btn-reject" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>` : `<span style="font-size:11px;color:var(--ink3);">Awaiting decision from approver</span>`}
+        <button class="btn-reject" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>` : (!canRoute ? `<span style="font-size:11px;color:var(--ink3);">Awaiting decision from approver</span>` : '')}
       </div>
     </div>` : ''}
     <div class="flow-footer">
@@ -5486,6 +5498,28 @@ function openFlowStep(flowId, stepIdx) {
       <div class="dp-label">Status</div>
       <span class="sp ${SC[st]||'sp-todo'}" style="display:inline-block;">${stLabel}</span>
       ${_stepDeadlineChip(f, stepIdx) ? `&nbsp;${_stepDeadlineChip(f, stepIdx)}` : ''}
+      ${_isApprovalStep && (f.approvalRoutees || []).length ? `
+        <div style="margin-top:8px;padding:8px 10px;background:#F3E8FF;border-radius:var(--rad);border:1px solid #DDD6FE;">
+          <div style="font-size:10px;font-weight:700;color:#7C3AED;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Approval Routing</div>
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:4px;">
+            <span style="font-size:11px;color:var(--ink3);">Submitted by:</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--ink2);">
+              <div class="av" style="width:16px;height:16px;font-size:8px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--navy);color:white;">${ini(_snapOwner||'?')}</div>
+              ${_snapOwner||'Unknown'}
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+            <span style="font-size:11px;color:var(--ink3);">Pending with:</span>
+            ${f.approvalRoutees.map(name => `<span style="display:inline-flex;align-items:center;gap:4px;background:white;border:1px solid #DDD6FE;color:#7C3AED;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">
+              <div class="av" style="width:14px;height:14px;font-size:7px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#7C3AED;color:white;">${ini(name)}</div>
+              ${name}
+            </span>`).join('')}
+          </div>
+        </div>` : ''}
+      ${_isApprovalStep && !(f.approvalRoutees || []).length && st === 'active' ? `
+        <div style="margin-top:6px;font-size:11px;color:var(--amber);padding:6px 10px;background:var(--amber-light);border-radius:var(--rad);">
+          ⏳ Not yet sent for approval — the step owner needs to route this.
+        </div>` : ''}
     </div>
     ${isManagerOrHead && st !== 'done' ? `
     <div class="dp-sec">
@@ -5514,6 +5548,21 @@ function openFlowStep(flowId, stepIdx) {
     ${!allDone && canEdit ? `<div class="subtask-blocker">⚠ All subtasks must be completed before marking done</div>` : ''}
     ` : ''}
     ${f.notes[stepIdx] ? `<div class="dp-sec"><div class="dp-label">Notes</div><div class="dp-val" style="font-size:12px;line-height:1.5;">${f.notes[stepIdx]}</div></div>` : ''}
+    ${(f.approvalHistory||[]).filter(h => h.stepIdx === stepIdx).length ? `
+    <div class="dp-sec">
+      <div class="dp-label">Approval History</div>
+      ${f.approvalHistory.filter(h => h.stepIdx === stepIdx).map(h => {
+        const d = new Date(h.at);
+        const timeStr = d.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+        return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:16px;margin-top:1px;">✅</span>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">Approved by <span style="color:var(--green);">${h.approvedBy}</span></div>
+            <div style="font-size:11px;color:var(--ink3);">Submitted by ${h.submittedBy||'Unknown'} · ${timeStr}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
     <div class="divider"></div>
     <div class="dp-label" style="margin-bottom:8px;">All Steps</div>
     <div class="timeline">${tmplSteps.map((s, i) => {
@@ -8889,21 +8938,23 @@ function submitWeeklyPlan() {
 // AUDIT TRAIL
 // ═══════════════════════════════════════════
 const AUDIT_ICONS = {
-  step_done:    { icon:'✓', bg:'#EAF3DE' },
-  step_rejected:{ icon:'↩', bg:'#FDEAEA' },
-  flow_spawned: { icon:'▶', bg:'#E6F1FB' },
-  task_created: { icon:'＋', bg:'#EEE9F8' },
-  task_pushed:  { icon:'→', bg:'#E5F4F2' },
-  task_blocked: { icon:'✗', bg:'#FDEAEA' },
-  file_uploaded:{ icon:'📎', bg:'#F0F7FF' },
-  weekly_plan:  { icon:'📅', bg:'#FAEEDA' },
-  login:        { icon:'🔑', bg:'#F1F3F5' },
-  sub_assigned: { icon:'👤', bg:'#FAEEDA' },
-  approved:     { icon:'✓', bg:'#EAF3DE' },
-  step_flagged: { icon:'🚩', bg:'#FDEAEA' },
-  flag_cleared: { icon:'✅', bg:'#EAF3DE' },
-  deadline_set:    { icon:'📅', bg:'#FFF7ED' },
-  deadline_missed: { icon:'🔴', bg:'#FEF2F2' },
+  step_done:        { icon:'✓',  bg:'#EAF3DE' },
+  step_rejected:    { icon:'↩',  bg:'#FDEAEA' },
+  flow_spawned:     { icon:'▶',  bg:'#E6F1FB' },
+  task_created:     { icon:'＋', bg:'#EEE9F8' },
+  task_pushed:      { icon:'→',  bg:'#E5F4F2' },
+  task_blocked:     { icon:'✗',  bg:'#FDEAEA' },
+  file_uploaded:    { icon:'📎', bg:'#F0F7FF' },
+  weekly_plan:      { icon:'📅', bg:'#FAEEDA' },
+  login:            { icon:'🔑', bg:'#F1F3F5' },
+  sub_assigned:     { icon:'👤', bg:'#FAEEDA' },
+  approval_routed:  { icon:'📤', bg:'#F3E8FF' },
+  approved:         { icon:'✅', bg:'#D1FAE5' },
+  step_flagged:     { icon:'🚩', bg:'#FDEAEA' },
+  flag_cleared:     { icon:'✅', bg:'#EAF3DE' },
+  deadline_set:     { icon:'📅', bg:'#FFF7ED' },
+  deadline_missed:  { icon:'🔴', bg:'#FEF2F2' },
+  task_edited:      { icon:'✏️', bg:'#F0F7FF' },
 };
 
 async function auditLog(type, description, meta = {}) {
@@ -9135,10 +9186,40 @@ function renderAudit() {
     const ic = AUDIT_ICONS[e.type] || { icon:'●', bg:'#F1F3F5' };
     const dateSep = dateStr !== lastDate ? `<div class="audit-date-sep">${dateStr}</div>` : '';
     lastDate = dateStr;
+    // Exclude keys rendered separately to avoid duplication in chip row
+    const skipKeys = new Set(['id', 'approvers', 'submittedBy', 'approvedBy', 'sentBy']);
     const metaChips = Object.entries(e.meta || {})
-      .filter(([k]) => !['id'].includes(k))
+      .filter(([k]) => !skipKeys.has(k))
       .map(([k, v]) => `<span class="audit-chip">${k}: ${v}</span>`)
       .join('');
+
+    // Approval-specific rich display rows
+    let approvalExtra = '';
+    if (e.type === 'approval_routed') {
+      const approvers = (e.meta?.approvers || '').split(',').map(s => s.trim()).filter(Boolean);
+      if (approvers.length) {
+        approvalExtra = `<div class="audit-approver-chips">
+          <span style="font-size:11px;color:var(--ink3);white-space:nowrap;">Sent to:</span>
+          ${approvers.map(name => `<span class="audit-approver-chip">
+            <div class="av" style="width:16px;height:16px;font-size:8px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--purple,#7C3AED);color:white;">${ini(name)}</div>
+            ${name}
+          </span>`).join('')}
+        </div>`;
+      }
+    }
+    if (e.type === 'approved') {
+      const submittedBy = e.meta?.submittedBy;
+      if (submittedBy) {
+        approvalExtra = `<div style="margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span class="audit-submitted-by">
+            <div class="av" style="width:14px;height:14px;font-size:7px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--navy);color:white;">${ini(submittedBy)}</div>
+            Submitted by: ${submittedBy}
+          </span>
+          <span style="font-size:10px;color:var(--ink3);">→ approved by <strong>${e.actor}</strong></span>
+        </div>`;
+      }
+    }
+
     return `${dateSep}<div class="audit-entry">
       <div class="audit-icon" style="background:${ic.bg};">${ic.icon}</div>
       <div class="audit-body">
@@ -9149,6 +9230,7 @@ function renderAudit() {
           <span class="audit-time">${timeStr}</span>
         </div>
         <div class="audit-desc">${e.description}</div>
+        ${approvalExtra}
         ${metaChips ? `<div class="audit-meta">${metaChips}</div>` : ''}
       </div>
     </div>`;
@@ -9388,11 +9470,25 @@ async function approveStep(flowId) {
   } else {
     f.completedAt = Date.now();
   }
+  // Capture who submitted this step before clearing routees
+  const stepOwner = (f.stepOwners && f.stepOwners[f.currentStep]) || curStep.owner || null;
+  // Store approval record on the flow for history
+  if (!Array.isArray(f.approvalHistory)) f.approvalHistory = [];
+  f.approvalHistory.push({
+    stepIdx: f.currentStep,
+    stepName,
+    submittedBy: stepOwner,
+    approvedBy: loggedInMember?.name || 'Unknown',
+    at: Date.now(),
+  });
   // Clear routees for this step after approval
   delete f.approvalRoutees;
   await fbSaveFlows();
   renderToday();
-  auditLog('approved', `Approved "${stepName}" on "${f.title}"`, { flow: f.title, step: stepName });
+  auditLog('approved',
+    `${loggedInMember?.name} approved "${stepName}" on "${f.title}"${stepOwner ? ` — content submitted by ${stepOwner}` : ''}`,
+    { flow: f.title, step: stepName, approvedBy: loggedInMember?.name || 'Unknown', submittedBy: stepOwner || 'Unknown' }
+  );
   toast('Step approved and pushed forward!', 'ok');
 }
 
@@ -9542,9 +9638,11 @@ async function confirmApprovalRouting() {
 
   const tmplSteps = getTemplateSteps(f.templateId);
   const stepName = tmplSteps[f.currentStep]?.name || 'Approval';
+  const stepOwnerForRouting = (f.stepOwners && f.stepOwners[f.currentStep]) ||
+    tmplSteps[f.currentStep]?.owner || loggedInMember?.name || 'Unknown';
   auditLog('approval_routed',
-    `Sent "${stepName}" on "${f.title}" for approval to: ${selected.join(', ')}`,
-    { flow: f.title, step: stepName, approvers: selected.join(', ') }
+    `"${stepName}" on "${f.title}" sent for approval by ${loggedInMember?.name} → ${selected.join(', ')}`,
+    { flow: f.title, step: stepName, approvers: selected.join(', '), sentBy: loggedInMember?.name || 'Unknown', submittedBy: stepOwnerForRouting }
   );
 
   // Notify each chosen approver
