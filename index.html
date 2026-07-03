@@ -11257,8 +11257,13 @@ async function sendChatMessage() {
 }
 
 function notifyMention(name, from, text) {
-  // Desktop push
-  pushNotif({ title:`💬 ${from} mentioned you`, body: text.substring(0,80), icon:'💬', type:'turn' });
+  const notif = { title: `💬 ${from} mentioned you`, body: text.substring(0, 80), icon: '💬', type: 'turn', tag: 'mention-' + name };
+  if (name && name !== loggedInMember?.name) {
+    // Cross-browser: write to Firestore so the recipient's tab picks it up
+    sendFirestoreNotif(name, notif);
+  } else {
+    pushNotif(notif);
+  }
   // Email
   const email = getMemberEmail(name);
   if (email) sendEmailNotification(email, name,
