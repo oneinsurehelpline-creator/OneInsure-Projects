@@ -10521,12 +10521,40 @@ function chatAttachFile(event) {
   _updateSendBtn();
 }
 
+let _dmPreviewsLoaded = false;
+async function preloadDMPreviews() {
+  if (!fbReady || !db || !loggedInMember || _dmPreviewsLoaded) return;
+  _dmPreviewsLoaded = true;
+  const others = MEMBERS.filter(m => m.name !== loggedInMember.name && m.role !== 'approver');
+  await Promise.all(others.map(async m => {
+    const roomId = getDMRoomId(loggedInMember.name, m.name);
+    if (DM_LAST[roomId]) return;
+    try {
+      const snap = await db.collection('chat')
+        .where('room', '==', roomId)
+        .orderBy('loggedAt', 'desc')
+        .limit(1)
+        .get();
+      if (!snap.empty) {
+        const d = snap.docs[0].data();
+        DM_LAST[roomId] = {
+          sender: d.sender || '',
+          text: d.text || (d.type === 'image' ? '📷 Photo' : d.fileName ? '📎 ' + d.fileName : '📎'),
+          loggedAt: d.loggedAt || 0,
+        };
+      }
+    } catch(e) { /* skip rooms with no messages or index issues */ }
+  }));
+  renderDMList();
+}
+
 function initChat() {
   if (!fbReady || !db) { renderChatMessages(); return; }
   if (chatUnsubscribe) chatUnsubscribe();
   // Start background unread trackers for all channels + DMs (idempotent)
   initAllChannelTrackers();
   listenForDMInbox();
+  preloadDMPreviews();
   const chatRoom = currentDM ? currentDM.roomId : currentRoom;
   // Order by loggedAt (plain number) — avoids Firestore composite index requirement
   // sentAt is a server timestamp which needs an index; loggedAt is set client-side
