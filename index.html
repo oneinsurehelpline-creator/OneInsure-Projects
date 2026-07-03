@@ -10362,7 +10362,7 @@ function getChannelMembers(roomId) {
 
 function canAccessChannel(roomId) {
   if (!loggedInMember) return false;
-  if (loggedInMember.role === 'head' || loggedInMember.role === 'viewer') return true; // Head/viewer sees all
+  if (loggedInMember.role === 'head') return true; // Only head sees all channels
   if (roomId === 'general') return true;            // General is always open
   const members = getChannelMembers(roomId);
   // If no members set yet, only managers/head can see it
