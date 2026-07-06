@@ -1488,10 +1488,11 @@ let allFlows          = [];
 let _mobFlowTab       = 'active';
 let chatRoomId        = null;
 let chatUnsub         = null;
-let MOB_CHANNEL_UNREAD = {};  // roomId → count
-let MOB_CHANNEL_LAST   = {};  // roomId → { sender, text, loggedAt }
-let _mobTrackers       = {};  // roomId → unsubscribe
-let MOB_DM_UNREAD      = {};  // roomId → count
+let MOB_CHANNEL_UNREAD   = {};  // roomId → count
+let MOB_CHANNEL_LAST     = {};  // roomId → { sender, text, loggedAt }
+let MOB_CHANNEL_MEMBERS  = {};  // roomId → [name, …] (loaded from Firestore channelMembers)
+let _mobTrackers         = {};  // roomId → unsubscribe
+let MOB_DM_UNREAD        = {};  // roomId → count
 let _mobDmInboxListener = null;
 let _mobDmInboxReady    = false;
 const _MOB_MUTED = new Set(JSON.parse(localStorage.getItem('sd_muted_chans') || '[]'));
@@ -1602,6 +1603,41 @@ function triggerFlowStepNotif(flowTitle) {
   if (Notification.permission === 'granted') {
     new Notification('Your turn!', { body: `You have a step to action: ${flowTitle}`, icon: '/favicon.ico', tag: 'flow_step' });
   }
+}
+
+async function sendMobFirestoreNotif(toName, { title, body, icon = '📋', type = 'info', tag = null } = {}) {
+  if (!db || !toName || toName === currentMember?.name) return;
+  try {
+    await db.collection('user_notifs').add({ to: toName, title, body, icon, type, tag, ts: Date.now(), sentBy: currentMember?.name || 'System', read: false });
+  } catch(e) { console.warn('sendMobFirestoreNotif failed:', e); }
+}
+
+let _mobNotifsUnsub = null;
+function mobListenForMyNotifs() {
+  if (!db || !currentMember || _mobNotifsUnsub) return;
+  const cutoff = Date.now() - 48 * 3600 * 1000;
+  _mobNotifsUnsub = db.collection('user_notifs')
+    .where('to', '==', currentMember.name)
+    .where('read', '==', false)
+    .where('ts', '>', cutoff)
+    .onSnapshot(snap => {
+      snap.docChanges().forEach(change => {
+        if (change.type !== 'added') return;
+        const n = change.doc.data();
+        if (n.sentBy === currentMember.name) return;
+        if (Notification.permission === 'granted') {
+          new Notification(n.title || 'SociaDesk', { body: n.body || '', icon: '/favicon.ico', tag: n.tag || n.type });
+        }
+        change.doc.ref.update({ read: true }).catch(() => {});
+      });
+    }, () => {});
+}
+
+function mobLoadChannelMembers() {
+  if (!db) return;
+  db.collection('channelMembers').get().then(snap => {
+    snap.forEach(doc => { MOB_CHANNEL_MEMBERS[doc.id] = doc.data().members || []; });
+  }).catch(() => {});
 }
 
 async function requestNotifPermission() {
@@ -1827,6 +1863,8 @@ function initApp() {
   startListeners();
   initMobChannelTrackers();
   mobListenForDMInbox();
+  mobListenForMyNotifs();
+  mobLoadChannelMembers();
   requestNotifPermission();
   switchTab('today');
   const t = todayStr();
@@ -2837,7 +2875,14 @@ function _fmtMobChatTime(ts) {
 function renderChatList() {
   const chEl = document.getElementById('channel-list-items');
   if (chEl) {
-    const sorted = [...CHAT_ROOMS].sort((a,b) => {
+    const isViewer = currentMember?.role === 'viewer';
+    const visibleRooms = CHAT_ROOMS.filter(r => {
+      if (!isViewer) return true;
+      if (r.id === 'general') return true;
+      const members = MOB_CHANNEL_MEMBERS[r.id] || [];
+      return members.includes(currentMember?.name);
+    });
+    const sorted = [...visibleRooms].sort((a,b) => {
       const ua=MOB_CHANNEL_UNREAD[a.id]||0, ub=MOB_CHANNEL_UNREAD[b.id]||0;
       if (ua!==ub) return ub-ua;
       return (MOB_CHANNEL_LAST[b.id]?.loggedAt||0) - (MOB_CHANNEL_LAST[a.id]?.loggedAt||0);
@@ -2870,9 +2915,21 @@ function renderChatList() {
 
   const dmEl = document.getElementById('dm-list-items');
   if (dmEl) {
-    const others = MEMBERS.filter(m => m.name !== (currentMember ? currentMember.name : ''));
+    const others = MEMBERS.filter(m => m.name !== (currentMember ? currentMember.name : '') && m.role !== 'approver');
     const ROLE_LABELS = {head:'Head of Social',manager:'Manager',member:'Team Member',approver:'Approver'};
-    dmEl.innerHTML = others.map(m => {
+    // My Notes — pinned self-chat at top
+    const selfRoomId = 'notes_self_' + (currentMember?.name || '').replace(/\s+/g,'_');
+    const selfLast = MOB_CHANNEL_LAST[selfRoomId];
+    const selfPreview = selfLast ? (selfLast.text || '📎').slice(0, 45) : 'Notes, reminders, links…';
+    const selfTime = selfLast?.loggedAt ? _fmtMobChatTime(selfLast.loggedAt) : '';
+    dmEl.innerHTML = `<div class="chat-list-row" onclick="openChatRoom('${selfRoomId}','My Notes','dm','Personal notes &amp; reminders')" style="background:#FFFBEB;border-bottom:1px solid #FDE68A;">
+      <div class="ch-icon-box" style="background:linear-gradient(135deg,#F59E0B,#D97706);border-radius:50%;font-size:18px;">📌</div>
+      <div class="ch-text">
+        <div class="ch-name" style="font-weight:600;color:#92400E;">My Notes</div>
+        <div class="ch-preview" style="color:#78350F;">${escHtml(selfPreview)}</div>
+      </div>
+      <div class="ch-meta">${selfTime ? `<div class="ch-time">${selfTime}</div>` : '<div class="ch-chevron">›</div>'}</div>
+    </div>` + others.map(m => {
       const init     = m.name.charAt(0).toUpperCase();
       const dmId     = dmRoomId(currentMember ? currentMember.name : '', m.name);
       const dmUnread = MOB_DM_UNREAD[dmId] || 0;
@@ -3059,7 +3116,17 @@ async function sendMessage() {
       loggedAt: Date.now(),
     };
     await db.collection('chat').add(msg);
-    // Write DM inbox notification for recipient
+    // Notify @mentioned members via Firestore
+    if (text) {
+      const re = /@(\w+)/g; let m;
+      while ((m = re.exec(text)) !== null) {
+        const member = MEMBERS.find(mb => mb.name.toLowerCase() === m[1].toLowerCase());
+        if (member && member.name !== currentMember.name) {
+          sendMobFirestoreNotif(member.name, { title: `💬 ${currentMember.name} mentioned you`, body: text.substring(0, 80), icon: '💬', type: 'turn', tag: 'mention-' + member.name });
+        }
+      }
+    }
+    // Write DM inbox notification for recipient (skip self-notes rooms)
     if (chatRoomId && chatRoomId.startsWith('dm_') && currentMember) {
       const recipientName = MEMBERS.find(m => m.name !== currentMember.name && chatRoomId.includes(m.name.replace(/\s+/g,'_')))?.name;
       if (recipientName) {

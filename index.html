@@ -9038,6 +9038,7 @@ const AUDIT_ICONS = {
   deadline_set:     { icon:'📅', bg:'#FFF7ED' },
   deadline_missed:  { icon:'🔴', bg:'#FEF2F2' },
   task_edited:      { icon:'✏️', bg:'#F0F7FF' },
+  file_comment:     { icon:'💬', bg:'#EFF6FF' },
 };
 
 async function auditLog(type, description, meta = {}) {
@@ -12288,11 +12289,13 @@ function notifyMyTurn(stepName, flowTitle, owner) {
 
 function notifyBlocked(taskTitle, assignee) {
   if (!NOTIF_PREFS.blocked) return;
-  pushNotif({
-    title: `🔴 Task Blocked — needs attention`,
-    body: `"${taskTitle}" was marked blocked by ${assignee}.`,
-    icon: '🔴', type: 'blocked', tag: 'blocked-' + taskTitle,
-  });
+  const notif = { title: `🔴 Task Blocked`, body: `"${taskTitle}" — ${assignee} is blocked and needs help.`, icon: '🔴', type: 'blocked', tag: 'blocked-' + taskTitle };
+  pushNotif(notif);
+  // Also cross-notify the assignee's manager so they see it on their device
+  const assigneeMember = MEMBERS.find(m => m.name === assignee);
+  if (assigneeMember?.reportsTo && assigneeMember.reportsTo !== loggedInMember?.name) {
+    sendFirestoreNotif(assigneeMember.reportsTo, notif);
+  }
 }
 
 function notifyFlowPushed(stepName, flowTitle, pushedBy) {
