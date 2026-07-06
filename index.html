@@ -693,6 +693,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .chat-dm-btn{display:flex;align-items:center;gap:11px;padding:8px 14px;cursor:pointer;transition:background 0.12s;border-bottom:1px solid #f5f5f5;width:100%;text-align:left;background:transparent;border-top:none;border-left:none;border-right:none;font-family:var(--ff-body);}
 .chat-dm-btn:hover{background:#f5f5f5;}
 .chat-dm-btn.active{background:#ebebeb;}
+.chat-self-notes-btn{background:#FFFBEB;border-bottom:1px solid #FDE68A;}
+.chat-self-notes-btn:hover{background:#FEF9C3;}
+.chat-self-notes-btn.active{background:#FEF08A;}
+.chat-self-notes-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#D97706);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
 .chat-dm-unread{background:#25D366;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
 /* Online status dot on DM avatar */
 .chat-av-online{position:relative;flex-shrink:0;}
@@ -10015,6 +10019,22 @@ function getDMRoomId(user1, user2) {
   return 'dm_' + [user1, user2].sort().join('_').replace(/\s+/g, '_');
 }
 
+function openSelfNotes() {
+  if (!loggedInMember) return;
+  _saveDraft();
+  if (_partnerReadListener) { _partnerReadListener(); _partnerReadListener = null; }
+  if (_typingListener) { _typingListener(); _typingListener = null; }
+  _clearTyping();
+  _partnerReadAt = 0;
+  currentDM = { roomId: 'notes_self_' + loggedInMember.name.replace(/\s+/g,'_'), otherUser: '__self__' };
+  currentRoom = null;
+  CHANNEL_UNREAD[currentDM.roomId] = 0;
+  _setLastRead(currentDM.roomId, Date.now());
+  updateChatNavBadge();
+  renderChat();
+  initChat();
+}
+
 function openDM(otherUser) {
   if (!loggedInMember) return;
   _saveDraft(); // save draft for current room before switching
@@ -10092,7 +10112,19 @@ function renderDMList() {
     return !DM_UNREAD[rid] && !DM_LAST[rid];
   });
   const sorted = [...withUnread, ...withRecent, ...rest];
-  el.innerHTML = sorted.map(m => {
+  const selfRoomId = 'notes_self_' + loggedInMember.name.replace(/\s+/g,'_');
+  const selfActive = currentDM?.otherUser === '__self__';
+  const selfLast = DM_LAST[selfRoomId];
+  const selfPreview = selfLast ? (selfLast.text || '📎').slice(0, 36) : 'Notes, reminders, links…';
+  const selfTime = selfLast ? fmtChatTime(selfLast.loggedAt) : '';
+  el.innerHTML = `<button class="chat-dm-btn chat-self-notes-btn${selfActive?' active':''}" onclick="openSelfNotes()">
+    <div class="chat-self-notes-av">📌</div>
+    <div class="chat-room-body">
+      <div class="chat-room-name" style="font-weight:600;color:#92400E;">My Notes</div>
+      <div class="chat-room-preview" style="color:#78350F;">${selfPreview}</div>
+    </div>
+    <div class="chat-room-meta">${selfTime ? `<div class="chat-room-time">${selfTime}</div>` : ''}</div>
+  </button>` + sorted.map(m => {
     const roomId = getDMRoomId(loggedInMember.name, m.name);
     const isActive = currentDM?.otherUser === m.name;
     const unread = DM_UNREAD[roomId] || 0;
@@ -10526,8 +10558,10 @@ async function preloadDMPreviews() {
   if (!fbReady || !db || !loggedInMember || _dmPreviewsLoaded) return;
   _dmPreviewsLoaded = true;
   const others = MEMBERS.filter(m => m.name !== loggedInMember.name && m.role !== 'approver');
-  await Promise.all(others.map(async m => {
-    const roomId = getDMRoomId(loggedInMember.name, m.name);
+  // Include self-notes room
+  const selfRoomId = 'notes_self_' + loggedInMember.name.replace(/\s+/g,'_');
+  const rooms = [selfRoomId, ...others.map(m => getDMRoomId(loggedInMember.name, m.name))];
+  await Promise.all(rooms.map(async roomId => {
     if (DM_LAST[roomId]) return;
     try {
       const snap = await db.collection('chat')
@@ -10607,10 +10641,16 @@ function renderChat() {
   const avatarEl = document.getElementById('chat-header-avatar');
   if (currentDM) {
     const other = currentDM.otherUser;
-    document.getElementById('chat-header-title').textContent = other;
-    document.getElementById('chat-header-meta').textContent = 'Direct message';
-    if (avatarEl) { avatarEl.textContent = ini(other); avatarEl.style.background = 'rgba(255,255,255,0.25)'; }
-    trackDMRecent(other);
+    if (other === '__self__') {
+      document.getElementById('chat-header-title').textContent = 'My Notes';
+      document.getElementById('chat-header-meta').textContent = 'Personal notes, tasks & reminders';
+      if (avatarEl) { avatarEl.textContent = '📌'; avatarEl.style.background = 'linear-gradient(135deg,#F59E0B,#D97706)'; }
+    } else {
+      document.getElementById('chat-header-title').textContent = other;
+      document.getElementById('chat-header-meta').textContent = 'Direct message';
+      if (avatarEl) { avatarEl.textContent = ini(other); avatarEl.style.background = 'rgba(255,255,255,0.25)'; }
+      trackDMRecent(other);
+    }
   } else {
     const rm = getAllRooms().find(r => r.id === currentRoom) || CHAT_ROOMS[0];
     document.getElementById('chat-header-title').textContent = rm?.label || 'Chat';
@@ -11264,8 +11304,8 @@ async function sendChatMessage() {
 
   try {
     await db.collection('chat').add(msg);
-    // Write DM inbox notification so recipient sees unread dot immediately
-    if (currentDM) {
+    // Write DM inbox notification so recipient sees unread dot immediately (skip for self-notes)
+    if (currentDM && currentDM.otherUser !== '__self__') {
       const inboxId = currentDM.roomId + '__' + currentDM.otherUser;
       const preview = (msg.text || (msg.fileName ? `Shared a file: ${msg.fileName}` : '')).substring(0, 80);
       db.collection('dm_inbox').doc(inboxId).set({
