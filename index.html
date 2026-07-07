@@ -588,6 +588,18 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .audit-date-sep{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em;padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:10px;}
 .subassign-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--amber-light);border-top:1px solid #FFB733;}
 .subassign-label{font-size:11px;font-weight:600;color:var(--amber);flex-shrink:0;}
+.handoff-step-box{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rad);font-size:13px;font-weight:500;margin-bottom:6px;}
+.handoff-step-done{background:#EAF3DE;color:#2D6A4F;border:1px solid #B7E4C7;}
+.handoff-step-next{background:#EFF6FF;color:#1E3A8A;border:1px solid #BFDBFE;}
+.handoff-log-row{display:flex;gap:8px;font-size:11px;color:var(--ink3);padding:4px 0;border-bottom:1px solid var(--border);}
+.handoff-log-row:last-child{border-bottom:none;}
+.approval-pending-banner{background:#F3E8FF;border:1px solid #DDD6FE;border-radius:var(--rad);padding:8px 12px;font-size:12px;color:#6D28D9;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.handoff-step-box{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rad);font-size:13px;font-weight:500;margin-bottom:6px;}
+.handoff-step-done{background:#EAF3DE;color:#2D6A4F;border:1px solid #B7E4C7;}
+.handoff-step-next{background:#EFF6FF;color:#1E3A8A;border:1px solid #BFDBFE;}
+.handoff-log-row{display:flex;gap:8px;font-size:11px;color:var(--ink3);padding:4px 0;border-bottom:1px solid var(--border);}
+.handoff-log-row:last-child{border-bottom:none;}
+.approval-pending-banner{background:#F3E8FF;border:1px solid #DDD6FE;border-radius:var(--rad);padding:8px 12px;font-size:12px;color:#6D28D9;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
 .subassign-select{font-size:12px;padding:5px 9px;border:1.5px solid #FFB733;border-radius:var(--rad);background:var(--white);font-family:var(--ff-body);color:var(--ink);outline:none;}
 .subassign-chip{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--amber-light);color:var(--amber);border:1px solid #FFB733;font-weight:600;}
 
@@ -2698,6 +2710,39 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 
 </div>
 
+<!-- STEP HANDOFF MODAL -->
+<div class="overlay" id="handoff-modal" onclick="if(event.target===this)closeHandoffModal()">
+  <div class="modal" style="width:440px;max-width:95vw;">
+    <div class="modal-hdr">
+      <span class="modal-title">↪ Hand Off Step</span>
+      <button class="close-x" onclick="closeHandoffModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="handoff-step-box handoff-step-done" id="handoff-from-label">
+        <span>✓</span><span id="handoff-from-name">Current Step</span>
+      </div>
+      <div style="text-align:center;font-size:18px;color:var(--ink3);margin:-2px 0;">↓</div>
+      <div class="handoff-step-box handoff-step-next" id="handoff-to-label" style="margin-top:2px;">
+        <span>→</span><span id="handoff-to-name">Next Step</span>
+      </div>
+      <div class="form-grid" style="margin-top:14px;">
+        <div class="fg">
+          <label>Assign next step to</label>
+          <select id="handoff-assignee" class="form-select"></select>
+        </div>
+        <div class="fg fc-full">
+          <label>Handoff note (optional)</label>
+          <textarea id="handoff-note" rows="2" placeholder="Any instructions or context for the next person…" style="resize:vertical;min-height:60px;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeHandoffModal()">Cancel</button>
+      <button class="btn btn-coral" onclick="confirmHandoff()">Hand Off →</button>
+    </div>
+  </div>
+</div>
+
 <!-- SPAWN FLOW MODAL -->
 <div class="overlay" id="spawn-modal" style="display:none;" onclick="if(event.target===this)closeSpawnModal()">
   <div class="modal" style="width:420px;max-width:95vw;">
@@ -4272,7 +4317,10 @@ function renderHome() {
   // My pending steps
   const mySteps = TODAY_FLOWS.filter(f => {
     if (getFlowStatus(f) === 'done') return false;
-    const owner = (f.stepOwners || [])[f.currentStep] || '';
+    // Routed for approval — belongs in approver's bucket, not sender's
+    if ((f.approvalRoutees || []).length > 0) return (f.approvalRoutees).includes(me);
+    const tmplOwner = getTemplateSteps(f.templateId)[f.currentStep]?.owner || '';
+    const owner = (f.stepOwners || [])[f.currentStep] || tmplOwner;
     return owner === me;
   });
 
@@ -5119,15 +5167,20 @@ function flowCardHTML(f) {
   const isApprovalStep = curStep.isApproval === true ||
     curStep.name?.toLowerCase().includes('approval') ||
     curStep.name?.toLowerCase().includes('approve');
+  // Approval pending = a non-approval step that has been handed off for approval (sender waiting for approver)
+  const isApprovalPending = !isApprovalStep && (f.approvalRoutees || []).length > 0;
   // Only the actual task owner can mark a non-approval step done — managers cannot bypass this
-  const canMarkDone = isStepOwner && !isApprovalStep;
+  // Also blocked while waiting for the approver to come back
+  const canMarkDone = isStepOwner && !isApprovalStep && !isApprovalPending;
   // Approval: only the explicitly routed approver can approve — step owner must send for approval first
   const isRoutedApprover = loggedInMember &&
-    isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
+    (isApprovalStep || isApprovalPending) && (f.approvalRoutees || []).includes(loggedInMember.name);
   const canApprove = isRoutedApprover;
   // Who can "Send for Approval": only the approval step's designated owner (the reviewer), or any manager/head.
   // The previous step's owner (content creator) should not route — they don't decide which approver is relevant.
   const canRoute = isApprovalStep && !canApprove && (isStepOwner || isManager);
+  // Handoff: step owner can hand off to the next step's assignee before completing current step
+  const canHandoff = isStepOwner && !isApprovalStep && !isApprovalPending && status !== 'done';
   const subtasksDone = areSubtasksDone(f, curStepIdx);
   const curSubtasks = curStep.subtasks || [];
   const curChecks = (f.subtaskChecks || [])[curStepIdx] || [];
@@ -5354,17 +5407,29 @@ function flowCardHTML(f) {
             (_stepDeadlineChip(f, curStepIdx) ? ' ' + _stepDeadlineChip(f, curStepIdx) : '')
           : '<span style="color:var(--green);font-weight:600;">✓ All steps complete!</span>'}
       </div>
-      ${status !== 'done' && !isApprovalStep ? `
+      ${status !== 'done' && isApprovalPending ? `
+        <div class="approval-pending-banner">⏳ Awaiting approval from <strong>${(f.approvalRoutees||[]).join(', ')}</strong></div>
+        ${canApprove ? `
+          <button class="btn btn-sm" style="background:#7C3AED;color:white;border-color:#7C3AED;font-weight:700;padding:8px 20px;font-size:13px;" onclick="approveStep('${f.id}')">✓ Approve</button>
+          <button class="btn btn-sm btn-ghost" style="border-color:#DC2626;color:#DC2626;" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>
+        ` : ''}
+        <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
+      ` : status !== 'done' && !isApprovalStep ? `
         ${canMarkDone ? `
         <button class="btn btn-sm"
           style="background:var(--coral);color:white;border-color:var(--coral);font-weight:700;padding:8px 20px;font-size:13px;"
-          onclick="confirmMarkStepDone('${f.id}')"
+          onclick="openHandoffModal('${f.id}')"
           ${!subtasksDone ? 'disabled style="opacity:0.35;cursor:not-allowed;background:var(--coral);color:white;border-color:var(--coral);font-weight:700;padding:8px 20px;font-size:13px;"' : ''}>
-          ✓ Mark Step Done
+          ✓ Complete &amp; Hand Off
         </button>` : `<span style="font-size:11px;color:var(--ink3);">⏳ Waiting for <strong>${subAssignee||curStep.owner||'owner'}</strong></span>`}
         ${isManager && (subAssignee||curStep.owner) ? `<button class="btn btn-sm btn-ghost" style="border-color:var(--amber);color:#b45309;" onclick="openNudgeModal('${f.id}',${curStepIdx})">📨 Nudge</button>` : ''}
         <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
       ` : status !== 'done' && isApprovalStep ? `
+        ${canRoute ? `<button class="btn btn-sm btn-ghost" style="border-color:#7C3AED;color:#7C3AED;" onclick="openApprovalRoutingModal('${f.id}')">↗ Send for Approval</button>` : ''}
+        ${canApprove ? `
+          <button class="btn btn-sm" style="background:#7C3AED;color:white;border-color:#7C3AED;font-weight:700;padding:8px 20px;font-size:13px;" onclick="approveStep('${f.id}')">✓ Approve</button>
+          <button class="btn btn-sm btn-ghost" style="border-color:#DC2626;color:#DC2626;" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>
+        ` : ''}
         ${isManager ? `<button class="btn btn-sm btn-ghost" style="border-color:var(--amber);color:#b45309;" onclick="openNudgeModal('${f.id}',${curStepIdx})">📨 Nudge</button>` : ''}
         <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
       ` : ''}
@@ -5386,18 +5451,99 @@ Next step: ${nextStep.name}${nextStep.owner ? ' → ' + nextStep.owner : ''}`;
   sdConfirm('Mark Step Done', msg, () => markStepDone(flowId), 'Mark Done', false);
 }
 
+let _handoffFlowId = null;
+
+function openHandoffModal(flowId) {
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  _handoffFlowId = flowId;
+  const tmplSteps = getTemplateSteps(f.templateId);
+  const curIdx = f.currentStep;
+  const curStep = tmplSteps[curIdx] || {};
+  const curOwner = (f.stepOwners || [])[curIdx] || curStep.owner || loggedInMember?.name || '';
+  const isLast = curIdx >= tmplSteps.length - 1;
+  const nextStep = !isLast ? tmplSteps[curIdx + 1] : null;
+
+  document.getElementById('handoff-from-name').textContent =
+    `${curStep.name || `Step ${curIdx + 1}`} (${curOwner || 'Unassigned'})`;
+  document.getElementById('handoff-to-name').textContent = isLast
+    ? 'Flow Complete'
+    : `${nextStep.name || `Step ${curIdx + 2}`}`;
+
+  const sel = document.getElementById('handoff-assignee');
+  sel.innerHTML = '';
+  if (isLast) {
+    sel.innerHTML = '<option value="">— final step, no next assignee —</option>';
+    sel.disabled = true;
+  } else {
+    sel.disabled = false;
+    const currentNext = (f.stepOwners || [])[curIdx + 1] || nextStep.owner || '';
+    MEMBERS.filter(m => m.role !== 'viewer').forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.name;
+      opt.textContent = m.name + (m.role ? ` (${m.role})` : '');
+      if (m.name === currentNext) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (!currentNext && MEMBERS.length) sel.selectedIndex = 0;
+  }
+  document.getElementById('handoff-note').value = '';
+  document.getElementById('handoff-modal').style.display = 'flex';
+}
+
+function closeHandoffModal() {
+  document.getElementById('handoff-modal').style.display = 'none';
+  _handoffFlowId = null;
+}
+
+async function confirmHandoff() {
+  const flowId = _handoffFlowId;
+  if (!flowId) return;
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  const tmplSteps = getTemplateSteps(f.templateId);
+  const curIdx = f.currentStep;
+  const isLast = curIdx >= tmplSteps.length - 1;
+  const nextAssignee = document.getElementById('handoff-assignee').value;
+  const note = document.getElementById('handoff-note').value.trim();
+
+  if (!isLast) {
+    if (!f.stepOwners) f.stepOwners = tmplSteps.map((s, i) => (f.stepOwners || [])[i] || s.owner || '');
+    f.stepOwners[curIdx + 1] = nextAssignee || f.stepOwners[curIdx + 1];
+  }
+
+  // Record in handoff log for audit trail
+  if (!f.handoffLog) f.handoffLog = [];
+  f.handoffLog.push({
+    at: Date.now(),
+    by: loggedInMember?.name || '',
+    fromStep: tmplSteps[curIdx]?.name || `Step ${curIdx + 1}`,
+    toStep: !isLast ? (tmplSteps[curIdx + 1]?.name || `Step ${curIdx + 2}`) : '(complete)',
+    toAssignee: isLast ? '' : nextAssignee,
+    note
+  });
+
+  closeHandoffModal();
+  auditLog('step_handoff',
+    `Handed off "${tmplSteps[curIdx]?.name || 'step'}" → ${isLast ? 'complete' : (nextAssignee || 'next step')} on "${f.title}"`,
+    { flow: f.title, note: note || undefined }
+  );
+  await markStepDone(flowId);
+}
+
 async function markStepDone(flowId) {
   const f = TODAY_FLOWS.find(x => x.id === flowId);
   if (!f || role === 'viewer') return;
   const tmplSteps = getTemplateSteps(f.templateId);
   const curStep = tmplSteps[f.currentStep] || {};
+  const effectiveOwner = (f.stepOwners || [])[f.currentStep] || curStep.owner || '';
   const subAssigneeCheck = (f.subAssignees || {})[f.currentStep] || null;
   const isStepOwner = loggedInMember && (
-    curStep.owner === loggedInMember.name ||
+    effectiveOwner === loggedInMember.name ||
     (subAssigneeCheck && subAssigneeCheck === loggedInMember.name)
   );
-  if (!isStepOwner && curStep.owner) {
-    toast(`Only ${subAssigneeCheck || curStep.owner} can mark this step done.`, 'warn'); return;
+  if (!isStepOwner && effectiveOwner) {
+    toast(`Only ${subAssigneeCheck || effectiveOwner} can mark this step done.`, 'warn'); return;
   }
   if (!areSubtasksDone(f, f.currentStep)) {
     toast('Complete all subtasks before marking this step done.', 'warn'); return;
@@ -5417,6 +5563,7 @@ async function markStepDone(flowId) {
     }
     await fbSaveFlows(); renderToday();
     const nextStep = tmplSteps[f.currentStep];
+    const nextOwner = (f.stepOwners || [])[f.currentStep] || nextStep.owner || '';
     const elapsed = f.stepTimings?.[f.currentStep - 1]
       ? formatElapsed(f.stepTimings[f.currentStep - 1].startedAt, f.stepTimings[f.currentStep - 1].completedAt)
       : null;
@@ -5424,8 +5571,8 @@ async function markStepDone(flowId) {
       `Marked "${tmplSteps[f.currentStep - 1]?.name || 'step'}" done on "${f.title}"${elapsed ? ` — took ${elapsed}` : ''}`,
       { flow: f.title, next: nextStep.name, ...(elapsed && { duration: elapsed }) }
     );
-    toast(`Step done! Pushed to ${nextStep.name} → ${nextStep.owner || 'Unassigned'}`, 'ok');
-    notifyMyTurn(nextStep.name, f.title, nextStep.owner);
+    toast(`Step done! Pushed to ${nextStep.name} → ${nextOwner || 'Unassigned'}`, 'ok');
+    notifyMyTurn(nextStep.name, f.title, nextOwner);
   }
 }
 
@@ -9039,6 +9186,7 @@ const AUDIT_ICONS = {
   deadline_missed:  { icon:'🔴', bg:'#FEF2F2' },
   task_edited:      { icon:'✏️', bg:'#F0F7FF' },
   file_comment:     { icon:'💬', bg:'#EFF6FF' },
+  step_handoff:     { icon:'↪', bg:'#F0FDF4' },
 };
 
 async function auditLog(type, description, meta = {}) {
