@@ -5831,9 +5831,10 @@ function taskCardHTML(t){
     <option value="blocked"${t.status==='blocked'?' selected':''}>Blocked</option>
     <option value="done"${t.status==='done'?' selected':''}>Done</option>
   </select>` : `<span class="sp ${SC[t.status]||'sp-todo'}">${SL[t.status]||t.status}</span>`;
-  return `<div class="task-card${t.id===selectedId?' sel':''}${t.status==='blocked'?' blocked':''}${isSel?' sel':''}"
+  const isMyTask = loggedInMember && t.assignee === loggedInMember.name;
+  return `<div class="task-card${t.id===selectedId?' sel':''}${t.status==='blocked'?' blocked':''}${isSel?' sel':''}${isMyTask?' my-task':''}"
     onclick="${_bulkMode?`toggleTaskSelect('${t.id}')`:`openTask('${t.id}')`}"
-    style="${isSel?'border-color:var(--coral);border-width:2px;':''}"
+    style="${isSel?'border-color:var(--coral);border-width:2px;':isMyTask?'border-left:3px solid var(--coral);':''}"
   >
     <div class="tc-top">
       ${bulkCheck}
@@ -5898,9 +5899,10 @@ function kanbanTaskCardHTML(t) {
     </select>
     ${canPush?`<button class="k-push-btn" onclick="pushTask(${t.id});event.stopPropagation()">${NEXT_LABEL[t.status]}</button>`:''}
   </div>` : '';
-  return `<div class="k-card${t.status==='blocked'?' blocked':''}${isSel?' sel':''}"
+  const isMyTask = loggedInMember && t.assignee === loggedInMember.name;
+  return `<div class="k-card${t.status==='blocked'?' blocked':''}${isSel?' sel':''}${isMyTask?' my-task':''}"
     onclick="${_bulkMode?`toggleTaskSelect('${t.id}')`:`openTask('${t.id}')`}"
-    style="${isSel?'border-color:var(--coral);border-width:2px;':''}"
+    style="${isSel?'border-color:var(--coral);border-width:2px;':isMyTask?'border-left:3px solid var(--coral);':''}"
   >
     <div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:5px;">
       ${bulkCheck}
@@ -5908,6 +5910,7 @@ function kanbanTaskCardHTML(t) {
       <span class="prio-dot pd-${t.priority}" style="flex-shrink:0;margin-top:4px;" title="${t.priority} priority"></span>
     </div>
     <div class="k-card-meta">
+      ${isMyTask?`<span style="font-size:9px;font-weight:700;color:var(--coral);background:#FFF0EB;border-radius:8px;padding:1px 6px;letter-spacing:0.03em;">Assigned to me</span>`:''}
       <span class="meta-chip"><div class="av av-sm ${AV[t.assignee]||'av-a'}" style="width:16px;height:16px;font-size:8px;">${ini(t.assignee)}</div>${t.assignee.split(' ')[0]}</span>
       <span class="meta-chip">📅 ${fmtDue(t.due)}</span>
       ${commentCount?`<span class="meta-chip" title="${commentCount} comment${commentCount!==1?'s':''}">💬 ${commentCount}</span>`:''}
@@ -6049,10 +6052,20 @@ function openTask(id){
       <button class="btn btn-coral btn-sm" onclick="addTaskComment(${t.id})">Post</button>
     </div>` : ''}
     ${canEdit?`<div class="divider"></div>
-    <div style="display:flex;flex-direction:column;gap:6px;">
-      ${isManager?`<button class="btn btn-coral" onclick="openTaskModal(${t.id})">&#9999;&#65039; Edit Task</button>`:''}
-      <button class="btn" onclick="go('tasks');setTasksTab('activity')">&#128221; Log Activity</button>
-      ${isManager?`<button class="btn" style="border-color:var(--red);color:var(--red);" onclick="delTask(${t.id})">&times; Delete</button>`:''}
+    <div class="dp-label" style="margin-bottom:6px;">&#128221; Log Activity</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+      <div style="display:flex;gap:6px;">
+        <input type="number" id="tl-hours-${t.id}" min="0.5" max="24" step="0.5" value="1" placeholder="Hours"
+          style="width:70px;padding:6px 8px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;"/>
+        <input type="text" id="tl-note-${t.id}" placeholder="What did you work on?" onkeydown="if(event.key==='Enter')logTaskActivity(${t.id})"
+          style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;"/>
+        <button class="btn btn-coral btn-sm" onclick="logTaskActivity(${t.id})">Log</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      ${(isManager||isAssignee)?`<button class="btn btn-coral" style="flex:1;" onclick="openTaskModal(${t.id})">&#9999;&#65039; Edit Task</button>`:''}
+      ${isManager?`<button class="btn" style="border-color:var(--red);color:var(--red);flex:1;" onclick="delTask(${t.id})">&times; Delete</button>`:''}
     </div>`:''}  `;
   document.getElementById('side-panel').classList.add('open');
   document.querySelectorAll('.task-card,.k-card').forEach(el=>el.classList.remove('sel'));
@@ -7193,22 +7206,27 @@ function closeNewFlowModal() {
 
 function renderNfSteps() {
   document.getElementById('nf-steps-list').innerHTML = _nfSteps.map((s, i) => `
-    <div style="display:flex;align-items:center;gap:8px;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span style="font-size:11px;font-weight:700;color:var(--ink3);min-width:20px;">${i+1}</span>
       <input type="text" placeholder="Step name…" value="${s.name}"
         oninput="_nfSteps[${i}].name=this.value;_nfSteps[${i}].short=this.value.substring(0,6);"
-        style="flex:1;font-size:13px;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);font-family:var(--ff-body);outline:none;"/>
+        style="flex:1;min-width:120px;font-size:13px;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);font-family:var(--ff-body);outline:none;"/>
       <select onchange="_nfSteps[${i}].owner=this.value"
         style="font-size:12px;border:1.5px solid var(--border2);border-radius:var(--rad);padding:7px 9px;font-family:var(--ff-body);outline:none;background:var(--white);">
         <option value="">— Unassigned —</option>
         ${MEMBERS.map(m=>`<option value="${m.name}"${m.name===s.owner?' selected':''}>${m.name}</option>`).join('')}
       </select>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--purple);font-weight:600;cursor:pointer;white-space:nowrap;" title="Mark as approval step">
+        <input type="checkbox" ${s.isApproval?'checked':''} onchange="_nfSteps[${i}].isApproval=this.checked;renderNfSteps();"
+          style="accent-color:var(--purple);width:13px;height:13px;cursor:pointer;"/>
+        Approval
+      </label>
       ${_nfSteps.length > 1 ? `<button onclick="_nfSteps.splice(${i},1);renderNfSteps();" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:16px;padding:2px 5px;">×</button>` : ''}
     </div>`).join('');
 }
 
 function addNfStep() {
-  _nfSteps.push({ id:'s'+Date.now(), name:'', short:'', owner:'' });
+  _nfSteps.push({ id:'s'+Date.now(), name:'', short:'', owner:'', isApproval:false });
   renderNfSteps();
 }
 
@@ -10096,32 +10114,47 @@ function _restoreDraft() {
   _updateSendBtn();
 }
 
-// ── Send button mic/send toggle ──
+// ── Send button — always shows send arrow (mic removed) ──
 function _updateSendBtn() {
-  const inp = document.getElementById('chat-input');
   const btn = document.getElementById('chat-send-btn');
-  if (!inp || !btn) return;
-  const hasContent = inp.value.trim().length > 0 || _chatAttachPending;
-  btn.innerHTML = hasContent ? '➤' : '🎤';
-  btn.classList.toggle('mic-mode', !hasContent);
+  if (!btn) return;
+  btn.innerHTML = '➤';
+  btn.classList.remove('mic-mode');
 }
 
-// ── Expanded emoji picker ──
+// ── Expanded emoji picker (position:fixed to avoid layout shift on other messages) ──
 const CHAT_EMOJI_SET = ['👍','❤️','😂','🔥','😮','😢','🙏','💯','👏','🎉','✅','💪','😍','🤔','😅','🥳','👀','🚀','💡','✨'];
+
+let _emojiPickerEl = null;
+function _removeEmojiPicker() {
+  if (_emojiPickerEl) { _emojiPickerEl.remove(); _emojiPickerEl = null; }
+}
+
 function openEmojiPicker(msgId, btn) {
-  // Close any already-open picker
-  document.querySelectorAll('.chat-emoji-pop.show').forEach(p => { if (p.dataset.for !== msgId) p.classList.remove('show'); });
-  let picker = btn.closest('.chat-bubble-wrap').querySelector('.chat-emoji-pop');
-  if (!picker) {
-    picker = document.createElement('div');
-    picker.className = 'chat-emoji-pop';
-    picker.dataset.for = msgId;
-    picker.innerHTML = CHAT_EMOJI_SET.map(e =>
-      `<button class="chat-emoji-pop-btn" onclick="toggleReaction('${msgId}','${e}');this.closest('.chat-emoji-pop').classList.remove('show');">${e}</button>`
-    ).join('');
-    btn.closest('.chat-bubble-wrap').appendChild(picker);
-  }
-  picker.classList.toggle('show');
+  // If already open for this message, toggle off
+  if (_emojiPickerEl && _emojiPickerEl.dataset.for === msgId) { _removeEmojiPicker(); return; }
+  _removeEmojiPicker();
+
+  const picker = document.createElement('div');
+  picker.className = 'chat-emoji-pop show';
+  picker.dataset.for = msgId;
+  picker.style.cssText = 'position:fixed;z-index:9999;';
+  picker.innerHTML = CHAT_EMOJI_SET.map(e =>
+    `<button class="chat-emoji-pop-btn" onclick="toggleReaction('${msgId}','${e}');_removeEmojiPicker();">${e}</button>`
+  ).join('');
+  document.body.appendChild(picker);
+  _emojiPickerEl = picker;
+
+  // Position above or below the button depending on available space
+  const r = btn.getBoundingClientRect();
+  const ph = 130; // estimated picker height
+  const top = r.top - ph - 6 > 0 ? r.top - ph - 6 : r.bottom + 6;
+  const left = Math.min(r.left, window.innerWidth - 210);
+  picker.style.top  = top  + 'px';
+  picker.style.left = left + 'px';
+
+  // Close on outside click
+  setTimeout(() => document.addEventListener('click', _removeEmojiPicker, { once: true }), 0);
 }
 
 // ── Copy message text ──
@@ -10554,7 +10587,8 @@ async function loadCustomChannels() {
   try {
     const snap = await db.collection('customChannels').get();
     CUSTOM_CHANNELS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // Refresh list and start tracking newly loaded groups
+    // Ensure channel membership is loaded before rendering so members see correct channels
+    await loadChannelMembers();
     renderChannelList();
     initAllChannelTrackers();
   } catch(e) { console.warn('loadCustomChannels:', e); }
@@ -10585,12 +10619,11 @@ function getChannelMembers(roomId) {
 
 function canAccessChannel(roomId) {
   if (!loggedInMember) return false;
-  if (loggedInMember.role === 'head') return true; // Only head sees all channels
-  if (roomId === 'general') return true;            // General is always open
+  const r = loggedInMember.role;
+  if (r === 'head' || r === 'manager') return true; // managers and head see all channels
+  if (roomId === 'general') return true;             // general is open to everyone
   const members = getChannelMembers(roomId);
-  // If no members set yet, only managers/head can see it
-  if (!members.length) return loggedInMember.role === 'manager' || loggedInMember.role === 'head';
-  return members.includes(loggedInMember.name);
+  return members.includes(loggedInMember.name);     // others only see channels they're in
 }
 // ═══════════════════════════════════════════
 // ENHANCED CHAT — @mentions, polls, reactions
@@ -12703,6 +12736,31 @@ async function addTaskComment(id) {
   // Update comment count label
   const dpLabel = commentsEl?.previousElementSibling;
   if (dpLabel && dpLabel.classList.contains('dp-label')) dpLabel.textContent = `Comments (${t.comments.length})`;
+}
+
+async function logTaskActivity(id) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  const hoursEl = document.getElementById('tl-hours-' + id);
+  const noteEl  = document.getElementById('tl-note-'  + id);
+  if (!hoursEl || !noteEl) return;
+  const hours = parseFloat(hoursEl.value) || 0;
+  const note  = noteEl.value.trim();
+  if (!note) { toast('Add a note about what you worked on.', 'warn'); noteEl.focus(); return; }
+  t.timeLogged = parseFloat(((t.timeLogged || 0) + hours).toFixed(1));
+  // Also append as a comment so it's visible in the thread
+  if (!Array.isArray(t.comments)) t.comments = [];
+  t.comments.push({
+    by: loggedInMember?.name || 'Unknown',
+    text: `⏱ Logged ${hours}h — ${note}`,
+    at: new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+  });
+  await fbSaveTask(t);
+  auditLog('task_log', `${loggedInMember?.name} logged ${hours}h on "${t.title}": ${note}`, { task: t.title, hours, note });
+  toast(`${hours}h logged!`, 'ok');
+  hoursEl.value = '1';
+  noteEl.value  = '';
+  openTask(id); // refresh panel
 }
 
 // ── Test & History ─────────────────────────
