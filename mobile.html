@@ -1569,6 +1569,21 @@ function mobApplySearch(q) {
 function _mobGetLastRead(r) { try { return JSON.parse(localStorage.getItem('sd_mob_last_read')||'{}')[r]||0; } catch{return 0;} }
 function _mobSetLastRead(r, ts) { try { const m=JSON.parse(localStorage.getItem('sd_mob_last_read')||'{}'); m[r]=ts||Date.now(); localStorage.setItem('sd_mob_last_read',JSON.stringify(m)); } catch{} }
 
+async function loadMobCustomChannels() {
+  if (!db) return;
+  try {
+    const snap = await db.collection('customChannels').get();
+    snap.forEach(doc => {
+      const ch = { id: doc.id, ...doc.data() };
+      if (!CHAT_ROOMS.find(r => r.id === ch.id)) {
+        CHAT_ROOMS.push(ch);
+      }
+    });
+    initMobChannelTrackers();
+    renderChatList();
+  } catch(e) { console.warn('loadMobCustomChannels:', e); }
+}
+
 function initMobChannelTrackers() {
   if (!db) return;
   CHAT_ROOMS.forEach(r => {
@@ -1697,9 +1712,10 @@ function deserializeFlowFromFirestore(f) {
   if (!f) return f;
   const out = { ...f };
   if (typeof out.driveFiles    === 'string') out.driveFiles    = safeJSON(out.driveFiles, []);
-  if (typeof out.subtaskChecks === 'string') out.subtaskChecks = safeJSON(out.subtaskChecks, {});
+  if (typeof out.subtaskChecks === 'string') out.subtaskChecks = safeJSON(out.subtaskChecks, []); // [] matches desktop
   if (typeof out.stepTimings   === 'string') out.stepTimings   = safeJSON(out.stepTimings, {});
   if (typeof out.subAssignees  === 'string') out.subAssignees  = safeJSON(out.subAssignees, {});
+  if (typeof out.stepComments  === 'string') out.stepComments  = safeJSON(out.stepComments, {});
   return out;
 }
 
@@ -1896,7 +1912,7 @@ function initApp() {
   renderTeamList();
   setupProfile();
   startListeners();
-  initMobChannelTrackers();
+  loadMobCustomChannels();
   mobListenForDMInbox();
   mobListenForMyNotifs();
   mobLoadChannelMembers();
@@ -2070,14 +2086,19 @@ function showMobApproverModal(flowId, approverEmail) {
 
   const filesHtml = allFiles.length ? `
     <div class="dl-section-hdr">📁 Files attached</div>
-    ${allFiles.map(file => `<div class="flow-drive-item">
-      <span style="font-size:18px;">${getMobDriveIcon(file.mimeType)}</span>
-      <div style="flex:1;min-width:0;">
-        <div class="flow-drive-name">${escHtml(file.name || 'File')}</div>
-        <div class="flow-drive-meta">${escHtml(file.stepName)}${file.addedBy?' · '+escHtml(file.addedBy):''}</div>
-      </div>
-      <button class="flow-drive-preview-btn" onclick="window.open('${file.url||'#'}','_blank')">👁</button>
-    </div>`).join('')}
+    ${allFiles.map(file => {
+      const nc = (file.comments||[]).length;
+      const latestC = nc ? file.comments[nc-1] : null;
+      return `<div class="flow-drive-item" style="flex-wrap:wrap;">
+        <span style="font-size:18px;">${getMobDriveIcon(file.mimeType)}</span>
+        <div style="flex:1;min-width:0;">
+          <div class="flow-drive-name">${escHtml(file.name || 'File')}</div>
+          <div class="flow-drive-meta">${escHtml(file.stepName)}${file.addedBy?' · '+escHtml(file.addedBy):''}${nc?` · <span style="color:#3B82F6;font-weight:600;">💬 ${nc}</span>`:''}</div>
+          ${latestC?`<div style="font-size:11px;color:#6b7280;margin-top:2px;"><strong style="color:#374151;">${escHtml(latestC.by)}:</strong> ${escHtml(String(latestC.text||'').slice(0,80))}${(latestC.text||'').length>80?'…':''}</div>`:''}
+        </div>
+        <button class="flow-drive-preview-btn" onclick="window.open('${file.url||'#'}','_blank')">👁</button>
+      </div>`;
+    }).join('')}
   ` : '';
 
   content.innerHTML = `
@@ -2191,7 +2212,7 @@ function mobDlOpenFullApp() {
 function _mobStepDlChip(f, stepIdx) {
   const dl = (f.stepDeadlines || [])[stepIdx];
   if (!dl) return '';
-  const today = (new Date()).toISOString().slice(0, 10);
+  const today = todayStr();
   const daysLeft = Math.ceil((new Date(dl) - new Date(today)) / 86400000);
   let cls, label;
   if (daysLeft < 0)       { cls = 'dl-overdue'; label = Math.abs(daysLeft) + 'd overdue'; }
@@ -2203,7 +2224,7 @@ function _mobStepDlChip(f, stepIdx) {
 
 function mobCheckStepDeadlines() {
   if (!currentMember || !allFlows.length) return;
-  const today = (new Date()).toISOString().slice(0, 10);
+  const today = todayStr();
   const cacheKey = 'sd_mobdlchk_' + today + '_' + currentMember.name;
   if (localStorage.getItem(cacheKey)) return;
   allFlows.forEach(f => {
@@ -2641,14 +2662,19 @@ function openFlowDetail(flowId) {
   if (allFiles.length) {
     driveSectionEl.innerHTML = `<div class="flow-drive-section">
       <div class="flow-drive-title">📁 ${allDone ? 'Files from this flow' : 'Files attached'}</div>
-      ${allFiles.map(file => `<div class="flow-drive-item">
-        <span style="font-size:18px;">${getMobDriveIcon(file.mimeType)}</span>
-        <div style="flex:1;min-width:0;">
-          <div class="flow-drive-name">${escHtml(file.name || 'File')}</div>
-          <div class="flow-drive-meta">${escHtml(file.stepName)}${file.addedBy ? ' · ' + escHtml(file.addedBy) : ''}</div>
-        </div>
-        <button class="flow-drive-preview-btn" onclick="window.open('${file.url || '#'}','_blank')">👁</button>
-      </div>`).join('')}
+      ${allFiles.map(file => {
+        const nc = (file.comments||[]).length;
+        const latestC = nc ? file.comments[nc-1] : null;
+        return `<div class="flow-drive-item" style="flex-wrap:wrap;">
+          <span style="font-size:18px;">${getMobDriveIcon(file.mimeType)}</span>
+          <div style="flex:1;min-width:0;">
+            <div class="flow-drive-name">${escHtml(file.name || 'File')}</div>
+            <div class="flow-drive-meta">${escHtml(file.stepName)}${file.addedBy ? ' · ' + escHtml(file.addedBy) : ''}${nc ? ` · <span style="color:#3B82F6;font-weight:600;">💬 ${nc}</span>` : ''}</div>
+            ${latestC ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;"><strong style="color:#374151;">${escHtml(latestC.by)}:</strong> ${escHtml(String(latestC.text||'').slice(0,80))}${(latestC.text||'').length>80?'…':''}</div>` : ''}
+          </div>
+          <button class="flow-drive-preview-btn" onclick="window.open('${file.url || '#'}','_blank')">👁</button>
+        </div>`;
+      }).join('')}
     </div>`;
   } else {
     driveSectionEl.innerHTML = '';
@@ -2886,6 +2912,12 @@ async function doMobApprove(flowId, e) {
 async function doMobReject(flowId, e) {
   if (e) e.stopPropagation();
   if (!currentMember) return;
+  // Prompt for rejection reason
+  const reason = window.prompt('Reason for rejection (required):');
+  if (reason === null) return; // cancelled
+  if (!reason.trim() || reason.trim().length < 5) {
+    showToast('Please enter a reason (min 5 characters).', 'warn'); return;
+  }
   try {
     const snap = await db.collection('flows').doc('active').get();
     if (!snap.exists) return;
@@ -2898,6 +2930,8 @@ async function doMobReject(flowId, e) {
     }
     // Send back to previous step
     const cs = parseInt(f.currentStep) || 0;
+    const fromStepName = (f.stepNames || [])[cs] || `Step ${cs + 1}`;
+    const toStepName   = (f.stepNames || [])[Math.max(0, cs - 1)] || `Step ${cs}`;
     const statuses = [...(f.stepStatuses || [])];
     if (cs > 0) {
       statuses[cs] = 'pending';
@@ -2905,9 +2939,27 @@ async function doMobReject(flowId, e) {
       f.currentStep = cs - 1;
     }
     f.stepStatuses = statuses;
+    // Record rejection notes
+    if (!f.rejectionNotes) f.rejectionNotes = {};
+    f.rejectionNotes[cs] = {
+      reason: reason.trim(),
+      by: currentMember.name,
+      at: new Date().toISOString(),
+    };
     delete f.approvalRoutees;
     flows[idx] = f;
     await db.collection('flows').doc('active').update({ flows });
+    // Notify the step owner
+    const prevOwner = getStepOwner(f, Math.max(0, cs - 1)) || (f.stepOwners||[])[Math.max(0,cs-1)] || '';
+    if (prevOwner) {
+      sendMobFirestoreNotif(prevOwner, {
+        title: `❌ Step Rejected — ${f.title || 'Flow'}`,
+        body: `${currentMember.name} rejected "${fromStepName}" → sent back to "${toStepName}". Reason: ${reason.trim()}`,
+        icon: '❌',
+        type: 'rejection',
+        tag: `rej-${flowId}-${cs}`,
+      });
+    }
     showToast('Step rejected — sent back to previous step.', 'ok');
     closeSheet();
   } catch(err) {
@@ -3153,12 +3205,18 @@ function _fmtMobChatTime(ts) {
 function renderChatList() {
   const chEl = document.getElementById('channel-list-items');
   if (chEl) {
-    const isViewer = currentMember?.role === 'viewer';
+    const role = currentMember?.role || '';
     const visibleRooms = CHAT_ROOMS.filter(r => {
-      if (!isViewer) return true;
+      if (role === 'head' || role === 'manager') return true;
+      if (role === 'viewer') {
+        if (r.id === 'general') return true;
+        const members = MOB_CHANNEL_MEMBERS[r.id] || [];
+        return members.includes(currentMember?.name);
+      }
+      // member role: only general or channels they're explicitly added to
       if (r.id === 'general') return true;
       const members = MOB_CHANNEL_MEMBERS[r.id] || [];
-      return members.includes(currentMember?.name);
+      return !members.length || members.includes(currentMember?.name);
     });
     const sorted = [...visibleRooms].sort((a,b) => {
       const ua=MOB_CHANNEL_UNREAD[a.id]||0, ub=MOB_CHANNEL_UNREAD[b.id]||0;

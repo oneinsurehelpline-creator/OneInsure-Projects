@@ -4300,7 +4300,8 @@ function renderHome() {
   });
 
   // Overdue / due-soon steps — only within visible flows
-  const today = new Date().toISOString().slice(0, 10);
+  const _tn = new Date();
+  const today = `${_tn.getFullYear()}-${String(_tn.getMonth()+1).padStart(2,'0')}-${String(_tn.getDate()).padStart(2,'0')}`;
   const overdueSteps = myVisibleFlows.filter(f => {
     if (getFlowStatus(f) === 'done') return false;
     const dl = (f.stepDeadlines || [])[f.currentStep];
@@ -4321,8 +4322,9 @@ function renderHome() {
   // Tasks due today or overdue — only show to the assignee or head (not all managers)
   const isHead = loggedInMember.role === 'head' || loggedInMember.role === 'viewer';
   const myTasks = TASKS.filter(t => t.status !== 'done' && !t.done && (t.assignee === me || isHead));
-  const overdueTasks  = myTasks.filter(t => t.due && new Date(t.due) < new Date());
-  const dueTodayTasks = myTasks.filter(t => t.due && t.due.slice(0,10) === today && new Date(t.due) >= new Date());
+  // Compare due dates using local date strings to avoid UTC-midnight-vs-IST issues.
+  const overdueTasks  = myTasks.filter(t => t.due && t.due.slice(0, 10) < today);
+  const dueTodayTasks = myTasks.filter(t => t.due && t.due.slice(0, 10) === today);
 
   // Unread counts
   const totalUnread = Object.values(CHANNEL_UNREAD).reduce((s,n)=>s+(n||0),0)
@@ -4384,9 +4386,9 @@ function renderHome() {
         <div class="home-action-icon">✅</div>
         <div class="home-action-body">
           <div class="home-action-title">${t.title}</div>
-          <div class="home-action-meta">${t.assignee || ''}${t.due ? ' · Due '+t.due : ''}</div>
+          <div class="home-action-meta">${t.assignee || ''}${t.due ? ' · Due '+fmtDue(t.due) : ''}</div>
         </div>
-        ${t.due && new Date(t.due) < new Date() ? '<span class="home-action-badge">Overdue</span>' : '<span class="home-action-badge amber">Today</span>'}
+        ${t.due && t.due.slice(0,10) < today ? '<span class="home-action-badge">Overdue</span>' : '<span class="home-action-badge amber">Today</span>'}
       </div>`).join('')}` : ''}
 
     ${isManager ? `
@@ -4456,7 +4458,7 @@ function renderToday(){
       <div class="empty">
         <div class="empty-icon">📋</div>
         <div class="empty-title">No flows spawned yet today</div>
-        <div class="empty-sub">${isManager ? 'Click "↺ Spawn Today\'s Flows" to start the day\'s work.' : 'Your manager will spawn today\'s flows shortly.'}</div>
+        <div class="empty-sub">${canManageFlows() ? 'Click "↺ Spawn Today\'s Flows" to start the day\'s work.' : 'Your manager will spawn today\'s flows shortly.'}</div>
       </div>`;
     return;
   }
@@ -4475,7 +4477,7 @@ function renderToday(){
     }
     if (r === 'approver') {
       // Approvers see their pending approval flows AND any completed flows they approved
-      if (getFlowStatus(f) === 'done') return (f.approvalRoutees || []).includes(name);
+      if (getFlowStatus(f) === 'done') return (f.approvalHistory || []).some(h => h.approvedBy === name);
       const tmplSteps = getTemplateSteps(f.templateId);
       const curStep = tmplSteps[f.currentStep] || {};
       const isApprovalStep = curStep.isApproval === true ||
@@ -4909,7 +4911,7 @@ async function confirmSpawn() {
 function _stepDeadlineChip(f, stepIdx) {
   const dl = (f.stepDeadlines || [])[stepIdx];
   if (!dl) return '';
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKey();
   const daysLeft = Math.ceil((new Date(dl) - new Date(today)) / 86400000);
   const cls   = daysLeft < 0 ? 'overdue' : daysLeft === 0 ? 'due' : daysLeft <= 2 ? 'warn' : 'ok';
   const label = daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : daysLeft === 0 ? 'Due today' : daysLeft === 1 ? 'Due tomorrow' : `${daysLeft}d left`;
@@ -5022,7 +5024,7 @@ async function setStepDeadline(flowId, stepIdx, dateVal) {
 // ── Check step deadlines on login ─────────
 async function checkStepDeadlines() {
   if (!loggedInMember || !TODAY_FLOWS.length) return;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKey();
   const cacheKey = 'sd_dlchk_' + today + '_' + loggedInMember.name;
   if (localStorage.getItem(cacheKey)) return;
   // Only managers/head write audit entries to avoid duplicate writes from every member
@@ -5219,7 +5221,8 @@ function flowCardHTML(f) {
           </div>
           ${group.files.map(file => {
             const nc = (file.comments||[]).length;
-            return `<div class="drive-file-row">
+            const latestC = nc ? file.comments[nc-1] : null;
+            return `<div class="drive-file-row" style="flex-wrap:wrap;">
               <span class="drive-file-icon">${getDriveIcon(file.mimeType)}</span>
               <span class="drive-file-name" onclick="openMvFile('${file.id||file.url}','${f.id}',${curStepIdx})">${file.name}</span>
               <span class="drive-file-meta">${file.addedBy} · ${file.addedAt}</span>
@@ -5227,6 +5230,7 @@ function flowCardHTML(f) {
                 ${nc?`<span class="file-comment-badge" onclick="openMvFile('${file.id||file.url}','${f.id}',${curStepIdx})">💬 ${nc}</span>`:''}
                 <button class="drive-btn" onclick="openMvFile('${file.id||file.url}','${f.id}',${curStepIdx})">👁 Preview</button>
               </div>
+              ${latestC?`<div style="width:100%;font-size:10px;color:var(--ink3);padding:3px 0 0 26px;"><strong style="color:var(--ink2);">${latestC.by}:</strong> ${String(latestC.text||'').slice(0,80)}${(latestC.text||'').length>80?'…':''}</div>`:''}
             </div>`;
           }).join('')}`).join('') : ''}
         <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em;margin:${allPrevFiles.length?'8px':'0'} 0 3px;">
@@ -5234,7 +5238,8 @@ function flowCardHTML(f) {
         </div>
         ${stepFiles.map((file, fi) => {
           const nc = (file.comments||[]).length;
-          return `<div class="drive-file-row">
+          const latestC = nc ? file.comments[nc-1] : null;
+          return `<div class="drive-file-row" style="flex-wrap:wrap;">
             <span class="drive-file-icon">${getDriveIcon(file.mimeType)}</span>
             <span class="drive-file-name" onclick="openMvFile('${file.id||file.url}','${f.id}',${curStepIdx})">${file.name}</span>
             <span class="drive-file-meta">${file.addedBy} · ${file.addedAt}</span>
@@ -5244,6 +5249,7 @@ function flowCardHTML(f) {
               <button class="drive-btn" onclick="openVersionModal('${file.id||file.url}','${f.id}',${curStepIdx})" title="Version history">📂</button>
               ${isManager?`<button class="drive-btn" style="color:var(--red);border-color:#F7C1C1;" onclick="removeDriveFile('${f.id}',${curStepIdx},${fi})">✕</button>`:''}
             </div>
+            ${latestC?`<div style="width:100%;font-size:10px;color:var(--ink3);padding:3px 0 0 26px;"><strong style="color:var(--ink2);">${latestC.by}:</strong> ${String(latestC.text||'').slice(0,80)}${(latestC.text||'').length>80?'…':''}</div>`:''}
           </div>`;
         }).join('')}
         <div style="display:flex;gap:8px;margin-top:8px;">
@@ -5265,7 +5271,8 @@ function flowCardHTML(f) {
         <div class="drive-section-title">📁 ${status === 'done' ? 'Files from this flow' : 'Files attached'}</div>
         ${allFiles.map(file=>{
           const nc = (file.comments||[]).length;
-          return `<div class="drive-file-row">
+          const latestC = nc ? file.comments[nc-1] : null;
+          return `<div class="drive-file-row" style="flex-wrap:wrap;">
           <span class="drive-file-icon">${getDriveIcon(file.mimeType)}</span>
           <span class="drive-file-name" onclick="openMvFile('${file.id||file.url}','${f.id}',null)">${file.name}</span>
           <span class="drive-file-meta">${file.stepName}${file.addedBy ? ' · ' + file.addedBy : ''}</span>
@@ -5273,6 +5280,7 @@ function flowCardHTML(f) {
             ${nc?`<span class="file-comment-badge" onclick="openMvFile('${file.id||file.url}','${f.id}',null)">💬 ${nc}</span>`:''}
             <button class="drive-btn" onclick="openMvFile('${file.id||file.url}','${f.id}',null)">👁 Preview</button>
           </div>
+          ${latestC?`<div style="width:100%;font-size:10px;color:var(--ink3);padding:3px 0 0 26px;"><strong style="color:var(--ink2);">${latestC.by}:</strong> ${String(latestC.text||'').slice(0,80)}${(latestC.text||'').length>80?'…':''}</div>`:''}
         </div>`;}).join('')}
       </div>`;
     }
@@ -5327,13 +5335,13 @@ function flowCardHTML(f) {
         </div>
         <div class="flow-meta">
           <span class="flow-status-pill ${statusCls}">${statusLabel}</span>
-          ${(() => { const _od = (f.stepDeadlines||[])[curStepIdx]; return (_od && _od < new Date().toISOString().slice(0,10) && status !== 'done') ? '<span class="flow-overdue-badge">🔴 Overdue</span>' : ''; })()}
+          ${(() => { const _od = (f.stepDeadlines||[])[curStepIdx]; const _tk=todayKey(); return (_od && _od < _tk && status !== 'done') ? '<span class="flow-overdue-badge">🔴 Overdue</span>' : ''; })()}
           <div class="platform-row">${platChips(f.platforms)}</div>
           ${f.startedAt ? `<span class="flow-tat">⏱ ${formatElapsed(f.startedAt)}</span>` : ''}
           ${(() => {
-            const td = f.targetDate;
+            const td = f.targetDate; const _tk = todayKey();
             if (!td) return `<span class="flow-target-date" onclick="setFlowTargetDate('${f.id}',this)" title="Set target date">📅 Set date</span>`;
-            const isOverdue = status !== 'done' && td < new Date().toISOString().slice(0,10);
+            const isOverdue = status !== 'done' && td < _tk;
             return `<span class="flow-target-date${isOverdue?' overdue':''}" onclick="setFlowTargetDate('${f.id}',this)" title="Change target date">📅 ${td}${isOverdue?' ⚠':''}</span>`;
           })()}
         </div>
@@ -6768,6 +6776,47 @@ async function mvAddComment() {
 
   input.value = '';
   mvRenderComments(file);
+
+  // Notify the step owner (and approver if different) about the new comment
+  if (_mv.flowId) {
+    const f = TODAY_FLOWS.find(x => x.id === _mv.flowId);
+    if (f) {
+      const stepOwner = (f.stepOwners || [])[f.currentStep] ||
+        getTemplateSteps(f.templateId)[f.currentStep]?.owner || '';
+      const notif = {
+        title: `💬 Comment on "${file.name}"`,
+        body: `${comment.by}: ${text}`,
+        icon: '💬',
+        type: 'file_comment',
+        tag: `fc-${_mv.flowId}-${file.id || file.name}`,
+      };
+      // Notify step owner if different from commenter
+      if (stepOwner && stepOwner !== comment.by) {
+        sendFirestoreNotif(stepOwner, notif);
+        // Email notification
+        const ownerEmail = getMemberEmail(stepOwner);
+        if (ownerEmail) {
+          const html = _emailCard({
+            icon: '💬', iconBg: '#EFF6FF', accentColor: '#3B82F6',
+            label: f.title || 'Flow',
+            title: `New comment on "${file.name}"`,
+            rows: [['Comment by', comment.by], ['Message', text]],
+            ctaHref: 'https://social-desk-d823c.web.app',
+            ctaText: 'View in SociaDesk',
+          });
+          sendEmailNotification(ownerEmail, stepOwner,
+            `💬 ${comment.by} commented on "${file.name}" — ${f.title}`, html);
+        }
+      }
+      // Also notify approvers if any
+      (f.approvalRoutees || []).forEach(name => {
+        if (name !== comment.by && name !== stepOwner) {
+          sendFirestoreNotif(name, notif);
+        }
+      });
+    }
+  }
+
   toast('Comment added.', 'ok');
 }
 
@@ -7565,7 +7614,7 @@ function setCalView(v) {
 
 function renderCalendar() {
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = todayKey();
 
   if (calView === 'list') { renderCalList(); return; }
 
@@ -7583,8 +7632,12 @@ function renderCalendar() {
   const headers = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
     .map(d=>`<div class="cal-header">${d}</div>`).join('');
 
+  function localKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
   const cells = days.map(day => {
-    const key = day.toISOString().split('T')[0];
+    const key = localKey(day);
     const isToday = key === todayStr;
     const ideas = CONTENT_IDEAS.filter(i => i.date === key);
     const dateNum = `<div class="cal-date">${isToday?`<span class="today-num">${day.getDate()}</span>`:day.getDate()}</div>`;
@@ -7603,7 +7656,7 @@ function renderCalendar() {
   document.getElementById('cal-grid').innerHTML = `<div class="cal-grid">${headers}${cells}</div>`;
 
   // Ideas list for the week below
-  const weekIdeas = days.flatMap(d => CONTENT_IDEAS.filter(i=>i.date===d.toISOString().split('T')[0]));
+  const weekIdeas = days.flatMap(d => CONTENT_IDEAS.filter(i=>i.date===localKey(d)));
   renderCalIdeasList(weekIdeas, 'This Week');
 }
 
@@ -7628,7 +7681,7 @@ function renderCalMonth(today, todayStr) {
       cells += `<div class="cal-day other-month"></div>`; continue;
     }
     const d = new Date(base.getFullYear(), base.getMonth(), dayNum);
-    const key = d.toISOString().split('T')[0];
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const isToday = key === todayStr;
     const ideas = CONTENT_IDEAS.filter(i=>i.date===key);
     const chips = ideas.slice(0,3).map(idea=>`
@@ -9607,7 +9660,7 @@ function downloadTaskReport() {
   const memberNames = [...new Set(TASKS.map(t => t.assignee).filter(Boolean))];
   memberNames.forEach(name => {
     const mt = TASKS.filter(t => t.assignee === name);
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayKey();
     byMemberRows.push([
       name,
       mt.length,
