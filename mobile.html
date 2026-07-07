@@ -498,6 +498,14 @@ a{text-decoration:none;color:inherit;}
   background:#DCFCE7;font-size:14px;font-weight:600;color:#166534;
   border-top:1px solid #BBF7D0;
 }
+.approval-pending-banner{
+  background:#F3E8FF;border-top:1px solid #DDD6FE;
+  padding:12px 16px;font-size:13px;color:#6D28D9;font-weight:600;
+  display:flex;align-items:center;gap:6px;
+}
+.handoff-step-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;margin-bottom:6px;}
+.handoff-from{background:#EAF3DE;color:#2D6A4F;border:1px solid #B7E4C7;}
+.handoff-to{background:#EFF6FF;color:#1E3A8A;border:1px solid #BFDBFE;}
 
 /* ─────────────────────────────────────
    TASKS TAB
@@ -1417,6 +1425,32 @@ a{text-decoration:none;color:inherit;}
   </div>
 </div>
 
+<!-- Handoff Sheet -->
+<div class="sheet" id="sheet-handoff">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">↪ Hand Off Step</div>
+    <div class="sheet-subtitle" id="mob-handoff-subtitle">Assign next step owner</div>
+  </div>
+  <div style="padding:0 20px;">
+    <div class="handoff-step-row handoff-from"><span>✓</span><span id="mob-handoff-from">Current Step</span></div>
+    <div style="text-align:center;font-size:20px;color:#aaa;margin:-2px 0;">↓</div>
+    <div class="handoff-step-row handoff-to" style="margin-top:2px;"><span>→</span><span id="mob-handoff-to">Next Step</span></div>
+  </div>
+  <div class="sheet-field">
+    <label class="sheet-label">Assign next step to</label>
+    <select class="sheet-input sheet-select" id="mob-handoff-assignee"></select>
+  </div>
+  <div class="sheet-field">
+    <label class="sheet-label">Handoff note (optional)</label>
+    <textarea class="sheet-input" id="mob-handoff-note" rows="2" placeholder="Any instructions for the next person…" style="min-height:64px;resize:vertical;"></textarea>
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn-cancel" onclick="closeMobHandoffSheet()">Cancel</button>
+    <button class="sheet-btn-primary" onclick="confirmMobHandoff()">Hand Off →</button>
+  </div>
+</div>
+
 <!-- Approver Deep-Link Modal -->
 <div id="mob-dl-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:#f0f4f8;overflow-y:auto;">
   <div style="max-width:480px;margin:0 auto;padding:24px 20px 40px;">
@@ -1679,11 +1713,12 @@ function isMyTurn(f) {
   const statuses = f.stepStatuses || [];
   const cs = f.currentStep || 0;
   if (statuses[cs] !== 'active') return false;
+  const isApprovalPending = !_isApprovalStep(f) && (f.approvalRoutees || []).length > 0;
+  // Approval is pending: routed approver's turn; sender (step owner) waits
+  if (isApprovalPending) return (f.approvalRoutees || []).includes(currentMember.name);
   if (getStepOwner(f, cs) === currentMember.name) return true;
-  // Routed approver also gets their turn indicator
-  const stepNames = f.stepNames || [];
-  const isApprovalStep = /approv/i.test(stepNames[cs] || '');
-  return isApprovalStep && (f.approvalRoutees || []).includes(currentMember.name);
+  // Formal approval step: routed approver gets their turn indicator
+  return _isApprovalStep(f) && (f.approvalRoutees || []).includes(currentMember.name);
 }
 
 function _isApprovalStep(f) {
@@ -2241,9 +2276,10 @@ function buildFlowCard(f, cardIdx) {
 
   // Approval step logic
   const isApprStep  = _isApprovalStep(f);
+  const isApprovalPending = !isApprStep && (f.approvalRoutees || []).length > 0;
   const isManagerOrHead = currentMember && (currentMember.role === 'manager' || currentMember.role === 'head');
   const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
-  const isRoutedApproverTurn = currentMember && isApprStep && (f.approvalRoutees || []).includes(currentMember.name);
+  const isRoutedApproverTurn = currentMember && (isApprStep || isApprovalPending) && (f.approvalRoutees || []).includes(currentMember.name);
   // Step owner (reviewer) or manager can send for approval — NOT the previous step owner
   const canRoute = isApprStep && !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHead && statuses[cs] === 'active'));
 
@@ -2251,6 +2287,21 @@ function buildFlowCard(f, cardIdx) {
   let footHtml = '';
   if (allDone) {
     footHtml = `<div class="flow-done-banner">🎉 All steps complete!</div>`;
+  } else if (isApprovalPending && isRoutedApproverTurn) {
+    footHtml = `<div class="approval-pending-banner">⏳ Awaiting your approval</div>
+    <div class="flow-foot">
+      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="push-btn-full" style="background:#7C3AED;flex:1;" onclick="doMobApprove('${escHtml(f.id)}',event)">✓ Approve</button>
+        <button class="push-btn-full" style="background:#e74c3c;flex:1;" onclick="doMobReject('${escHtml(f.id)}',event)">✗ Reject</button>
+      </div>
+    </div>`;
+  } else if (isApprovalPending) {
+    footHtml = `<div class="approval-pending-banner">⏳ Awaiting approval from <strong>${escHtml((f.approvalRoutees||[]).join(', '))}</strong></div>
+    <div class="flow-foot">
+      <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
+      <div class="flow-waiting">You'll be notified when approved.</div>
+    </div>`;
   } else if (isRoutedApproverTurn) {
     footHtml = `<div class="flow-foot">
       <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
@@ -2264,12 +2315,12 @@ function buildFlowCard(f, cardIdx) {
       <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong></div>
       <button class="push-btn-full" style="background:var(--purple,#9113af);" onclick="openMobApprovalRouting('${escHtml(f.id)}',event)">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}</button>
     </div>`;
-  } else if (mine && !isApprStep) {
+  } else if (mine && !isApprStep && !isApprovalPending) {
     const isLast = cs >= totalSteps - 1;
     footHtml = `<div class="flow-foot">
       <div class="flow-step-label">Step ${cs+1}/${totalSteps}: <strong>${escHtml(curName)}</strong>${(f.stepFlags||{})[cs] ? ' <span class="mob-flag-badge">🚩</span>' : ''}${_mobStepDlChip(f,cs) ? ' ' + _mobStepDlChip(f,cs) : ''}</div>
-      <button class="push-btn-full" onclick="doPushStep('${escHtml(f.id)}',event)">
-        ${isLast ? 'Mark Flow Complete' : 'Push Step →'}
+      <button class="push-btn-full" onclick="openMobHandoff('${escHtml(f.id)}',event)">
+        ${isLast ? 'Complete Flow ✓' : 'Complete &amp; Hand Off →'}
       </button>
     </div>`;
   } else if (isApprStep && (f.approvalRoutees || []).length) {
@@ -2307,6 +2358,108 @@ function buildFlowCard(f, cardIdx) {
     </div>
     ${footHtml}
   </div></div>`;
+}
+
+let _mobHandoffFlowId = null;
+
+function openMobHandoff(flowId, e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  const f = allFlows.find(x => x.id === flowId);
+  if (!f) return;
+  _mobHandoffFlowId = flowId;
+  const cs = parseInt(f.currentStep) || 0;
+  const stepNames = f.stepNames || [];
+  const totalSteps = stepNames.length || (f.stepStatuses || []).length;
+  const isLast = cs >= totalSteps - 1;
+  const curName = stepNames[cs] || `Step ${cs + 1}`;
+  const nextName = !isLast ? (stepNames[cs + 1] || `Step ${cs + 2}`) : '(complete)';
+  const curOwner = getStepOwner(f, cs) || currentMember?.name || '';
+
+  document.getElementById('mob-handoff-subtitle').textContent = `Step ${cs + 1} of ${totalSteps}`;
+  document.getElementById('mob-handoff-from').textContent = `${curName} (${curOwner})`;
+  document.getElementById('mob-handoff-to').textContent = nextName;
+
+  const sel = document.getElementById('mob-handoff-assignee');
+  sel.innerHTML = '';
+  if (isLast) {
+    sel.innerHTML = '<option value="">— final step —</option>';
+    sel.disabled = true;
+  } else {
+    sel.disabled = false;
+    const currentNext = (f.stepOwners || [])[cs + 1] || '';
+    (MEMBERS || []).filter(m => m.role !== 'viewer').forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.name;
+      opt.textContent = m.name + (m.role ? ` (${m.role})` : '');
+      if (m.name === currentNext) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+  document.getElementById('mob-handoff-note').value = '';
+  openSheet('sheet-handoff');
+}
+
+function closeMobHandoffSheet() {
+  closeSheet();
+  _mobHandoffFlowId = null;
+}
+
+async function confirmMobHandoff() {
+  const flowId = _mobHandoffFlowId;
+  if (!flowId) return;
+  const nextAssignee = document.getElementById('mob-handoff-assignee').value;
+  const note = document.getElementById('mob-handoff-note').value.trim();
+  closeMobHandoffSheet();
+
+  try {
+    const snap = await db.collection('flows').doc('active').get();
+    if (!snap.exists) { showToast('Flow data not found', 'err'); return; }
+    const flows = snap.data().flows || [];
+    const idx = flows.findIndex(f => f.id === flowId);
+    if (idx === -1) { showToast('Flow not found', 'err'); return; }
+
+    const f = { ...flows[idx] };
+    const statuses = [...(f.stepStatuses || [])];
+    const cs = parseInt(f.currentStep) || 0;
+    const isLast = cs >= statuses.length - 1;
+
+    // Assign next step owner if provided
+    if (!isLast && nextAssignee) {
+      const stepOwners = [...(f.stepOwners || statuses.map(() => ''))];
+      stepOwners[cs + 1] = nextAssignee;
+      f.stepOwners = stepOwners;
+    }
+
+    // Record handoff log
+    const handoffLog = [...(f.handoffLog || [])];
+    handoffLog.push({
+      at: Date.now(),
+      by: currentMember?.name || '',
+      fromStep: (f.stepNames || [])[cs] || `Step ${cs + 1}`,
+      toStep: isLast ? '(complete)' : ((f.stepNames || [])[cs + 1] || `Step ${cs + 2}`),
+      toAssignee: isLast ? '' : nextAssignee,
+      note
+    });
+    f.handoffLog = handoffLog;
+
+    // Advance step
+    statuses[cs] = 'done';
+    if (!isLast) {
+      statuses[cs + 1] = 'active';
+      f.currentStep = cs + 1;
+    } else {
+      f.stuck = false;
+    }
+    f.stepStatuses = statuses;
+    flows[idx] = f;
+
+    await db.collection('flows').doc('active').update({ flows });
+    const isDone = statuses.every(s => s === 'done');
+    showToast(isDone ? '🎉 Flow complete!' : `✅ Handed off! ${nextAssignee || 'Next person'} is up.`, 'ok');
+  } catch(err) {
+    console.error(err);
+    showToast('Failed to hand off step', 'err');
+  }
 }
 
 async function doPushStep(flowId, e) {
@@ -2404,14 +2557,26 @@ function openFlowDetail(flowId) {
   document.getElementById('fd-steps').innerHTML = stepsHtml;
 
   const isApprStep  = _isApprovalStep(f);
+  const isApprovalPendingDet = !isApprStep && (f.approvalRoutees || []).length > 0;
   const isManagerOrHeadDet = currentMember && (currentMember.role === 'manager' || currentMember.role === 'head');
   const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
-  const isRoutedApproverTurn = currentMember && isApprStep && (f.approvalRoutees || []).includes(currentMember.name);
+  const isRoutedApproverTurn = currentMember && (isApprStep || isApprovalPendingDet) && (f.approvalRoutees || []).includes(currentMember.name);
   const canRouteDetail = isApprStep && !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHeadDet && statuses[cs] === 'active'));
 
   const pushArea = document.getElementById('fd-push-area');
   if (allDone) {
     pushArea.innerHTML = `<div style="text-align:center;padding:16px 0;color:var(--green);font-size:18px;font-weight:600;">🎉 Flow Complete!</div>`;
+  } else if (isApprovalPendingDet && isRoutedApproverTurn) {
+    pushArea.innerHTML = `<div class="approval-pending-banner" style="border-radius:10px;margin-bottom:10px;">⏳ Awaiting your approval on this step</div>
+    <div style="display:flex;gap:10px;padding:4px 0;">
+      <button class="push-btn-full" style="background:#7C3AED;flex:1;margin:0;"
+        onclick="doMobApprove('${escHtml(f.id)}',event)">✓ Approve</button>
+      <button class="push-btn-full" style="background:#e74c3c;flex:1;margin:0;"
+        onclick="doMobReject('${escHtml(f.id)}',event)">✗ Reject</button>
+    </div>`;
+  } else if (isApprovalPendingDet) {
+    pushArea.innerHTML = `<div class="approval-pending-banner" style="border-radius:10px;">
+      ⏳ Awaiting approval from <strong>${escHtml((f.approvalRoutees||[]).join(', '))}</strong></div>`;
   } else if (isRoutedApproverTurn) {
     pushArea.innerHTML = `<div style="display:flex;gap:10px;padding:4px 0;">
       <button class="push-btn-full" style="background:var(--green);flex:1;margin:0;"
@@ -2424,7 +2589,7 @@ function openFlowDetail(flowId) {
       onclick="openMobApprovalRouting('${escHtml(f.id)}',event)">
       📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}
     </button>`;
-  } else if (isMyTurn(f) && !isApprStep) {
+  } else if (isMyTurn(f) && !isApprStep && !isApprovalPendingDet) {
     const isLast = cs >= totalSteps - 1;
     const flagData = (f.stepFlags||{})[cs];
     const flagHtml = flagData
@@ -2442,8 +2607,8 @@ function openFlowDetail(flowId) {
            </div>
          </div>`;
     pushArea.innerHTML = `<button class="push-btn-full" style="margin:0 0 8px 0;"
-      onclick="doPushStepFromDetail('${escHtml(f.id)}',this)">
-      ${isLast ? 'Mark Flow Complete' : 'Push to Next Step →'}
+      onclick="openMobHandoff('${escHtml(f.id)}',this)">
+      ${isLast ? 'Complete Flow ✓' : 'Complete &amp; Hand Off →'}
     </button>${flagHtml}`;
   } else if (isApprStep && (f.approvalRoutees || []).length) {
     const routees = (f.approvalRoutees || []).join(', ');
