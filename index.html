@@ -8128,16 +8128,59 @@ async function sendEmailNotification(toEmail, toName, subject, htmlBody, fromEma
   }
 }
 
+// ── Shared email helper ─────────────────────────────────
+function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function _emailCard({ icon, iconBg, accentColor, label, title, rows, ctaHref, ctaText, note }) {
+  const rowsHtml = (rows||[]).filter(r=>r[1]).map(([k,v]) => `
+    <tr>
+      <td style="padding:6px 0;font-size:13px;color:#6B7280;font-family:Arial,sans-serif;width:110px;vertical-align:top;">${_esc(k)}</td>
+      <td style="padding:6px 0;font-size:13px;color:#111827;font-family:Arial,sans-serif;font-weight:600;">${_esc(v)}</td>
+    </tr>`).join('');
+  return `
+<div style="max-width:560px;margin:0 auto;font-family:Arial,sans-serif;">
+  <!-- Header bar -->
+  <div style="background:${accentColor||'#E55934'};border-radius:8px 8px 0 0;padding:20px 28px;display:flex;align-items:center;gap:14px;">
+    <div style="width:44px;height:44px;border-radius:50%;background:${iconBg||'rgba(255,255,255,0.2)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${icon||'📬'}</div>
+    <div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:2px;">${_esc(label||'SociaDesk')}</div>
+      <div style="font-size:18px;font-weight:700;color:#fff;line-height:1.25;">${_esc(title)}</div>
+    </div>
+  </div>
+  <!-- Body card -->
+  <div style="background:#fff;border:1px solid #E5E7EB;border-top:none;border-radius:0 0 8px 8px;padding:24px 28px;">
+    ${rowsHtml ? `<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">${rowsHtml}</table>` : ''}
+    ${ctaHref ? `<div style="margin:4px 0 20px;">
+      <a href="${ctaHref}" style="display:inline-block;padding:12px 28px;background:${accentColor||'#E55934'};color:#fff;border-radius:6px;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.02em;">${_esc(ctaText||'Open SociaDesk →')}</a>
+    </div>` : ''}
+    ${note ? `<p style="font-size:12px;color:#9CA3AF;margin:0;line-height:1.6;">${note}</p>` : ''}
+  </div>
+  <!-- Footer -->
+  <div style="text-align:center;padding:16px 0 4px;font-size:11px;color:#9CA3AF;font-family:Arial,sans-serif;">
+    Sent by <strong style="color:#6B7280;">SociaDesk</strong> · OneInsure Content Operations
+  </div>
+</div>`;
+}
+
 // ── Step assignment email ──────────────────────────────
 function sendStepAssignedEmail(toName, flowTitle, stepName) {
   const toEmail = getMemberEmail(toName);
   if (!toEmail) return;
+  const assigner = loggedInMember?.name || 'A team member';
   const subject  = `[SociaDesk] Your turn: ${stepName} — ${flowTitle}`;
-  const htmlBody = `<p>Hi ${toName},</p>
-<p><strong>${loggedInMember?.name || 'A team member'}</strong> has handed off the next step to you on <strong>${flowTitle}</strong>.</p>
-<p><strong>Step:</strong> ${stepName}</p>
-<p>Log in to SociaDesk to take action.</p>
-<p>— SociaDesk</p>`;
+  const htmlBody = _emailCard({
+    icon: '📲', iconBg: 'rgba(255,255,255,0.2)', accentColor: '#E55934',
+    label: 'New Step Assigned',
+    title: stepName,
+    rows: [
+      ['Flow',        flowTitle],
+      ['Assigned by', assigner],
+      ['Action',      'Your step is now active — please complete it and hand off to the next person.'],
+    ],
+    ctaHref: 'https://sociadesk.oneinsure.com',
+    ctaText: 'Open SociaDesk →',
+    note: `You received this because <strong>${_esc(assigner)}</strong> handed off this step to you in the <strong>${_esc(flowTitle)}</strong> flow.`,
+  });
   sendEmailNotification(toEmail, toName, subject, htmlBody);
 }
 
@@ -8145,14 +8188,23 @@ function sendStepAssignedEmail(toName, flowTitle, stepName) {
 function sendTaskAssignedEmail(toName, taskTitle, dueDate, priority) {
   const toEmail = getMemberEmail(toName);
   if (!toEmail) return;
-  const subject  = `[SociaDesk] New task assigned to you: ${taskTitle}`;
-  const htmlBody = `<p>Hi ${toName},</p>
-<p><strong>${loggedInMember?.name || 'A team member'}</strong> has assigned a task to you.</p>
-<p><strong>Task:</strong> ${taskTitle}<br/>
-${priority ? `<strong>Priority:</strong> ${priority}<br/>` : ''}
-${dueDate   ? `<strong>Due:</strong> ${dueDate}<br/>`      : ''}</p>
-<p>Log in to SociaDesk to view and update it.</p>
-<p>— SociaDesk</p>`;
+  const assigner = loggedInMember?.name || 'A team member';
+  const subject  = `[SociaDesk] New task assigned: ${taskTitle}`;
+  const prioColor = { high:'#DC2626', medium:'#F59E0B', low:'#10B981' }[priority?.toLowerCase()] || '#6B7280';
+  const htmlBody = _emailCard({
+    icon: '📋', iconBg: 'rgba(255,255,255,0.2)', accentColor: '#1B2B4B',
+    label: 'New Task Assigned',
+    title: taskTitle,
+    rows: [
+      ['Assigned by', assigner],
+      ['Priority',    priority ? `${priority.charAt(0).toUpperCase()+priority.slice(1)} priority` : ''],
+      ['Due date',    dueDate  || ''],
+      ['Status',      'To Do'],
+    ],
+    ctaHref: 'https://sociadesk.oneinsure.com',
+    ctaText: 'View Task →',
+    note: `You received this because <strong>${_esc(assigner)}</strong> assigned this task to you in SociaDesk.`,
+  });
   sendEmailNotification(toEmail, toName, subject, htmlBody);
 }
 
@@ -11422,7 +11474,15 @@ function notifyMention(name, from, text) {
   const email = getMemberEmail(name);
   if (email) sendEmailNotification(email, name,
     `[SociaDesk] ${from} mentioned you in chat`,
-    `<p>Hi ${name},</p><p><strong>${from}</strong> mentioned you in the team chat:</p><blockquote style="border-left:3px solid #e55934;margin:8px 0;padding:4px 12px;color:#555;">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</blockquote><p><a href="https://sociadesk.oneinsure.com">Log in to reply →</a></p><p>— SociaDesk</p>`);
+    _emailCard({
+      icon: '💬', iconBg: 'rgba(255,255,255,0.2)', accentColor: '#0EA5E9',
+      label: 'You were mentioned',
+      title: `${from} mentioned you`,
+      rows: [],
+      ctaHref: 'https://sociadesk.oneinsure.com',
+      ctaText: 'Reply in SociaDesk →',
+      note: `<strong>${_esc(from)}</strong> said: <em style="color:#374151;">&ldquo;${_esc(text)}&rdquo;</em>`,
+    }));
 }
 
 // ── POLLS ────────────────────────────────────
@@ -11738,31 +11798,69 @@ async function sendDailyDigest() {
   const approvals = TODAY_FLOWS.filter(f=>getFlowStatus(f)==='approval');
   const ideas     = CONTENT_IDEAS.filter(i=>i.date===todayKey());
 
-  const body = `Good morning!
+  const dateStr = new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+  const pendingRowsHtml = pending.map(f => {
+    const steps = getTemplateSteps(f.templateId);
+    const step  = steps[f.currentStep];
+    return `<tr>
+      <td style="padding:5px 8px;font-size:13px;font-family:Arial,sans-serif;border-bottom:1px solid #F3F4F6;">${_esc(f.title)}</td>
+      <td style="padding:5px 8px;font-size:13px;font-family:Arial,sans-serif;border-bottom:1px solid #F3F4F6;color:#6B7280;">${_esc(step?.name||'?')}</td>
+      <td style="padding:5px 8px;font-size:13px;font-family:Arial,sans-serif;border-bottom:1px solid #F3F4F6;font-weight:600;">${_esc(step?.owner||'Unassigned')}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="3" style="padding:8px;font-size:13px;color:#9CA3AF;font-family:Arial,sans-serif;">All clear — no pending flows.</td></tr>`;
 
-Here's today's SociaDesk digest — ${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}
+  const statsHtml = `
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;background:#F9FAFB;border-radius:6px;overflow:hidden;">
+      <tr>
+        <td style="padding:14px;text-align:center;border-right:1px solid #E5E7EB;">
+          <div style="font-size:24px;font-weight:700;color:#1B2B4B;font-family:Arial,sans-serif;">${TODAY_FLOWS.length}</div>
+          <div style="font-size:11px;color:#6B7280;font-family:Arial,sans-serif;">Total Flows</div>
+        </td>
+        <td style="padding:14px;text-align:center;border-right:1px solid #E5E7EB;">
+          <div style="font-size:24px;font-weight:700;color:#10B981;font-family:Arial,sans-serif;">${done.length}</div>
+          <div style="font-size:11px;color:#6B7280;font-family:Arial,sans-serif;">Done</div>
+        </td>
+        <td style="padding:14px;text-align:center;border-right:1px solid #E5E7EB;">
+          <div style="font-size:24px;font-weight:700;color:#F59E0B;font-family:Arial,sans-serif;">${pending.length}</div>
+          <div style="font-size:11px;color:#6B7280;font-family:Arial,sans-serif;">Pending</div>
+        </td>
+        <td style="padding:14px;text-align:center;">
+          <div style="font-size:24px;font-weight:700;color:#DC2626;font-family:Arial,sans-serif;">${blocked.length}</div>
+          <div style="font-size:11px;color:#6B7280;font-family:Arial,sans-serif;">Blocked</div>
+        </td>
+      </tr>
+    </table>
+    ${approvals.length ? `<div style="background:#F3E8FF;border-left:4px solid #7C3AED;border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:16px;font-size:13px;font-family:Arial,sans-serif;color:#6D28D9;">
+      <strong>⚖️ Awaiting Approval:</strong> ${_esc(approvals.map(f=>f.title).join(', '))}
+    </div>` : ''}
+    ${blocked.length ? `<div style="background:#FEF2F2;border-left:4px solid #DC2626;border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:16px;font-size:13px;font-family:Arial,sans-serif;color:#B91C1C;">
+      <strong>🔴 Blocked Tasks:</strong> ${_esc(blocked.map(t=>t.title).join(', '))}
+    </div>` : ''}
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#9CA3AF;font-family:Arial,sans-serif;margin-bottom:8px;">Pending Flows</div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+      <tr style="background:#F9FAFB;">
+        <th style="padding:6px 8px;text-align:left;font-size:11px;color:#6B7280;font-family:Arial,sans-serif;font-weight:600;">Flow</th>
+        <th style="padding:6px 8px;text-align:left;font-size:11px;color:#6B7280;font-family:Arial,sans-serif;font-weight:600;">Current Step</th>
+        <th style="padding:6px 8px;text-align:left;font-size:11px;color:#6B7280;font-family:Arial,sans-serif;font-weight:600;">Waiting On</th>
+      </tr>
+      ${pendingRowsHtml}
+    </table>`;
 
-📋 FLOWS TODAY: ${TODAY_FLOWS.length} total · ${done.length} done · ${pending.length} pending
-${approvals.length ? `⚖️ AWAITING APPROVAL: ${approvals.map(f=>f.title).join(', ')}` : ''}
-${blocked.length   ? `🔴 BLOCKED TASKS: ${blocked.map(t=>t.title).join(', ')}` : '✅ No blocked tasks'}
-${ideas.length     ? `💡 IDEAS DUE TODAY: ${ideas.map(i=>i.title).join(', ')}` : ''}
-
-Pending flows:
-${pending.map(f=>{
-  const steps=getTemplateSteps(f.templateId);
-  const step=steps[f.currentStep];
-  return `• ${f.title} — at "${step?.name||'?'}" → ${step?.owner||'Unassigned'}`;
-}).join('\n') || 'None'}
-
-Open SociaDesk to take action. Have a great day!
-— SociaDesk`;
+  const digestHtmlBody = _emailCard({
+    icon: '☀️', iconBg: 'rgba(255,255,255,0.2)', accentColor: '#1B2B4B',
+    label: `Morning Digest · ${dateStr}`,
+    title: 'Good morning! Here\'s your daily overview.',
+    rows: [],
+    ctaHref: 'https://sociadesk.oneinsure.com',
+    ctaText: 'Open SociaDesk →',
+    note: 'This digest is sent automatically every morning to managers and heads.',
+  }).replace('</table>', `</table>${statsHtml}`);
 
   for (const m of managers) {
     const email = getMemberEmail(m.name);
     if (email) await sendEmailNotification(email, m.name,
       `[SociaDesk] Morning Digest — ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'})}`,
-      `<pre style="font-family:inherit;white-space:pre-wrap;">${body}</pre>`,
-      'akshay.raje@oneinsure.com', 'SociaDesk');
+      digestHtmlBody, 'support@oneinsure.com', 'SociaDesk');
   }
 }
 
@@ -11784,13 +11882,21 @@ async function sendApproverOneClickEmail(flowId, stepIdx, approverName) {
   const steps = getTemplateSteps(f.templateId);
   const stepName = steps[stepIdx]?.name || 'Approval Step';
   const deepLink = `https://sociadesk.oneinsure.com/?flow=${encodeURIComponent(flowId)}&approver=${encodeURIComponent(email)}`;
-  const htmlBody = `<p>Hi ${approverName},</p>
-<p>A content approval is waiting for your review.</p>
-<p><strong>Flow:</strong> ${f.title}<br/>
-<strong>Step:</strong> ${stepName}<br/>
-${(f.platforms||[]).length ? `<strong>Platforms:</strong> ${f.platforms.join(', ')}<br/>` : ''}</p>
-<p><a href="${deepLink}" style="display:inline-block;padding:10px 20px;background:#e55934;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">Review &amp; Approve →</a></p>
-<p>— SociaDesk</p>`;
+  const requester = loggedInMember?.name || 'A team member';
+  const htmlBody = _emailCard({
+    icon: '⚖️', iconBg: 'rgba(255,255,255,0.15)', accentColor: '#7C3AED',
+    label: 'Content Approval Required',
+    title: f.title,
+    rows: [
+      ['Step',       stepName],
+      ['Requested by', requester],
+      ['Platforms',  (f.platforms||[]).join(', ') || ''],
+      ['Action',     'Please review the content and click the button below to approve or open SociaDesk to reject with feedback.'],
+    ],
+    ctaHref: deepLink,
+    ctaText: 'Review & Approve →',
+    note: `You received this because <strong>${_esc(requester)}</strong> routed this content approval to you. You can also log in to SociaDesk to reject and provide feedback.`,
+  });
   await sendEmailNotification(email, approverName,
     `[SociaDesk] Approval needed: ${f.title} — ${stepName}`, htmlBody);
   toast(`Approval email sent to ${approverName}!`, 'ok');
