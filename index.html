@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="SociaDesk"/>
 <link rel="manifest" href="/manifest.json"/>
-<title>SociaDesk — Social Media Team OS</title>
+<title>SocialDesk — Social Media Team OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
@@ -377,9 +377,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .dev-stat-card{flex:1;min-width:130px;background:var(--cream2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
 .dev-stat-num{font-family:var(--ff-head);font-size:28px;font-weight:800;line-height:1;}
 .dev-stat-lbl{font-size:11px;color:var(--ink3);margin-top:3px;}
-.spawn-dl-grid{display:grid;grid-template-columns:1fr 140px;gap:5px 10px;align-items:center;margin-top:6px;}
+.spawn-dl-grid{display:grid;grid-template-columns:1fr 130px 120px;gap:5px 8px;align-items:center;margin-top:6px;}
 .spawn-dl-lbl{font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .spawn-dl-inp{padding:5px 8px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;background:var(--cream);color:var(--ink);width:100%;}
+.spawn-owner-sel{padding:5px 8px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;background:var(--cream);color:var(--ink);width:100%;}
 .tl-sub{font-size:10px;color:var(--ink3);}
 .comment-item{background:var(--cream2);border-radius:var(--rad);padding:8px 10px;font-size:11px;line-height:1.45;margin-bottom:5px;}
 .comment-meta{font-size:9px;color:var(--ink3);font-weight:600;margin-bottom:2px;}
@@ -1224,6 +1225,9 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .chat-ctx-item{padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--ink);font-family:var(--ff-body);border:none;background:none;width:100%;text-align:left;transition:background 0.1s;}
 .chat-ctx-item:hover{background:var(--cream2);}
 .chat-ctx-item.danger{color:var(--red);}
+.fwd-opt{padding:10px 16px;cursor:pointer;display:flex;align-items:center;font-size:13px;color:var(--ink);transition:background .1s;}
+.fwd-opt:hover{background:var(--cream2);}
+.chat-forwarded-label{font-size:11px;color:#888;margin-bottom:2px;padding:0 2px;}
 /* Send button mic/send toggle */
 .chat-send-btn.mic-mode{background:#8696a0;}
 .chat-send-btn.mic-mode:hover{background:#667781;transform:none;}
@@ -2351,9 +2355,9 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 
           <!-- Test button -->
           <div style="margin-bottom:18px;display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn btn-sm" onclick="testNotification()">🔔 Send Test Notification</button>
+            <button class="btn btn-sm" onclick="testNotification()">🔔 Test Notification</button>
+            <button class="btn btn-sm" style="background:var(--green);color:#fff;border-color:var(--green);" onclick="sendTestEmail(this)">📧 Test Email</button>
             <button class="btn btn-sm btn-ghost" onclick="clearNotifHistory()">Clear History</button>
-            <span style="font-size:11px;padding:5px 12px;border-radius:20px;background:var(--green-light);color:var(--green);font-weight:600;">📧 Email: Active</span>
           </div>
 
           <!-- History -->
@@ -2761,13 +2765,18 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         <label style="font-size:12px;font-weight:600;color:var(--ink2);">Flow Name</label>
         <input type="text" id="spawn-flow-name" style="width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:13px;font-family:var(--ff-body);outline:none;" placeholder="e.g. Morning Post — May 13" onkeydown="if(event.key==='Enter')confirmSpawn()"/>
       </div>
-      <!-- Step deadlines (manager / head) -->
+      <!-- Step owners & deadlines -->
       <div style="margin-bottom:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <label style="font-size:12px;font-weight:600;color:var(--ink2);">📅 Step Deadlines <span style="font-weight:400;font-size:11px;color:var(--ink3);">— optional, per step</span></label>
-          <button type="button" id="spawn-dl-toggle" style="background:none;border:none;font-size:11px;color:var(--coral);cursor:pointer;font-family:var(--ff-body);" onclick="_toggleSpawnDl()">▸ Set</button>
+          <label style="font-size:12px;font-weight:600;color:var(--ink2);">👤 Step Owners &amp; Deadlines <span style="font-weight:400;font-size:11px;color:var(--ink3);">— assign each step</span></label>
+          <button type="button" id="spawn-dl-toggle" style="background:none;border:none;font-size:11px;color:var(--coral);cursor:pointer;font-family:var(--ff-body);" onclick="_toggleSpawnDl()">▴ Hide</button>
         </div>
-        <div id="spawn-dl-body" style="display:none;background:var(--cream2);border-radius:var(--rad);padding:10px;">
+        <div id="spawn-dl-body" style="background:var(--cream2);border-radius:var(--rad);padding:10px;">
+          <div class="spawn-dl-grid" style="margin-bottom:4px;">
+            <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;">Step</div>
+            <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;">Owner</div>
+            <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em;">Deadline</div>
+          </div>
           <div class="spawn-dl-grid" id="spawn-dl-grid"></div>
         </div>
       </div>
@@ -3230,6 +3239,8 @@ const MEMBERS = [
   {name:'Susant',    role:'approver',    av:'av-h', status:'online', reportsTo:null},
   {name:'Nasita',    role:'approver',    av:'av-i', status:'online', reportsTo:null},
   {name:'Sakshi',    role:'member',      av:'av-d', status:'online', reportsTo:'Akshay'},
+  {name:'Shahbaaz',  role:'member',      av:'av-b', status:'online', reportsTo:'Akshay'},
+  {name:'Sejal',     role:'member',      av:'av-e', status:'online', reportsTo:'Akshay'},
 ];
 
 const AV = {
@@ -3238,7 +3249,7 @@ const AV = {
   'Deepanshu':'av-c','Harsh':'av-d','Pawan':'av-b',
   'Ria':'av-b','Isha':'av-e','Tamanna':'av-a',
   'Rochelle':'av-f','Anirudh':'av-g','Susant':'av-h','Nasita':'av-i',
-  'Sakshi':'av-d'
+  'Sakshi':'av-d','Shahbaaz':'av-b','Sejal':'av-e'
 };
 const ini = n => n.split(' ').map(x=>x[0]).join('');
 
@@ -3369,6 +3380,8 @@ const EMAIL_TO_MEMBER = {
   'susant.padhi@oneinsure.com':         { name:'Susant',    role:'approver', av:'av-h' },
   'nasita.londhe@oneinsure.com':        { name:'Nasita',    role:'approver', av:'av-i' },
   'sakshi.bhadarge@oneinsure.com':      { name:'Sakshi',    role:'member',   av:'av-d' },
+  'shahbaaz.khan@oneinsure.com':        { name:'Shahbaaz',  role:'member',   av:'av-b' },
+  'sejal.sharma@oneinsure.money':       { name:'Sejal',     role:'member',   av:'av-e' },
   'admin@oneinsure.com':                { name:'Admin',     role:'viewer',   av:'av-c' },
 };
 // Default password everyone starts with — change this to what you set
@@ -3797,7 +3810,7 @@ function startListeners() {
       TASKS = newTasks;
       if (currentPanel === 'tasks') refresh();
       if (currentPanel === 'home') renderHome();
-      document.getElementById('badge-tasks').textContent = TASKS.filter(t => t.status !== 'done').length;
+      document.getElementById('badge-tasks').textContent = getVisibleTasks().filter(t => t.status !== 'done').length || '';
     }, err => console.error('Tasks listener error:', err));
 
   // Logs
@@ -4294,7 +4307,8 @@ function renderHome() {
 
   // Flows visible to this user (same rule as renderToday)
   const myVisibleFlows = isManager ? TODAY_FLOWS : TODAY_FLOWS.filter(f => {
-    return (f.stepOwners || []).includes(me) ||
+    const _ts = getTemplateSteps(f.templateId);
+    return (f.stepOwners || []).some((o, i) => (o || _ts[i]?.owner || '') === me) ||
            (f.approvalRoutees || []).includes(me) ||
            Object.values(f.subAssignees || {}).includes(me);
   });
@@ -4470,7 +4484,9 @@ function renderToday(){
     if (r === 'head' || r === 'manager') return true;
     const name = loggedInMember.name;
     if (r === 'member') {
-      const inStepOwners = (f.stepOwners || []).includes(name);
+      const _tmplSteps = getTemplateSteps(f.templateId);
+      // For each step: if stepOwners[i] is set use it, else fall back to template step owner
+      const inStepOwners = (f.stepOwners || []).some((o, i) => (o || _tmplSteps[i]?.owner || '') === name);
       const inApprovalRoutees = (f.approvalRoutees || []).includes(name);
       const inSubAssignees = Object.values(f.subAssignees || {}).includes(name);
       return inStepOwners || inApprovalRoutees || inSubAssignees;
@@ -4824,14 +4840,23 @@ function updateSpawnMeta() {
     nameInput.value = `${tmpl.name} — ${dateStr}`;
     nameInput.dataset.autoName = 'true';
   }
-  // Rebuild deadline inputs for this template's steps
+  // Rebuild owner + deadline inputs for this template's steps
   const grid = document.getElementById('spawn-dl-grid');
   if (grid) {
     const todayVal = new Date().toISOString().slice(0, 10);
-    grid.innerHTML = steps.map((s, i) =>
-      `<div class="spawn-dl-lbl">${i+1}. ${s.name || 'Step '+(i+1)}</div>` +
-      `<input type="date" class="spawn-dl-inp" id="spawn-dl-${i}" min="${todayVal}" />`
-    ).join('');
+    const memberOpts = MEMBERS.filter(m => m.role !== 'approver' && m.role !== 'viewer')
+      .map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+    grid.innerHTML = steps.map((s, i) => {
+      const defOwner = s.owner || '';
+      return `<div class="spawn-dl-lbl">${i+1}. ${s.name || 'Step '+(i+1)}</div>` +
+        `<select class="spawn-owner-sel" id="spawn-owner-${i}"><option value="">— Unassigned —</option>${memberOpts}</select>` +
+        `<input type="date" class="spawn-dl-inp" id="spawn-dl-${i}" min="${todayVal}" />`;
+    }).join('');
+    // Pre-select template owners AFTER the HTML is in the DOM
+    steps.forEach((s, i) => {
+      const sel = document.getElementById(`spawn-owner-${i}`);
+      if (sel && s.owner) sel.value = s.owner;
+    });
   }
 }
 
@@ -4841,7 +4866,7 @@ function _toggleSpawnDl() {
   if (!body) return;
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
-  if (btn) btn.textContent = open ? '▸ Set' : '▴ Hide';
+  if (btn) btn.textContent = open ? '▸ Show' : '▴ Hide';
 }
 
 function closeSpawnModal() {
@@ -4885,8 +4910,8 @@ async function confirmSpawn() {
     platforms: tmpl.platforms || [],
     currentStep: 0,
     stepStatuses: steps.map((_, i) => i === 0 ? 'active' : 'pending'),
-    // Snapshot step owners at spawn time — so display never depends on template loading
-    stepOwners: steps.map(s => s.owner || ''),
+    // Snapshot step owners at spawn time — use spawn-modal overrides if set, else template default
+    stepOwners: steps.map((s, i) => document.getElementById('spawn-owner-' + i)?.value || s.owner || ''),
     stepNames: steps.map(s => s.name || ''),
     stepIsApproval: steps.map(s => s.isApproval === true || /approv/i.test(s.name || '')),
     notes: steps.map(() => ''),
@@ -5824,7 +5849,7 @@ function taskCardHTML(t){
   const isManager  = role === 'manager' || role === 'head';
   const isAssignee = loggedInMember && t.assignee === loggedInMember.name;
   const canAct     = isManager || isAssignee;
-  const inlineStatus = canAct ? `<select class="k-status-select" style="flex:0 0 120px;" onclick="event.stopPropagation()" onchange="setTaskStatus(${t.id},this.value);event.stopPropagation()">
+  const inlineStatus = canAct ? `<select class="k-status-select" style="flex:0 0 120px;" onclick="event.stopPropagation()" onchange="setTaskStatus('${t.id}',this.value);event.stopPropagation()">
     <option value="todo"${t.status==='todo'?' selected':''}>To Do</option>
     <option value="inprogress"${t.status==='inprogress'?' selected':''}>In Progress</option>
     <option value="review"${t.status==='review'?' selected':''}>In Review</option>
@@ -5890,14 +5915,14 @@ function kanbanTaskCardHTML(t) {
   const canPush = canAct && NEXT[t.status];
   // Build inline actions row (stop click propagation so card click doesn't open side panel)
   const actionsHTML = canAct ? `<div class="k-card-actions" onclick="event.stopPropagation()">
-    <select class="k-status-select" onchange="setTaskStatus(${t.id},this.value);event.stopPropagation()">
+    <select class="k-status-select" onchange="setTaskStatus('${t.id}',this.value);event.stopPropagation()">
       <option value="todo"${t.status==='todo'?' selected':''}>To Do</option>
       <option value="inprogress"${t.status==='inprogress'?' selected':''}>In Progress</option>
       <option value="review"${t.status==='review'?' selected':''}>In Review</option>
       <option value="blocked"${t.status==='blocked'?' selected':''}>Blocked</option>
       <option value="done"${t.status==='done'?' selected':''}>Done</option>
     </select>
-    ${canPush?`<button class="k-push-btn" onclick="pushTask(${t.id});event.stopPropagation()">${NEXT_LABEL[t.status]}</button>`:''}
+    ${canPush?`<button class="k-push-btn" onclick="pushTask('${t.id}');event.stopPropagation()">${NEXT_LABEL[t.status]}</button>`:''}
   </div>` : '';
   const isMyTask = loggedInMember && t.assignee === loggedInMember.name;
   return `<div class="k-card${t.status==='blocked'?' blocked':''}${isSel?' sel':''}${isMyTask?' my-task':''}"
@@ -5985,17 +6010,17 @@ function openTask(id){
     const s = t.status;
     const btns = [];
     if ((isAssignee || isManager) && s === 'todo')
-      btns.push(`<button class="btn btn-coral" style="flex:1;" onclick="setTaskStatus(${t.id},'inprogress')">&#9654; Start Working</button>`);
+      btns.push(`<button class="btn btn-coral" style="flex:1;" onclick="setTaskStatus('${t.id}','inprogress')">&#9654; Start Working</button>`);
     if ((isAssignee || isManager) && s === 'inprogress')
-      btns.push(`<button class="btn btn-coral" style="flex:1;" onclick="setTaskStatus(${t.id},'review')">&#128065; Submit for Review</button>`);
+      btns.push(`<button class="btn btn-coral" style="flex:1;" onclick="setTaskStatus('${t.id}','review')">&#128065; Submit for Review</button>`);
     if (isManager && s === 'review')
-      btns.push(`<button class="btn btn-coral" style="flex:1;" onclick="setTaskStatus(${t.id},'done')">&#9989; Mark Done</button>`);
+      btns.push(`<button class="btn btn-coral" style="flex:1;" onclick="setTaskStatus('${t.id}','done')">&#9989; Mark Done</button>`);
     if ((isAssignee || isManager) && s !== 'done' && s !== 'blocked')
-      btns.push(`<button class="btn" style="border-color:var(--red);color:var(--red);flex:1;" onclick="setTaskStatus(${t.id},'blocked')">&#128308; Mark Blocked</button>`);
+      btns.push(`<button class="btn" style="border-color:var(--red);color:var(--red);flex:1;" onclick="setTaskStatus('${t.id}','blocked')">&#128308; Mark Blocked</button>`);
     if (isManager && s === 'blocked')
-      btns.push(`<button class="btn" style="flex:1;" onclick="setTaskStatus(${t.id},'inprogress')">&#8617; Unblock</button>`);
+      btns.push(`<button class="btn" style="flex:1;" onclick="setTaskStatus('${t.id}','inprogress')">&#8617; Unblock</button>`);
     if (isManager && s === 'done')
-      btns.push(`<button class="btn" style="flex:1;" onclick="setTaskStatus(${t.id},'inprogress')">&#8617; Reopen</button>`);
+      btns.push(`<button class="btn" style="flex:1;" onclick="setTaskStatus('${t.id}','inprogress')">&#8617; Reopen</button>`);
     return btns.length ? `<div class="dp-sec"><div class="dp-label">Update Status</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">${btns.join('')}</div></div>` : '';
   })();
 
@@ -6033,7 +6058,7 @@ function openTask(id){
     <div class="dp-sec"><div class="dp-label">Due</div><div class="dp-val">${fmtDue(t.due)}</div></div>
     <div class="dp-sec"><div class="dp-label">Time Logged</div><div class="dp-val">${t.timeLogged}h</div></div>
     <div class="dp-sec"><div class="dp-label">Progress</div>
-      ${canEdit?`<div style="display:flex;align-items:center;gap:8px;"><input type="range" min="0" max="100" value="${t.progress}" style="flex:1;" oninput="updProg(${t.id},this.value)"/><span id="pv-${t.id}" style="font-size:12px;font-weight:600;min-width:32px;">${t.progress}%</span></div>`
+      ${canEdit?`<div style="display:flex;align-items:center;gap:8px;"><input type="range" min="0" max="100" value="${t.progress}" style="flex:1;" oninput="updProg('${t.id}',this.value)"/><span id="pv-${t.id}" style="font-size:12px;font-weight:600;min-width:32px;">${t.progress}%</span></div>`
       :`<div style="height:5px;background:var(--cream3);border-radius:3px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:${t.progress}%;background:var(--coral);border-radius:3px;"></div></div>`}
     </div>
     ${t.notes?`<div class="dp-sec"><div class="dp-label">Notes</div><div style="font-size:12px;line-height:1.5;color:var(--ink2);">${linkify(t.notes)}</div></div>`:''}
@@ -6048,8 +6073,8 @@ function openTask(id){
       return `<div class="comment-item">${c}</div>`;
     }).join('') : `<span style="font-size:11px;color:var(--ink3);">No comments yet.</span>`}</div>
     ${canEdit ? `<div style="display:flex;gap:6px;margin-bottom:4px;">
-      <input type="text" id="task-comment-input-${t.id}" placeholder="Add a comment…" style="flex:1;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;" onkeydown="if(event.key==='Enter')addTaskComment(${t.id})"/>
-      <button class="btn btn-coral btn-sm" onclick="addTaskComment(${t.id})">Post</button>
+      <input type="text" id="task-comment-input-${t.id}" placeholder="Add a comment…" style="flex:1;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;" onkeydown="if(event.key==='Enter')addTaskComment('${t.id}')"/>
+      <button class="btn btn-coral btn-sm" onclick="addTaskComment('${t.id}')">Post</button>
     </div>` : ''}
     ${canEdit?`<div class="divider"></div>
     <div class="dp-label" style="margin-bottom:6px;">&#128221; Log Activity</div>
@@ -6057,15 +6082,15 @@ function openTask(id){
       <div style="display:flex;gap:6px;">
         <input type="number" id="tl-hours-${t.id}" min="0.5" max="24" step="0.5" value="1" placeholder="Hours"
           style="width:70px;padding:6px 8px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;"/>
-        <input type="text" id="tl-note-${t.id}" placeholder="What did you work on?" onkeydown="if(event.key==='Enter')logTaskActivity(${t.id})"
+        <input type="text" id="tl-note-${t.id}" placeholder="What did you work on?" onkeydown="if(event.key==='Enter')logTaskActivity('${t.id}')"
           style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);font-size:12px;font-family:var(--ff-body);outline:none;"/>
-        <button class="btn btn-coral btn-sm" onclick="logTaskActivity(${t.id})">Log</button>
+        <button class="btn btn-coral btn-sm" onclick="logTaskActivity('${t.id}')">Log</button>
       </div>
     </div>
     <div class="divider"></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
-      ${(isManager||isAssignee)?`<button class="btn btn-coral" style="flex:1;" onclick="openTaskModal(${t.id})">&#9999;&#65039; Edit Task</button>`:''}
-      ${isManager?`<button class="btn" style="border-color:var(--red);color:var(--red);flex:1;" onclick="delTask(${t.id})">&times; Delete</button>`:''}
+      ${(isManager||isAssignee)?`<button class="btn btn-coral" style="flex:1;" onclick="openTaskModal('${t.id}')">&#9999;&#65039; Edit Task</button>`:''}
+      ${isManager?`<button class="btn" style="border-color:var(--red);color:var(--red);flex:1;" onclick="delTask('${t.id}')">&times; Delete</button>`:''}
     </div>`:''}  `;
   document.getElementById('side-panel').classList.add('open');
   document.querySelectorAll('.task-card,.k-card').forEach(el=>el.classList.remove('sel'));
@@ -8157,46 +8182,72 @@ async function bulkDeleteTasks() {
 }
 
 // ═══════════════════════════════════════════
-// EMAIL NOTIFICATIONS (internal API)
+// EMAIL NOTIFICATIONS (via Cloud Function proxy)
 // ═══════════════════════════════════════════
-const EMAIL_API = 'https://crmwebapi.oneinsure.com/api/common/util_FreedomEmail';
+// Calls our own Cloud Function which forwards to the CRM API server-to-server,
+// bypassing browser CORS restrictions entirely.
+const EMAIL_API = 'https://us-central1-social-desk-d823c.cloudfunctions.net/proxyEmail';
 
 // Find email address for a member name
 function getMemberEmail(name) {
   return Object.entries(EMAIL_TO_MEMBER).find(([,v])=>v.name===name)?.[0] || null;
 }
 
-// Core send function — fromEmail/fromName default to the logged-in user
-async function sendEmailNotification(toEmail, toName, subject, htmlBody, fromEmailOverride, fromNameOverride) {
+// Core send function — always sends from the SociaDesk shared mailbox
+async function sendEmailNotification(toEmail, toName, subject, htmlBody) {
   if (!toEmail) return;
-  const fromEmail = fromEmailOverride || loggedInMember?.email || 'akshay.raje@oneinsure.com';
-  const fromName  = fromNameOverride  || loggedInMember?.name  || 'SociaDesk';
+  const payload = JSON.stringify({
+    IssueId:            9999,
+    FromEmail:          'socialdesk@oneinsure.com',
+    ToEmail:            toEmail,
+    Subject:            subject,
+    HTMLBody:           htmlBody,
+    AttachmentFilePath: '',
+    CCEmail:            '',
+    ReplyEmailId:       '',
+    FromDisplayName:    'SociaDesk',
+    TemplateId:         0,
+    EmailType:          1,
+    PurposeId:          0,
+    IsHeaderFooter:     1,
+    UserId:             null,
+  });
   try {
     const res = await fetch(EMAIL_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        IssueId:            9999,
-        FromEmail:          fromEmail,
-        ToEmail:            toEmail,
-        Subject:            subject,
-        HTMLBody:           htmlBody,
-        AttachmentFilePath: '',
-        CCEmail:            '',
-        ReplyEmailId:       '',
-        FromDisplayName:    fromName,
-        TemplateId:         0,
-        EmailType:          1,
-        PurposeId:          0,
-        IsHeaderFooter:     1,
-        UserId:             null,
-      }),
+      body: payload,
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    console.log(`Email sent to ${toEmail}`);
-  } catch(e) {
-    console.warn('Email send failed:', e);
+    if (res.ok) {
+      console.log(`✅ Email sent to ${toEmail}`);
+    } else {
+      const errBody = await res.text().catch(() => '');
+      console.warn(`Email API ${res.status} for ${toEmail}:`, errBody);
+    }
+  } catch (err) {
+    console.warn('Email send failed:', toEmail, err.message);
   }
+}
+
+async function sendTestEmail(btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  const toEmail = loggedInMember?.email;
+  const toName  = loggedInMember?.name || 'User';
+  if (!toEmail) {
+    toast('No email found for your account.', 'warn');
+    if (btn) { btn.disabled = false; btn.textContent = '📧 Test Email'; }
+    return;
+  }
+  const html = _emailCard({
+    icon: '✅', iconBg: 'rgba(255,255,255,0.2)', accentColor: '#10B981',
+    label: 'Email Test', title: 'SociaDesk email is working!',
+    rows: [['Sent to', toEmail], ['Sent by', toName], ['Time', new Date().toLocaleTimeString()]],
+    ctaHref: 'https://sociadesk.oneinsure.com', ctaText: 'Open SociaDesk →',
+    note: 'This is a test email sent from SociaDesk notification settings.',
+  });
+  await sendEmailNotification(toEmail, toName, '[SociaDesk] Test email — notifications are active', html);
+  toast(`Test email dispatched to ${toEmail} — check your inbox.`, 'ok');
+  if (btn) { btn.disabled = false; btn.textContent = '📧 Test Email'; }
 }
 
 // ── Shared email helper ─────────────────────────────────
@@ -10010,15 +10061,26 @@ function applyChatSearch(q) {
 let _typingTimer = null;
 let _typingListener = null;
 function _sendTyping() {
-  if (!fbReady || !db || !loggedInMember || !currentDM) return;
-  db.collection('typing').doc(currentDM.roomId + '__' + loggedInMember.name)
-    .set({ user: loggedInMember.name, roomId: currentDM.roomId, typingAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(() => {});
+  if (!fbReady || !db || !loggedInMember) return;
+  if (currentDM) {
+    db.collection('typing').doc(currentDM.roomId + '__' + loggedInMember.name)
+      .set({ user: loggedInMember.name, roomId: currentDM.roomId, typingAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(() => {});
+  } else if (currentRoom) {
+    // Channel typing: single doc with a map of { userName: timestamp_ms }
+    db.collection('typing').doc('__ch_' + currentRoom)
+      .set({ [loggedInMember.name]: Date.now() }, { merge: true }).catch(() => {});
+  }
   clearTimeout(_typingTimer);
   _typingTimer = setTimeout(() => _clearTyping(), 4000);
 }
 function _clearTyping() {
-  if (!fbReady || !db || !loggedInMember || !currentDM) return;
-  db.collection('typing').doc(currentDM.roomId + '__' + loggedInMember.name).delete().catch(() => {});
+  if (!fbReady || !db || !loggedInMember) return;
+  if (currentDM) {
+    db.collection('typing').doc(currentDM.roomId + '__' + loggedInMember.name).delete().catch(() => {});
+  } else if (currentRoom) {
+    db.collection('typing').doc('__ch_' + currentRoom)
+      .update({ [loggedInMember.name]: 0 }).catch(() => {});
+  }
 }
 function _listenTyping(roomId, otherUser) {
   if (_typingListener) { _typingListener(); _typingListener = null; }
@@ -10033,6 +10095,23 @@ function _listenTyping(roomId, otherUser) {
         if (age < 5000) { el.innerHTML = `<span class="typing-dots"><span></span><span></span><span></span></span> ${otherUser} is typing…`; return; }
       }
       el.innerHTML = '';
+    }, () => {});
+}
+function _listenChannelTyping(roomId) {
+  if (_typingListener) { _typingListener(); _typingListener = null; }
+  if (!fbReady || !db) return;
+  _typingListener = db.collection('typing').doc('__ch_' + roomId)
+    .onSnapshot(snap => {
+      const el = document.getElementById('typing-indicator');
+      if (!el) return;
+      const data = snap.data() || {};
+      const now = Date.now();
+      const typers = Object.entries(data)
+        .filter(([u, ts]) => u !== loggedInMember?.name && typeof ts === 'number' && ts > 0 && (now - ts) < 5000)
+        .map(([u]) => u);
+      el.innerHTML = typers.length
+        ? `<span class="typing-dots"><span></span><span></span><span></span></span> ${typers.join(', ')} ${typers.length > 1 ? 'are' : 'is'} typing…`
+        : '';
     }, () => {});
 }
 let CUSTOM_CHANNELS = []; // user-created groups (loaded from Firestore)
@@ -10096,19 +10175,33 @@ function fullChatDateTime(msg) {
   return '';
 }
 
-// ── Draft saving — persist unsent text per room ──
-let _chatDrafts = {};
+// ── Draft saving — persist unsent text per room (localStorage-backed) ──
+const _DRAFTS_KEY = 'sd_chat_drafts';
+function _getDrafts() {
+  try { return JSON.parse(localStorage.getItem(_DRAFTS_KEY) || '{}'); } catch { return {}; }
+}
+function _setDraft(key, value) {
+  const d = _getDrafts();
+  if (value) d[key] = value; else delete d[key];
+  try { localStorage.setItem(_DRAFTS_KEY, JSON.stringify(d)); } catch {}
+}
+// Keep an in-memory alias so existing callers `_chatDrafts[key] = val` still work
+const _chatDrafts = new Proxy({}, {
+  get(_, k) { return _getDrafts()[k]; },
+  set(_, k, v) { _setDraft(k, v); return true; },
+  deleteProperty(_, k) { _setDraft(k, ''); return true; },
+});
 function _saveDraft() {
   const inp = document.getElementById('chat-input');
   if (!inp) return;
   const key = currentDM?.roomId || currentRoom || '';
-  if (key) _chatDrafts[key] = inp.value;
+  if (key) _setDraft(key, inp.value);
 }
 function _restoreDraft() {
   const inp = document.getElementById('chat-input');
   if (!inp) return;
   const key = currentDM?.roomId || currentRoom || '';
-  inp.value = _chatDrafts[key] || '';
+  inp.value = _getDrafts()[key] || '';
   inp.style.height = 'auto';
   if (inp.value) inp.style.height = Math.min(inp.scrollHeight, 160) + 'px';
   _updateSendBtn();
@@ -10176,6 +10269,7 @@ function showChatCtxMenu(msgId, e, isMine) {
   const canDelete = isMine || role === 'head' || role === 'manager';
   menu.innerHTML = `
     <button class="chat-ctx-item" onclick="startChatReply('${msgId}');closeChatCtxMenu()">↩ Reply</button>
+    <button class="chat-ctx-item" onclick="forwardChatMsg('${msgId}');closeChatCtxMenu()">↗ Forward</button>
     ${msg?.text ? `<button class="chat-ctx-item" onclick="copyChatMsg('${msgId}');closeChatCtxMenu()">📋 Copy text</button>` : ''}
     ${canEdit ? `<button class="chat-ctx-item" onclick="startEditChatMsg('${msgId}');closeChatCtxMenu()">✏️ Edit</button>` : ''}
     ${canDelete ? `<button class="chat-ctx-item danger" onclick="deleteChatMsg('${msgId}');closeChatCtxMenu()">🗑 Delete</button>` : ''}
@@ -10193,6 +10287,88 @@ function closeChatCtxMenu() {
   const menu = document.getElementById('chat-ctx-menu');
   if (menu) menu.style.display = 'none';
   _ctxMsgId = null;
+}
+
+function forwardChatMsg(msgId) {
+  const msg = CHAT_MESSAGES.find(m => m.id === msgId);
+  if (!msg) return;
+  const rooms = getAllRooms().filter(r => canAccessChannel(r.id));
+  const dmUsers = (MEMBERS || []).filter(m => m.name && m.name !== loggedInMember?.name);
+  let modal = document.getElementById('fwd-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'fwd-modal';
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9100;align-items:center;justify-content:center;';
+    modal.innerHTML = '<div id="fwd-box" style="background:#fff;border-radius:16px;width:320px;max-height:520px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25)"></div>';
+    document.body.appendChild(modal);
+  }
+  document.getElementById('fwd-box').innerHTML = `
+    <div style="padding:14px 16px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <b style="font-size:15px">Forward to…</b>
+      <button onclick="document.getElementById('fwd-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#666">✕</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:8px 0">
+      ${rooms.length ? `<div style="padding:6px 16px 2px;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">Channels</div>
+        ${rooms.map(r=>`<div class="fwd-opt" onclick="_doForward('${msgId}','room','${r.id}')"># ${r.name||r.id}</div>`).join('')}` : ''}
+      ${dmUsers.length ? `<div style="padding:10px 16px 2px;font-size:11px;color:#999;font-weight:600;text-transform:uppercase">People</div>
+        ${dmUsers.map(m=>`<div class="fwd-opt" onclick="_doForward('${msgId}','dm','${m.name.replace(/'/g,"\\'")}')">
+          <span class="av av-xs ${AV[m.name]||'av-a'}" style="display:inline-flex;margin-right:8px">${ini(m.name)}</span>${m.name}
+        </div>`).join('')}` : ''}
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+
+async function _doForward(msgId, destType, destId) {
+  document.getElementById('fwd-modal').style.display = 'none';
+  const msg = CHAT_MESSAGES.find(m => m.id === msgId);
+  if (!msg || !loggedInMember || !fbReady || !db) return;
+  let roomId;
+  if (destType === 'room') {
+    roomId = destId;
+  } else {
+    const parts = [loggedInMember.name, destId].sort();
+    roomId = 'dm_' + parts.join('_');
+  }
+  const fwd = {
+    room: roomId,
+    sender: loggedInMember.name,
+    type: msg.type === 'poll' ? 'text' : (msg.type || 'text'),
+    text: msg.type === 'poll' ? `📊 ${msg.text} [poll — vote in original]` : (msg.text || ''),
+    forwardedFrom: msg.sender,
+    ...(msg.fileUrl ? { fileUrl: msg.fileUrl, fileName: msg.fileName, fileType: msg.fileType, fileSize: msg.fileSize } : {}),
+    reactions: {},
+    time: new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }),
+    loggedAt: Date.now(),
+    sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  try {
+    await db.collection('chat').add(fwd);
+    if (destType === 'dm' && destId !== '__self__') {
+      const inboxId = roomId + '__' + destId;
+      const preview = (fwd.text || (fwd.fileName ? `Shared a file: ${fwd.fileName}` : 'Forwarded a message')).substring(0, 80);
+      db.collection('dm_inbox').doc(inboxId).set({
+        to: destId, from: loggedInMember.name, roomId,
+        text: `↗ ${preview}`,
+        count: firebase.firestore.FieldValue.increment(1),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    }
+    toast(`Forwarded to ${destType === 'dm' ? destId : '#' + destId}`, 'success');
+  } catch { toast('Forward failed', 'error'); }
+}
+
+// Refresh timestamps every 30s so "just now" → "1m ago" updates without a new message
+let _chatTimestampTimer = null;
+function startChatTimestampRefresh() {
+  if (_chatTimestampTimer) return;
+  _chatTimestampTimer = setInterval(() => {
+    if (document.getElementById('chat-messages')) renderChatMessages();
+  }, 30000);
+}
+function stopChatTimestampRefresh() {
+  if (_chatTimestampTimer) { clearInterval(_chatTimestampTimer); _chatTimestampTimer = null; }
 }
 
 // ── Clipboard paste + drag-drop (called once per initChat) ──
@@ -10262,6 +10438,8 @@ function openSelfNotes() {
 function openDM(otherUser) {
   if (!loggedInMember) return;
   _saveDraft(); // save draft for current room before switching
+  cancelChatReply(); // clear pending reply so it doesn't leak into DM
+  clearChatAttach();
   currentDM = {
     roomId: getDMRoomId(loggedInMember.name, otherUser),
     otherUser
@@ -10324,13 +10502,18 @@ function openNewDM() {
 function renderDMList() {
   const el = document.getElementById('chat-dm-list');
   if (!el || !loggedInMember) return;
-  // Show ALL team members (except self and approvers), with unread/active ones first
+  // Show ALL team members (except self and approvers), sorted by most recent activity
   const others = MEMBERS.filter(m => m.name !== loggedInMember.name && m.role !== 'approver');
-  const withUnread = others.filter(m => DM_UNREAD[getDMRoomId(loggedInMember.name, m.name)] > 0);
+  const byRecent = (a, b) => {
+    const ra = getDMRoomId(loggedInMember.name, a.name);
+    const rb = getDMRoomId(loggedInMember.name, b.name);
+    return (DM_LAST[rb]?.loggedAt || 0) - (DM_LAST[ra]?.loggedAt || 0);
+  };
+  const withUnread = others.filter(m => DM_UNREAD[getDMRoomId(loggedInMember.name, m.name)] > 0).sort(byRecent);
   const withRecent = others.filter(m => {
     const rid = getDMRoomId(loggedInMember.name, m.name);
     return !DM_UNREAD[rid] && DM_LAST[rid];
-  });
+  }).sort(byRecent);
   const rest = others.filter(m => {
     const rid = getDMRoomId(loggedInMember.name, m.name);
     return !DM_UNREAD[rid] && !DM_LAST[rid];
@@ -10459,7 +10642,7 @@ function initAllChannelTrackers() {
     _channelTrackers[r.id] = db.collection('chat')
       .where('room', '==', r.id)
       .orderBy('loggedAt', 'desc')
-      .limit(10)
+      .limit(30)
       .onSnapshot(snap => {
         if (!snap.size) return;
         const msgs = snap.docs.map(d => ({...d.data(), id: d.id}));
@@ -10517,6 +10700,12 @@ function listenForDMInbox() {
         const prevCount = DM_UNREAD[roomId] || 0;
         const newCount = d.count || 1;
         DM_UNREAD[roomId] = newCount;
+        // Update last-message preview so DM list sorts correctly by recency
+        DM_LAST[roomId] = {
+          sender: fromName,
+          text: d.text || '',
+          loggedAt: d.updatedAt?.toMillis?.() || Date.now(),
+        };
         trackDMRecent(fromName);
         if (wasReady && newCount > prevCount) {
           chatToast(fromName, fromName, d.text || '', true);
@@ -10581,26 +10770,34 @@ function renderChannelList() {
   }
 }
 
-// Load custom groups from Firestore
-async function loadCustomChannels() {
+// Real-time listeners for custom channels and membership
+let _customChannelsUnsub = null;
+let _channelMembersUnsub = null;
+let _channelMembersReady = false;
+
+function loadCustomChannels() {
   if (!fbReady || !db) return;
-  try {
-    const snap = await db.collection('customChannels').get();
+  if (_customChannelsUnsub) return; // already listening
+  _customChannelsUnsub = db.collection('customChannels').onSnapshot(snap => {
     CUSTOM_CHANNELS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // Ensure channel membership is loaded before rendering so members see correct channels
-    await loadChannelMembers();
-    renderChannelList();
-    initAllChannelTrackers();
-  } catch(e) { console.warn('loadCustomChannels:', e); }
+    if (_channelMembersReady) {
+      renderChannelList();
+      initAllChannelTrackers();
+    }
+  }, e => console.warn('customChannels listener:', e));
 }
 
-// Load channel membership from Firestore (or use defaults)
-async function loadChannelMembers() {
+function loadChannelMembers() {
   if (!fbReady || !db) return;
-  try {
-    const snap = await db.collection('channelMembers').get();
+  if (_channelMembersUnsub) return; // already listening
+  _channelMembersUnsub = db.collection('channelMembers').onSnapshot(snap => {
+    // Rebuild from scratch so removed members / deleted docs don't linger in memory
+    Object.keys(CHANNEL_MEMBERS).forEach(k => delete CHANNEL_MEMBERS[k]);
     snap.forEach(doc => { CHANNEL_MEMBERS[doc.id] = doc.data().members || []; });
-  } catch(e) { console.warn('loadChannelMembers:', e); }
+    _channelMembersReady = true;
+    renderChannelList();
+    initAllChannelTrackers(); // pick up any newly accessible channels
+  }, e => console.warn('channelMembers listener:', e));
 }
 
 async function saveChannelMembers(roomId, members) {
@@ -10620,10 +10817,17 @@ function getChannelMembers(roomId) {
 function canAccessChannel(roomId) {
   if (!loggedInMember) return false;
   const r = loggedInMember.role;
-  if (r === 'head' || r === 'manager') return true; // managers and head see all channels
+  if (r === 'head' || r === 'manager') return true; // head and managers see all channels
   if (roomId === 'general') return true;             // general is open to everyone
-  const members = getChannelMembers(roomId);
-  return members.includes(loggedInMember.name);     // others only see channels they're in
+  // Built-in (hardcoded) channels are visible to all unless an explicit member list was saved
+  const isBuiltin = CHAT_ROOMS.some(ch => ch.id === roomId);
+  if (isBuiltin) {
+    const saved = CHANNEL_MEMBERS[roomId];
+    // No restriction saved yet → open to all; restriction saved → must be in the list
+    return !saved || saved.length === 0 || saved.includes(loggedInMember.name);
+  }
+  // Custom channels created via New Group: user must be explicitly added
+  return (CHANNEL_MEMBERS[roomId] || []).includes(loggedInMember.name);
 }
 // ═══════════════════════════════════════════
 // ENHANCED CHAT — @mentions, polls, reactions
@@ -10663,7 +10867,7 @@ function chatInputHandler(e) {
   input.style.height = 'auto';
   input.style.height = Math.min(input.scrollHeight, 160) + 'px';
   _updateSendBtn();
-  if (currentDM) _sendTyping();
+  _sendTyping();
   const key = currentDM?.roomId || currentRoom || '';
   if (key) _chatDrafts[key] = input.value;
   const val = input.value;
@@ -10814,14 +11018,13 @@ function initChat() {
   listenForDMInbox();
   preloadDMPreviews();
   const chatRoom = currentDM ? currentDM.roomId : currentRoom;
-  // Order by loggedAt (plain number) — avoids Firestore composite index requirement
-  // sentAt is a server timestamp which needs an index; loggedAt is set client-side
   chatUnsubscribe = db.collection('chat')
     .where('room', '==', chatRoom)
-    .orderBy('loggedAt', 'asc')
+    .orderBy('loggedAt', 'desc')
     .limit(100)
     .onSnapshot(snap => {
-      CHAT_MESSAGES = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // desc gives newest-first; reverse so oldest is at top, newest at bottom
+      CHAT_MESSAGES = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
       renderChatMessages();
       // Mark current room as read and update last-message preview
       if (CHAT_MESSAGES.length) {
@@ -10852,11 +11055,11 @@ function renderChat() {
   const isHead = loggedInMember && loggedInMember.role === 'head';
   const isManager = loggedInMember && (loggedInMember.role === 'manager' || loggedInMember.role === 'head');
 
-  // Sidebar channel list — show accessible channels only
-  const accessibleRooms = CHAT_ROOMS.filter(r => canAccessChannel(r.id));
+  // Sidebar channel list — show accessible channels only (built-in + custom)
+  const accessibleRooms = getAllRooms().filter(r => canAccessChannel(r.id));
   // Ensure currentRoom is accessible; fallback to general
-  if (!accessibleRooms.find(r => r.id === currentRoom)) {
-    currentRoom = accessibleRooms[0]?.id || 'general';
+  if (!currentDM && !accessibleRooms.find(r => r.id === currentRoom)) {
+    currentRoom = 'general';
   }
 
   renderChannelList();
@@ -10914,19 +11117,22 @@ function renderChat() {
     TASKS.map(t => `<option value="task:${t.id}">Task: ${t.title}</option>`).join('');
   updateChatNavBadge();
 
-  // Show/hide message input for channels user is in
+  // Show/hide message input: DMs always allow posting; channels require membership
   const inputWrapper = document.querySelector('.chat-input-wrapper');
-  const canPost = canAccessChannel(currentRoom);
+  const canPost = currentDM ? true : canAccessChannel(currentRoom);
   if (inputWrapper) inputWrapper.style.display = canPost ? '' : 'none';
 
   initChat();
   initChatExtras();
+  startChatTimestampRefresh();
   _restoreDraft();
 }
 
 function switchRoom(roomId) {
   if (!canAccessChannel(roomId)) { toast("You're not a member of this channel.", 'warn'); return; }
   _saveDraft(); // save unsent text before leaving
+  cancelChatReply(); // clear any pending reply so it doesn't leak into the new room
+  clearChatAttach();  // clear any pending attachment
   if (_partnerReadListener) { _partnerReadListener(); _partnerReadListener = null; }
   if (_typingListener) { _typingListener(); _typingListener = null; }
   _clearTyping();
@@ -10940,6 +11146,7 @@ function switchRoom(roomId) {
     db.collection('chat_read').doc(roomId + '__' + loggedInMember.name)
       .set({ readAt: firebase.firestore.FieldValue.serverTimestamp(), user: loggedInMember.name }, { merge: true }).catch(() => {});
   }
+  _listenChannelTyping(roomId);
   renderChat();
 }
 
@@ -10951,7 +11158,7 @@ function openChannelManager(roomId) {
   _cmEditing = roomId || getAllRooms().find(r => r.id !== 'general')?.id || CHAT_ROOMS[0].id;
   _cmDirty = new Set(); // reset dirty set each time the modal opens
   // Refresh from Firestore before opening so we have latest state
-  loadChannelMembers().then(() => renderChannelManager());
+  loadChannelMembers(); // onSnapshot already running — no need to await
   renderChannelManager();
   document.getElementById('channel-manager-modal').style.display = 'flex';
 }
@@ -11197,7 +11404,7 @@ function renderChatMessages() {
     lastSender = msg.sender;
 
     // Poll rendering
-    if (msg.type === 'poll') return `${unreadDiv}${dateSep}<div class="chat-msg${isMine?' mine':''}" data-msg-id="${msg.id}">
+    if (msg.type === 'poll') return `${unreadDiv}${dateSep}<div class="chat-msg${isMine?' mine':''}" data-msg-id="${msg.id}" oncontextmenu="showChatCtxMenu('${msg.id}',event,${isMine})">
       <div class="chat-av-wrap"><div class="av av-sm ${AV[msg.sender]||'av-a'}">${isMine?'':ini(msg.sender)}</div></div>
       <div class="chat-bubble-wrap">
         ${!isMine&&!isConsecutive?`<div class="chat-sender-name">${msg.sender}</div>`:''}
@@ -11255,7 +11462,7 @@ function renderChatMessages() {
     const reactions = msg.reactions || {};
     const reactionHtml = Object.keys(reactions).length ? `<div class="chat-reactions">
       ${Object.entries(reactions).map(([emoji, users]) =>
-        `<span class="reaction-chip${users.includes(loggedInMember?.name)?' mine':''}" onclick="toggleReaction('${msg.id}','${emoji}')">
+        `<span class="reaction-chip${users.includes(loggedInMember?.name)?' mine':''}" onclick="toggleReaction('${msg.id}','${emoji}')" title="${users.join(', ')}">
           ${emoji} <span class="reaction-count">${users.length}</span>
         </span>`).join('')}
     </div>` : '';
@@ -11265,6 +11472,7 @@ function renderChatMessages() {
       <div class="chat-bubble-wrap">
         ${!isMine&&!isConsecutive?`<div class="chat-sender-name">${msg.sender}</div>`:''}
         ${msg.tagLabel?`<div class="chat-tag">📌 ${msg.tagLabel}</div>`:''}
+        ${msg.forwardedFrom?`<div class="chat-forwarded-label">↩ Forwarded from ${msg.forwardedFrom}</div>`:''}
         ${fileHtml}
         ${(msg.text||msg.replyTo)?`<div class="chat-bubble">
           ${msg.replyTo?`<div class="chat-quote" onclick="scrollToMsg('${msg.replyTo.id}')">
@@ -11338,15 +11546,17 @@ function filterChatSidebar(q) {
 
 async function toggleReaction(msgId, emoji) {
   if (!fbReady || !db) return;
+  const me = loggedInMember?.name;
+  if (!me) return;
   const msg = CHAT_MESSAGES.find(m => m.id === msgId);
   if (!msg) return;
-  const me = loggedInMember?.name;
-  const reactions = msg.reactions || {};
-  const users = reactions[emoji] || [];
-  if (users.includes(me)) reactions[emoji] = users.filter(u => u !== me);
-  else reactions[emoji] = [...users, me];
-  if (!reactions[emoji].length) delete reactions[emoji];
-  await db.collection('chat').doc(msgId).update({ reactions });
+  const users = (msg.reactions || {})[emoji] || [];
+  const field = `reactions.${emoji}`;
+  if (users.includes(me)) {
+    await db.collection('chat').doc(msgId).update({ [field]: firebase.firestore.FieldValue.arrayRemove(me) });
+  } else {
+    await db.collection('chat').doc(msgId).update({ [field]: firebase.firestore.FieldValue.arrayUnion(me) });
+  }
 }
 
 async function deleteChatMsg(id) {
@@ -11604,8 +11814,20 @@ async function sendPoll() {
     loggedAt: Date.now(),
     sentAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
-  try { await db.collection('chat').add(poll); }
-  catch(e) { CHAT_MESSAGES.push({...poll,id:Date.now()}); renderChatMessages(); }
+  try {
+    await db.collection('chat').add(poll);
+    if (currentDM && currentDM.otherUser !== '__self__') {
+      const inboxId = currentDM.roomId + '__' + currentDM.otherUser;
+      db.collection('dm_inbox').doc(inboxId).set({
+        to: currentDM.otherUser,
+        from: loggedInMember.name,
+        roomId: currentDM.roomId,
+        text: `📊 ${q}`,
+        count: firebase.firestore.FieldValue.increment(1),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    }
+  } catch(e) { CHAT_MESSAGES.push({...poll,id:Date.now()}); renderChatMessages(); }
   closePollModal();
   document.getElementById('poll-question').value = '';
   document.querySelectorAll('.poll-opt-input').forEach((el,i) => { if(i>1) el.remove(); else el.value=''; });
@@ -11632,17 +11854,23 @@ function renderPollCard(msg) {
 
 async function castVote(msgId, option) {
   if (!fbReady || !db) return;
-  const msg = CHAT_MESSAGES.find(m => m.id === msgId);
-  if (!msg) return;
   const me = loggedInMember?.name;
-  const votes = JSON.parse(JSON.stringify(msg.pollVotes || {}));
-  // Remove previous vote
-  Object.keys(votes).forEach(k => { votes[k] = (votes[k]||[]).filter(u=>u!==me); });
-  // Add new vote (toggle off if same)
-  if (!votes[option]) votes[option] = [];
-  const alreadyVoted = msg.pollVotes?.[option]?.includes(me);
-  if (!alreadyVoted) votes[option].push(me);
-  await db.collection('chat').doc(msgId).update({ pollVotes: votes });
+  if (!me) return;
+  const ref = db.collection('chat').doc(msgId);
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return;
+    const votes = JSON.parse(JSON.stringify(snap.data().pollVotes || {}));
+    const alreadyVoted = (votes[option] || []).includes(me);
+    // Remove from all options (enforce single-vote)
+    Object.keys(votes).forEach(k => { votes[k] = (votes[k] || []).filter(u => u !== me); });
+    // Add to chosen option unless toggling off
+    if (!alreadyVoted) {
+      if (!votes[option]) votes[option] = [];
+      votes[option].push(me);
+    }
+    tx.update(ref, { pollVotes: votes });
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -11877,7 +12105,7 @@ function scheduleDigest() {
 
 async function sendDailyDigest() {
   if (!NOTIF_PREFS.digest) return;
-  const managers = MEMBERS.filter(m=>m.role==='Head'||m.role==='Manager');
+  const managers = MEMBERS.filter(m=>m.role==='head'||m.role==='manager');
   const pending   = TODAY_FLOWS.filter(f=>getFlowStatus(f)!=='done');
   const done      = TODAY_FLOWS.filter(f=>getFlowStatus(f)==='done');
   const blocked   = TASKS.filter(t=>t.status==='blocked');
@@ -11946,7 +12174,7 @@ async function sendDailyDigest() {
     const email = getMemberEmail(m.name);
     if (email) await sendEmailNotification(email, m.name,
       `[SociaDesk] Morning Digest — ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'})}`,
-      digestHtmlBody, 'support@oneinsure.com', 'SociaDesk');
+      digestHtmlBody);
   }
 }
 

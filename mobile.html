@@ -1569,19 +1569,22 @@ function mobApplySearch(q) {
 function _mobGetLastRead(r) { try { return JSON.parse(localStorage.getItem('sd_mob_last_read')||'{}')[r]||0; } catch{return 0;} }
 function _mobSetLastRead(r, ts) { try { const m=JSON.parse(localStorage.getItem('sd_mob_last_read')||'{}'); m[r]=ts||Date.now(); localStorage.setItem('sd_mob_last_read',JSON.stringify(m)); } catch{} }
 
-async function loadMobCustomChannels() {
-  if (!db) return;
-  try {
-    const snap = await db.collection('customChannels').get();
+let _mobCustomChannelsUnsub = null;
+function loadMobCustomChannels() {
+  if (!db || _mobCustomChannelsUnsub) return;
+  _mobCustomChannelsUnsub = db.collection('customChannels').onSnapshot(snap => {
+    // Rebuild custom channels: remove old custom entries then re-add from snapshot
+    const builtinIds = new Set(['general','editing','ideas','compliance','tasks','leads']);
+    for (let i = CHAT_ROOMS.length - 1; i >= 0; i--) {
+      if (!builtinIds.has(CHAT_ROOMS[i].id)) CHAT_ROOMS.splice(i, 1);
+    }
     snap.forEach(doc => {
       const ch = { id: doc.id, ...doc.data() };
-      if (!CHAT_ROOMS.find(r => r.id === ch.id)) {
-        CHAT_ROOMS.push(ch);
-      }
+      CHAT_ROOMS.push(ch);
     });
     initMobChannelTrackers();
     renderChatList();
-  } catch(e) { console.warn('loadMobCustomChannels:', e); }
+  }, e => console.warn('loadMobCustomChannels:', e));
 }
 
 function initMobChannelTrackers() {
@@ -1682,11 +1685,14 @@ function mobListenForMyNotifs() {
     }, () => {});
 }
 
+let _mobChannelMembersUnsub = null;
 function mobLoadChannelMembers() {
-  if (!db) return;
-  db.collection('channelMembers').get().then(snap => {
+  if (!db || _mobChannelMembersUnsub) return;
+  _mobChannelMembersUnsub = db.collection('channelMembers').onSnapshot(snap => {
+    Object.keys(MOB_CHANNEL_MEMBERS).forEach(k => delete MOB_CHANNEL_MEMBERS[k]);
     snap.forEach(doc => { MOB_CHANNEL_MEMBERS[doc.id] = doc.data().members || []; });
-  }).catch(() => {});
+    renderChatList();
+  }, () => {});
 }
 
 async function requestNotifPermission() {
@@ -1939,11 +1945,14 @@ function startListeners() {
       allFlows = rawFlows;
     } else if (r === 'member') {
       const name = currentMember?.name || '';
-      allFlows = rawFlows.filter(f =>
-        (f.stepOwners || []).includes(name) ||
-        (f.approvalRoutees || []).includes(name) ||
-        Object.values(f.subAssignees || {}).includes(name)
-      );
+      allFlows = rawFlows.filter(f => {
+        // If no owners were ever set (legacy spawn), show to everyone
+        const hasAnyOwner = (f.stepOwners || []).some(o => !!o) || Object.keys(f.subAssignees || {}).length > 0;
+        if (!hasAnyOwner) return true;
+        return (f.stepOwners || []).includes(name) ||
+          (f.approvalRoutees || []).includes(name) ||
+          Object.values(f.subAssignees || {}).includes(name);
+      });
     } else {
       allFlows = rawFlows;
     }

@@ -1,0 +1,15 @@
+{
+  "name": "sociadesk-functions",
+  "description": "Cloud Functions for SociaDesk",
+  "scripts": {
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-functions": "^7.2.5"
+  },
+  "private": true
+}
