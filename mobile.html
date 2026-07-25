@@ -3063,6 +3063,41 @@ function mobSendTaskEmail(toName, taskTitle, dueDate, priority) {
     }));
 }
 
+function _mobTaskStatusLabel(s) {
+  return {todo:'To Do',inprogress:'In Progress',review:'In Review',done:'Done',blocked:'Blocked'}[s]
+      || (s ? s.charAt(0).toUpperCase()+s.slice(1) : '—');
+}
+
+// Emails the assignee and the task creator on a status change, skipping
+// whoever made the change, blanks, and duplicates.
+function mobSendTaskStatusEmail(t, fromStatus, toStatus) {
+  if (!t || fromStatus === toStatus) return;
+  const by   = currentMember?.name || 'A team member';
+  const from = _mobTaskStatusLabel(fromStatus);
+  const to   = _mobTaskStatusLabel(toStatus);
+  const isBlocked = toStatus === 'blocked';
+  const isDone    = toStatus === 'done';
+  const accent = isBlocked ? '#DC2626' : isDone ? '#10B981' : '#1B2B4B';
+  const seen = new Set();
+  for (const name of [t.assignee, t.createdBy]) {
+    if (!name || name === by || seen.has(name)) continue;
+    seen.add(name);
+    const toEmail = mobGetMemberEmail(name);
+    if (!toEmail) continue;
+    mobSendEmail(toEmail, name,
+      `[SociaDesk] ${t.title} — ${from} → ${to}`,
+      _mobEmailCard({
+        icon: isBlocked ? '🔴' : isDone ? '✅' : '🔄', accentColor: accent,
+        label: 'Task Status Updated', title: t.title,
+        rows: [['Status', `${from} → ${to}`], ['Updated by', by], ['Assignee', t.assignee || 'Unassigned'], ['Due date', t.due || '']],
+        ctaHref: 'https://sociadesk.oneinsure.com', ctaText: 'View Task →',
+        note: isBlocked
+          ? `<strong>${_mobEsc(t.title)}</strong> is now <strong>blocked</strong> and needs attention.`
+          : `You received this because you're involved with <strong>${_mobEsc(t.title)}</strong> in SociaDesk.`,
+      }));
+  }
+}
+
 function mobSendApprovalEmail(approverName, flowTitle, stepName, deepLink) {
   const toEmail = mobGetMemberEmail(approverName);
   if (!toEmail) return;
@@ -3136,6 +3171,7 @@ function openTaskDetail(id) {
   const t = allTasks.find(x => x.id === id);
   if (!t) return;
   currentTaskDetail = {...t};
+  currentTaskDetail._origStatus = t.status; // capture before status buttons mutate the copy
   document.getElementById('td-title').textContent    = t.title || 'Task';
   document.getElementById('td-priority').textContent = capitalize(t.priority || 'medium');
   document.getElementById('td-assignee').textContent = t.assignee || 'Unassigned';
@@ -3166,7 +3202,10 @@ function setTaskDetailStatus(status, btn) {
 async function updateCurrentTaskStatus() {
   if (!currentTaskDetail) return;
   try {
-    await db.collection('tasks').doc(currentTaskDetail.id).update({status: currentTaskDetail.status});
+    const prevStatus = currentTaskDetail._origStatus;
+    const newStatus  = currentTaskDetail.status;
+    await db.collection('tasks').doc(currentTaskDetail.id).update({status: newStatus});
+    if (prevStatus !== newStatus) mobSendTaskStatusEmail(currentTaskDetail, prevStatus, newStatus);
     showToast('Task updated!', 'ok');
     closeSheet();
   } catch(err) {
@@ -3184,7 +3223,7 @@ async function saveNewTask() {
   const btn = document.getElementById('nt-save-btn');
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
-    await db.collection('tasks').add({title, assignee, priority, due, notes, status:'todo', createdAt:Date.now()});
+    await db.collection('tasks').add({title, assignee, priority, due, notes, status:'todo', createdAt:Date.now(), createdBy: currentMember?.name || null});
     if (assignee && assignee !== currentMember?.name) mobSendTaskEmail(assignee, title, due, priority);
     showToast('Task created!', 'ok');
     closeSheet();
