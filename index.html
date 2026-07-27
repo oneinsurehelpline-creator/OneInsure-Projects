@@ -1968,7 +1968,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
             <div class="chat-sidebar">
               <div class="chat-sidebar-header">
                 <span class="chat-sidebar-header-title">Chats</span>
-                <button onclick="openNewDM()" title="New direct message" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#fff;">✏️</button>
+                <button onclick="(!currentDM && currentRoom) ? openChannelManager(currentRoom) : openNewDM()" title="Manage channel / New direct message" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#fff;">✏️</button>
               </div>
               <div class="chat-sidebar-search">
                 <div class="chat-sidebar-search-inner">
@@ -1996,6 +1996,10 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                 <button id="clear-channel-btn" onclick="clearChannelMessages()" title="Clear all messages"
                   style="display:none;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:34px;height:34px;font-size:15px;color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;">
                   🗑
+                </button>
+                <button id="manage-channel-btn" onclick="openChannelManager(currentRoom)" title="Manage channel members"
+                  style="display:none;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:34px;height:34px;font-size:15px;color:#fff;cursor:pointer;align-items:center;justify-content:center;">
+                  ⚙️
                 </button>
               </div>
               <div class="chat-search-bar" id="chat-search-bar">
@@ -11243,17 +11247,29 @@ function renderChat() {
     const rm = getAllRooms().find(r => r.id === currentRoom) || CHAT_ROOMS[0];
     document.getElementById('chat-header-title').textContent = rm?.label || 'Chat';
     const chMembers = getChannelMembers(currentRoom);
-    const memberStr = currentRoom === 'general'
-      ? `${MEMBERS.length} members`
-      : chMembers.length ? `${chMembers.length} member${chMembers.length !== 1 ? 's' : ''}`
-      : 'No members yet';
-    document.getElementById('chat-header-meta').textContent = memberStr;
+    const metaEl = document.getElementById('chat-header-meta');
+    if (currentRoom === 'general') {
+      metaEl.textContent = `${MEMBERS.length} members`;
+    } else if (chMembers.length) {
+      metaEl.textContent = `${chMembers.length} member${chMembers.length !== 1 ? 's' : ''}`;
+    } else if (role === 'head' || role === 'manager') {
+      metaEl.innerHTML = '<span onclick="openChannelManager(currentRoom)" style="cursor:pointer;text-decoration:underline;opacity:0.9;">No members yet — click to add</span>';
+    } else {
+      metaEl.textContent = 'No members yet';
+    }
     if (avatarEl) { avatarEl.textContent = rm?.icon || '#'; avatarEl.style.background = 'rgba(255,255,255,0.25)'; }
   }
 
   // Show clear history button only for head/manager in non-DM rooms
   const clearBtn = document.getElementById('clear-channel-btn');
   if (clearBtn) clearBtn.style.display = (!currentDM && (role==='head'||role==='manager')) ? 'block' : 'none';
+
+  // Show manage channel button for head/manager in channel rooms (not DMs, not general)
+  const manageBtn = document.getElementById('manage-channel-btn');
+  if (manageBtn) {
+    const showManage = !currentDM && currentRoom && currentRoom !== 'general' && (role==='head'||role==='manager');
+    manageBtn.style.display = showManage ? 'flex' : 'none';
+  }
 
   // Render DM list in sidebar
   renderDMList();
