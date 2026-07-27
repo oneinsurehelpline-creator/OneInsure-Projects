@@ -843,6 +843,12 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 .dl-reject-panel textarea:focus{outline:none;border-color:rgba(255,255,255,0.4);}
 .dl-reject-char{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px;}
 .dl-reject-char.ok{color:#4ade80;}
+.dl-approve-panel{display:none;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.35);border-radius:14px;padding:18px 20px;margin-bottom:20px;}
+.dl-approve-panel textarea{width:100%;box-sizing:border-box;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-family:var(--ff-body);font-size:14px;padding:12px;resize:none;min-height:80px;margin:10px 0;}
+.dl-approve-panel textarea::placeholder{color:rgba(255,255,255,0.3);}
+.dl-approve-panel textarea:focus{outline:none;border-color:rgba(255,255,255,0.4);}
+.dl-btn-submit-approve{width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;font-size:15px;font-weight:700;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-family:var(--ff-body);transition:opacity 0.15s;}
+.dl-btn-submit-approve:hover{opacity:0.88;}
 .dl-btn-submit-reject{width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;font-size:15px;font-weight:700;background:#ef4444;color:#fff;font-family:var(--ff-body);transition:opacity 0.15s;}
 .dl-btn-submit-reject:disabled{opacity:0.4;cursor:not-allowed;}
 .dl-confirm{text-align:center;padding:40px 20px;}
@@ -2664,6 +2670,28 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
   </div>
 </div>
 
+<!-- CONDITIONAL APPROVAL MODAL -->
+<div class="overlay" id="approve-modal" onclick="if(event.target===this)closeApproveModal()">
+  <div class="modal" style="width:420px;">
+    <div class="modal-hdr">
+      <span class="modal-title">✓ Approve Step</span>
+      <button class="close-x" onclick="closeApproveModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--ink2);margin-bottom:14px;" id="approve-flow-title"></div>
+      <div class="fg">
+        <label>Notes / Conditions <span style="color:var(--ink3);font-weight:400;">(optional — leave blank for unconditional approval)</span></label>
+        <textarea id="approve-comment" placeholder="e.g. Approved subject to adding disclaimer in caption…"
+          style="font-size:13px;padding:8px 10px;border:1.5px solid var(--border2);border-radius:var(--rad);background:var(--cream2);font-family:var(--ff-body);resize:vertical;min-height:90px;width:100%;outline:none;box-sizing:border-box;margin-top:6px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeApproveModal()">Cancel</button>
+      <button class="btn" onclick="confirmApprove()" style="background:var(--green);color:white;border-color:var(--green);font-weight:700;">✓ Confirm Approval</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MEDIA VIEWER ── -->
 <div class="mv-overlay" id="mv-overlay" onkeydown="mvKeyHandler(event)" tabindex="-1">
 
@@ -3525,16 +3553,25 @@ async function doForgotPassword() {
 
 if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
 
+// ── Approver email whitelist — must match APPROVERS const defined later ──
+const _APPROVER_EMAILS_SET = new Set([
+  'akshay.raje@oneinsure.com',
+  'anamika.patil@oneinsure.com',
+  'rochelle.mascarenhas@oneinsure.com',
+  'anirudh.baardwaj@oneinsure.com',
+  'susant.padhi@oneinsure.com',
+  'nasita.londhe@oneinsure.com',
+  'sejal.sharma@oneinsure.money',
+]);
+
 // ── Deep-link params (approver email link) ──
 const _dlParams = (() => {
   try {
     const p = new URLSearchParams(window.location.search);
     const flow     = p.get('flow');
     const approver = decodeURIComponent(p.get('approver') || '').toLowerCase();
-    if (flow && approver && EMAIL_TO_MEMBER[approver]) {
-      const m = EMAIL_TO_MEMBER[approver];
-      // Allow head role too (Akshay is in APPROVERS but has role 'head')
-      if (m.role === 'approver' || m.role === 'head') return { flow, approver };
+    if (flow && approver && EMAIL_TO_MEMBER[approver] && _APPROVER_EMAILS_SET.has(approver)) {
+      return { flow, approver };
     }
   } catch(e) {}
   return null;
@@ -4100,31 +4137,42 @@ const PIPELINE_STAGES = ['todo','inprogress','review','done'];
 const PIPELINE_NAMES  = {todo:'Incoming',inprogress:'In Progress',review:'In Review',done:'Done'};
 const STAGE_COL = {todo:'var(--ink3)',inprogress:'var(--amber)',review:'var(--purple)',done:'var(--green)'};
 
+// IST timezone constant — used everywhere dates/times are displayed
+const IST_TZ = 'Asia/Kolkata';
+// Returns how many IST calendar days ahead `date` is from today (negative = past)
+function _istDayDiff(date) {
+  const IST_OFFSET_MS = 19800000; // +5:30 in ms
+  const dDay  = Math.floor((date.valueOf()   + IST_OFFSET_MS) / 86400000);
+  const nDay  = Math.floor((Date.now()       + IST_OFFSET_MS) / 86400000);
+  return dDay - nDay;
+}
+
 function fmtDue(iso){
   if(!iso) return '—';
-  const d=new Date(iso), now=new Date();
+  // Bare date strings (no time) must be treated as IST midnight, not UTC midnight
+  const normalized = (iso.length === 10) ? iso + 'T00:00:00' : iso;
+  const d = new Date(normalized), now = new Date();
   const hasTime = iso.includes('T') && iso.length > 10;
   const diffMs = d - now;
-  const diffH = diffMs / 3600000;
-  const diffDays = Math.floor(diffMs / 86400000);
+  const diffH  = diffMs / 3600000;
+  const diffDays = _istDayDiff(d); // IST calendar-day difference, not raw hours/86400
   if(diffMs < 0){
-    // Overdue — show how long ago
     const overH = Math.abs(diffH);
-    if(overH < 1) return '<span style="color:var(--red);">⚠ Overdue just now</span>';
+    if(overH < 1)  return '<span style="color:var(--red);">⚠ Overdue just now</span>';
     if(overH < 24) return `<span style="color:var(--red);">⚠ Overdue ${Math.round(overH)}h ago</span>`;
     return `<span style="color:var(--red);">⚠ Overdue ${Math.floor(overH/24)}d ago</span>`;
   }
   if(hasTime && diffH < 1) return `<span style="color:var(--red);font-weight:700;">Due in ${Math.round(diffH*60)}m</span>`;
   if(hasTime && diffH < 3) return `<span style="color:var(--amber);font-weight:700;">Due in ${Math.round(diffH)}h</span>`;
   if(diffDays === 0){
-    const timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    return `<span style="color:var(--amber);">Today ${hasTime?timeStr:''}</span>`;
+    const timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ});
+    return `<span style="color:var(--amber);">Today${hasTime?' '+timeStr:''}</span>`;
   }
   if(diffDays === 1){
-    const timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    const timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ});
     return `<span style="color:var(--amber);">Tomorrow${hasTime?' '+timeStr:''}</span>`;
   }
-  return d.toLocaleDateString('en-IN',{month:'short',day:'numeric'})+(hasTime?' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'');
+  return d.toLocaleDateString('en-IN',{month:'short',day:'numeric',timeZone:IST_TZ})+(hasTime?' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ}):'');
 }
 
 function platChips(plats){
@@ -4298,17 +4346,24 @@ function renderHome() {
   // My pending steps
   const mySteps = TODAY_FLOWS.filter(f => {
     if (getFlowStatus(f) === 'done') return false;
-    // Routed for approval — belongs in approver's bucket, not sender's
-    if ((f.approvalRoutees || []).length > 0) return (f.approvalRoutees).includes(me);
-    const tmplOwner = getTemplateSteps(f.templateId)[f.currentStep]?.owner || '';
-    const owner = (f.stepOwners || [])[f.currentStep] || tmplOwner;
-    return owner === me;
+    const _mts = getTemplateSteps(f.templateId);
+    const _mcs = _mts[f.currentStep] || {};
+    const _isApprStep = _mcs.isApproval === true || /approv/i.test(_mcs.name || '');
+    // Only treat approvalRoutees as authoritative when the current step is actually an approval step
+    if (_isApprStep && (f.approvalRoutees || []).length > 0) return (f.approvalRoutees).includes(me);
+    const owner = (f.stepOwners || [])[f.currentStep] || _mts[f.currentStep]?.owner || '';
+    return owner === me || (f.subAssignees || {})[f.currentStep] === me;
   });
 
   // Flows visible to this user (same rule as renderToday)
   const myVisibleFlows = isManager ? TODAY_FLOWS : TODAY_FLOWS.filter(f => {
     const _ts = getTemplateSteps(f.templateId);
-    return (f.stepOwners || []).some((o, i) => (o || _ts[i]?.owner || '') === me) ||
+    if (loggedInMember.role === 'approver') {
+      if (getFlowStatus(f) === 'done') return (f.approvalHistory || []).some(h => h.approvedBy === me);
+      const _cs = _ts[f.currentStep] || {};
+      return (_cs.isApproval === true || /approv/i.test(_cs.name || '')) && (f.approvalRoutees || []).includes(me);
+    }
+    return _ts.some((s, i) => ((f.stepOwners || [])[i] || s.owner || '') === me) ||
            (f.approvalRoutees || []).includes(me) ||
            Object.values(f.subAssignees || {}).includes(me);
   });
@@ -4344,13 +4399,13 @@ function renderHome() {
   const totalUnread = Object.values(CHANNEL_UNREAD).reduce((s,n)=>s+(n||0),0)
                     + Object.values(DM_UNREAD).reduce((s,n)=>s+(n||0),0);
 
-  // Flow summary
-  const activeFlows = TODAY_FLOWS.filter(f => getFlowStatus(f) !== 'done').length;
-  const doneFlows   = TODAY_FLOWS.filter(f => getFlowStatus(f) === 'done').length;
+  // Flow summary — based on what the current user can actually see
+  const activeFlows = myVisibleFlows.filter(f => getFlowStatus(f) !== 'done').length;
+  const doneFlows   = myVisibleFlows.filter(f => getFlowStatus(f) === 'done').length;
 
   el.innerHTML = `
     <div class="home-greeting">${greeting}, ${me.split(' ')[0]} 👋</div>
-    <div class="home-sub">${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}</div>
+    <div class="home-sub">${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',timeZone:IST_TZ})}</div>
 
     <div class="home-grid">
       <div class="home-card${mySteps.length ? ' accent-blue' : ''}">
@@ -4431,7 +4486,7 @@ function canManageFlows() {
 }
 
 function renderToday(){
-  const today=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+  const today=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',timeZone:IST_TZ});
   // Show active flow count, not just today's date — flows persist until completed
   const activeCount = TODAY_FLOWS.filter(f => getFlowStatus(f) !== 'done').length;
   const doneCount = TODAY_FLOWS.filter(f => getFlowStatus(f) === 'done').length;
@@ -4465,7 +4520,7 @@ function renderToday(){
       </div>
     </div>`;
 
-  document.getElementById('badge-today').textContent=TODAY_FLOWS.length;
+  // Badge is updated below after allVisible is computed (shows user's actual visible count)
 
   if (!TODAY_FLOWS.length) {
     document.getElementById('flow-board').innerHTML = `
@@ -4485,24 +4540,21 @@ function renderToday(){
     const name = loggedInMember.name;
     if (r === 'member') {
       const _tmplSteps = getTemplateSteps(f.templateId);
-      // For each step: if stepOwners[i] is set use it, else fall back to template step owner
-      const inStepOwners = (f.stepOwners || []).some((o, i) => (o || _tmplSteps[i]?.owner || '') === name);
+      const inStepOwners = _tmplSteps.some((s, i) => ((f.stepOwners || [])[i] || s.owner || '') === name);
       const inApprovalRoutees = (f.approvalRoutees || []).includes(name);
       const inSubAssignees = Object.values(f.subAssignees || {}).includes(name);
       return inStepOwners || inApprovalRoutees || inSubAssignees;
     }
     if (r === 'approver') {
-      // Approvers see their pending approval flows AND any completed flows they approved
       if (getFlowStatus(f) === 'done') return (f.approvalHistory || []).some(h => h.approvedBy === name);
       const tmplSteps = getTemplateSteps(f.templateId);
       const curStep = tmplSteps[f.currentStep] || {};
-      const isApprovalStep = curStep.isApproval === true ||
-        curStep.name?.toLowerCase().includes('approval') ||
-        curStep.name?.toLowerCase().includes('approve');
+      const isApprovalStep = curStep.isApproval === true || /approv/i.test(curStep.name || '');
       return isApprovalStep && (f.approvalRoutees || []).includes(name);
     }
     return false;
   });
+  document.getElementById('badge-today').textContent = allVisible.length;
 
   const activeFlows    = allVisible.filter(f => getFlowStatus(f) !== 'done');
   const completedFlows = allVisible.filter(f => getFlowStatus(f) === 'done');
@@ -4815,7 +4867,7 @@ async function openSpawnModal(preselect) {
   updateSpawnMeta();
   sel.onchange = updateSpawnMeta;
 
-  const dateStr = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+  const dateStr = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', timeZone:IST_TZ });
   const tmpl = FLOW_TEMPLATES.find(t => t.id === sel.value) || FLOW_TEMPLATES[0];
   document.getElementById('spawn-flow-name').value = `${tmpl.name} — ${dateStr}`;
 
@@ -4836,7 +4888,7 @@ function updateSpawnMeta() {
   // Update default flow name
   const nameInput = document.getElementById('spawn-flow-name');
   if (nameInput && (!nameInput.value || nameInput.dataset.autoName === 'true')) {
-    const dateStr = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+    const dateStr = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', timeZone:IST_TZ });
     nameInput.value = `${tmpl.name} — ${dateStr}`;
     nameInput.dataset.autoName = 'true';
   }
@@ -4994,7 +5046,7 @@ function openNudgeModal(flowId, stepIdx) {
   const comments = ((f.stepComments||{})[stepIdx] || []);
   document.getElementById('nudge-thread').innerHTML = comments.length
     ? `<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;">Previous notes</div>` +
-      comments.map(c => `<div class="comment-item"><span style="font-weight:600;">${c.by}</span> <span style="font-size:10px;color:var(--ink3);">${new Date(c.at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span><div style="margin-top:2px;">${c.text}</div></div>`).join('')
+      comments.map(c => `<div class="comment-item"><span style="font-weight:600;">${c.by}</span> <span style="font-size:10px;color:var(--ink3);">${new Date(c.at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:IST_TZ})}</span><div style="margin-top:2px;">${c.text}</div></div>`).join('')
     : '';
   document.getElementById('nudge-modal').classList.add('open');
   setTimeout(() => document.getElementById('nudge-text').focus(), 100);
@@ -5157,6 +5209,7 @@ function flowCardHTML(f) {
   const subAssigneeForCur = (f.subAssignees || {})[curStepIdx] || null;
   const isStepOwner = loggedInMember && (
     (curStep.owner && curStep.owner === loggedInMember.name) ||
+    (f.stepOwners && f.stepOwners[curStepIdx] && f.stepOwners[curStepIdx] === loggedInMember.name) ||
     (subAssigneeForCur && subAssigneeForCur === loggedInMember.name)
   );
   const isApprovalStep = curStep.isApproval === true ||
@@ -5173,7 +5226,7 @@ function flowCardHTML(f) {
   const canApprove = isRoutedApprover;
   // Who can "Send for Approval": only the approval step's designated owner (the reviewer), or any manager/head.
   // The previous step's owner (content creator) should not route — they don't decide which approver is relevant.
-  const canRoute = isApprovalStep && !canApprove && (isStepOwner || isManager);
+  const canRoute = !canApprove && (isStepOwner || isManager);
   // Handoff: step owner can hand off to the next step's assignee before completing current step
   const canHandoff = isStepOwner && !isApprovalStep && !isApprovalPending && status !== 'done';
   const subtasksDone = areSubtasksDone(f, curStepIdx);
@@ -5395,8 +5448,16 @@ function flowCardHTML(f) {
       <div class="approval-btns">
         ${canRoute ? `<button class="btn btn-sm" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);" onclick="openApprovalRoutingModal('${f.id}')">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}</button>` : ''}
         ${canApprove ? `
-        <button class="btn-approve" onclick="approveStep('${f.id}')">✓ Approve</button>
+        <button class="btn-approve" onclick="openApproveModal('${f.id}')">✓ Approve</button>
         <button class="btn-reject" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>` : (!canRoute ? `<span style="font-size:11px;color:var(--ink3);">Awaiting decision from approver</span>` : '')}
+      </div>
+    </div>` : ''}
+    ${!isApprovalStep && canRoute && status !== 'done' ? `
+    <div class="approval-actions" style="border-color:rgba(124,58,237,0.2);">
+      <div class="approval-title" style="color:var(--purple);">📋 Request Approval for this Step</div>
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:8px;">${(f.approvalRoutees && f.approvalRoutees.length) ? `Currently pending approval from: ${f.approvalRoutees.join(', ')}` : 'Optionally get this step approved before completing.'}</div>
+      <div class="approval-btns">
+        <button class="btn btn-sm" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);" onclick="openApprovalRoutingModal('${f.id}')">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Request Approval'}</button>
       </div>
     </div>` : ''}
     <div class="flow-footer">
@@ -5411,7 +5472,7 @@ function flowCardHTML(f) {
       ${status !== 'done' && isApprovalPending ? `
         <div class="approval-pending-banner">⏳ Awaiting approval from <strong>${(f.approvalRoutees||[]).join(', ')}</strong></div>
         ${canApprove ? `
-          <button class="btn btn-sm" style="background:#7C3AED;color:white;border-color:#7C3AED;font-weight:700;padding:8px 20px;font-size:13px;" onclick="approveStep('${f.id}')">✓ Approve</button>
+          <button class="btn btn-sm" style="background:#7C3AED;color:white;border-color:#7C3AED;font-weight:700;padding:8px 20px;font-size:13px;" onclick="openApproveModal('${f.id}')">✓ Approve</button>
           <button class="btn btn-sm btn-ghost" style="border-color:#DC2626;color:#DC2626;" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>
         ` : ''}
         <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
@@ -5424,11 +5485,12 @@ function flowCardHTML(f) {
           ✓ Complete &amp; Hand Off
         </button>` : `<span style="font-size:11px;color:var(--ink3);">⏳ Waiting for <strong>${subAssignee||curStep.owner||'owner'}</strong></span>`}
         ${isManager && (subAssignee||curStep.owner) ? `<button class="btn btn-sm btn-ghost" style="border-color:var(--amber);color:#b45309;" onclick="openNudgeModal('${f.id}',${curStepIdx})">📨 Nudge</button>` : ''}
+        ${canRoute ? `<button class="btn btn-sm btn-ghost" style="border-color:#7C3AED;color:#7C3AED;" onclick="openApprovalRoutingModal('${f.id}')">📋 Req. Approval</button>` : ''}
         <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
       ` : status !== 'done' && isApprovalStep ? `
         ${canRoute ? `<button class="btn btn-sm btn-ghost" style="border-color:#7C3AED;color:#7C3AED;" onclick="openApprovalRoutingModal('${f.id}')">↗ Send for Approval</button>` : ''}
         ${canApprove ? `
-          <button class="btn btn-sm" style="background:#7C3AED;color:white;border-color:#7C3AED;font-weight:700;padding:8px 20px;font-size:13px;" onclick="approveStep('${f.id}')">✓ Approve</button>
+          <button class="btn btn-sm" style="background:#7C3AED;color:white;border-color:#7C3AED;font-weight:700;padding:8px 20px;font-size:13px;" onclick="openApproveModal('${f.id}')">✓ Approve</button>
           <button class="btn btn-sm btn-ghost" style="border-color:#DC2626;color:#DC2626;" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>
         ` : ''}
         ${isManager ? `<button class="btn btn-sm btn-ghost" style="border-color:var(--amber);color:#b45309;" onclick="openNudgeModal('${f.id}',${curStepIdx})">📨 Nudge</button>` : ''}
@@ -5641,7 +5703,7 @@ function openFlowStep(flowId, stepIdx) {
     step.name?.toLowerCase().includes('approve');
   // Approval step owner can route; routed approvers can approve/reject
   const _isRoutedApprover = loggedInMember && _isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
-  const _canRouteThis = _isApprovalStep && !_isRoutedApprover && (isThisStepMine || isManagerOrHead) && canEdit;
+  const _canRouteThis = !_isRoutedApprover && (isThisStepMine || isManagerOrHead) && canEdit;
   const _canApproveThis = _isRoutedApprover;
   // Mark as Done only for non-approval active steps
   const canMarkThisStepDone = isThisStepMine && canEdit && !_isApprovalStep;
@@ -5728,12 +5790,13 @@ function openFlowStep(flowId, stepIdx) {
       <div class="dp-label">Approval History</div>
       ${f.approvalHistory.filter(h => h.stepIdx === stepIdx).map(h => {
         const d = new Date(h.at);
-        const timeStr = d.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+        const timeStr = d.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:IST_TZ});
         return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
-          <span style="font-size:16px;margin-top:1px;">✅</span>
+          <span style="font-size:16px;margin-top:1px;">${h.comment ? '✅⚠️' : '✅'}</span>
           <div style="flex:1;">
             <div style="font-size:12px;font-weight:600;">Approved by <span style="color:var(--green);">${h.approvedBy}</span></div>
             <div style="font-size:11px;color:var(--ink3);">Submitted by ${h.submittedBy||'Unknown'} · ${timeStr}</div>
+            ${h.comment ? `<div style="font-size:11px;margin-top:4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:5px;padding:3px 7px;color:#b45309;"><strong>Condition:</strong> ${_esc(h.comment)}</div>` : ''}
           </div>
         </div>`;
       }).join('')}
@@ -5811,18 +5874,19 @@ function openFlowStep(flowId, stepIdx) {
     })() : ''}
     <div class="divider" style="margin:10px 0 8px;"></div>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      ${_isApprovalStep ? `
-        ${_canRouteThis ? `
+      ${_canRouteThis ? `
         <button class="btn" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);font-weight:600;"
           onclick="openApprovalRoutingModal('${f.id}');closeSide();">
-          📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}
-        </button>` : _canApproveThis ? `
-        <button class="btn-approve" onclick="approveStep('${f.id}');closeSide();">✓ Approve</button>
-        <button class="btn-reject" onclick="openRejectModal('${f.id}',${stepIdx});closeSide();">✗ Reject</button>` : `
+          📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : (_isApprovalStep ? 'Send for Approval' : 'Request Approval')}
+        </button>` : ''}
+      ${_canApproveThis ? `
+        <button class="btn-approve" onclick="openApproveModal('${f.id}');closeSide();">✓ Approve</button>
+        <button class="btn-reject" onclick="openRejectModal('${f.id}',${stepIdx});closeSide();">✗ Reject</button>` :
+        (_isApprovalStep && !_canRouteThis ? `
         <div style="font-size:12px;color:var(--ink3);padding:8px 0;">
-          ⏳ Waiting for <strong>${_snapOwner || 'reviewer'}</strong> to review and send for approval
-        </div>`}
-      ` : canMarkThisStepDone ? `
+          ⏳ Waiting for <strong>${_snapOwner || 'reviewer'}</strong> to send for approval
+        </div>` : '')}
+      ${!_isApprovalStep ? (canMarkThisStepDone ? `
       <button class="btn btn-coral"
         onclick="markStepDone('${f.id}');closeSide();"
         ${!allDone?'disabled style="opacity:0.4;cursor:not-allowed;"':''}>
@@ -5830,7 +5894,7 @@ function openFlowStep(flowId, stepIdx) {
       </button>` : st === 'active' ? `
       <div style="font-size:12px;color:var(--ink3);padding:8px 0;">
         ⏳ Waiting for ${_subAssigneeForStep || _snapOwner || 'owner'} to complete this step
-      </div>` : ''}
+      </div>` : '') : ''}
       <button class="btn" onclick="go('log')">✏️ Log Activity</button>
     </div>` : ''}
   `;
@@ -6029,7 +6093,7 @@ function openTask(id){
   const icons = {todo:'&#128203;',inprogress:'&#9654;',review:'&#128065;',done:'&#9989;',blocked:'&#128308;'};
   const historyHTML = history.length ? history.slice().reverse().map(h => {
     const d = new Date(h.at);
-    const timeStr = d.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const timeStr = d.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:IST_TZ});
     return `<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
       <span style="font-size:13px;margin-top:1px;">${icons[h.to]||'&#8226;'}</span>
       <div style="flex:1;">
@@ -6357,7 +6421,7 @@ function buildPicker(token) {
         attachDriveFile(flowId, stepIdx, {
           id: doc.id, name: doc.name, url: doc.url,
           mimeType: doc.mimeType, addedBy: loggedInMember?.name || 'Unknown',
-          addedAt: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
+          addedAt: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ})
         });
       }
     })
@@ -6744,8 +6808,9 @@ function mvDownload() {
 
 function mvApprove() {
   if (!_mv.flowId) return;
+  const fid = _mv.flowId;
   closeMv();
-  approveStep(_mv.flowId);
+  openApproveModal(fid);
 }
 
 function mvReject() {
@@ -6948,7 +7013,7 @@ async function submitLog() {
 
   const entry = {
     member, type, ref, step, status, timeH, note, platforms,
-    when: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+    when: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ}),
     attachment: attach,
     loggedAt: Date.now(),
     tatMs: timeH * 3600000, // approximate TAT from time spent
@@ -7387,7 +7452,7 @@ async function saveTaskModal(){
       const storageRef = firebase.storage().ref(`task_attachments/${taskId}/${file.name}`);
       await storageRef.put(file);
       const url = await storageRef.getDownloadURL();
-      newAttachment = { name: file.name, url, mimeType: file.type, addedBy: loggedInMember?.name || '', addedAt: new Date().toLocaleDateString('en-IN') };
+      newAttachment = { name: file.name, url, mimeType: file.type, addedBy: loggedInMember?.name || '', addedAt: new Date().toLocaleDateString('en-IN', {timeZone:IST_TZ}) };
     } catch(e) { console.warn('Attachment upload failed:', e); }
   }
 
@@ -7496,7 +7561,7 @@ function renderAnalytics(){
   // ── Member Throughput (last 7 days from logs) ──
   const days7 = Array.from({length:7},(_,i)=>{
     const d=new Date(); d.setDate(d.getDate()-6+i);
-    return { label:d.toLocaleDateString('en-IN',{weekday:'short'}), key:d.toISOString().split('T')[0] };
+    return { label:d.toLocaleDateString('en-IN',{weekday:'short',timeZone:IST_TZ}), key:d.toISOString().split('T')[0] };
   });
   const logsByDay = {};
   LOGS.forEach(l => {
@@ -7667,7 +7732,7 @@ function renderCalendar() {
   const base = new Date(today);
   base.setDate(base.getDate() - base.getDay() + 1 + calWeekOffset * 7);
   const days = Array.from({length:7},(_,i)=>{ const d=new Date(base); d.setDate(base.getDate()+i); return d; });
-  const weekLabel = `${days[0].toLocaleDateString('en-IN',{day:'numeric',month:'short'})} – ${days[6].toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}`;
+  const weekLabel = `${days[0].toLocaleDateString('en-IN',{day:'numeric',month:'short',timeZone:IST_TZ})} – ${days[6].toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:IST_TZ})}`;
   document.getElementById('cal-week-label').textContent = weekLabel;
 
   const CAT_ICONS = {health:'🏥',life:'💚',term:'🛡',motor:'🚗',travel:'✈️',misc:'📦'};
@@ -7705,7 +7770,7 @@ function renderCalendar() {
 
 function renderCalMonth(today, todayStr) {
   const base = new Date(today.getFullYear(), today.getMonth() + calMonthOffset, 1);
-  const monthLabel = base.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const monthLabel = base.toLocaleDateString('en-IN',{month:'long',year:'numeric',timeZone:IST_TZ});
   document.getElementById('cal-week-label').textContent = monthLabel;
 
   const CAT_ICONS = {health:'🏥',life:'💚',term:'🛡',motor:'🚗',travel:'✈️',misc:'📦'};
@@ -8205,7 +8270,7 @@ async function sendEmailNotification(toEmail, toName, subject, htmlBody) {
     AttachmentFilePath: '',
     CCEmail:            '',
     ReplyEmailId:       '',
-    FromDisplayName:    'SociaDesk',
+    FromDisplayName:    'SocialDesk',
     TemplateId:         0,
     EmailType:          1,
     PurposeId:          0,
@@ -8262,12 +8327,9 @@ function _emailCard({ icon, iconBg, accentColor, label, title, rows, ctaHref, ct
   return `
 <div style="max-width:560px;margin:0 auto;font-family:Arial,sans-serif;">
   <!-- Header bar -->
-  <div style="background:${accentColor||'#E55934'};border-radius:8px 8px 0 0;padding:20px 28px;display:flex;align-items:center;gap:14px;">
-    <div style="width:44px;height:44px;border-radius:50%;background:${iconBg||'rgba(255,255,255,0.2)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${icon||'📬'}</div>
-    <div>
-      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:2px;">${_esc(label||'SociaDesk')}</div>
-      <div style="font-size:18px;font-weight:700;color:#fff;line-height:1.25;">${_esc(title)}</div>
-    </div>
+  <div style="background:${accentColor||'#E55934'};border-radius:8px 8px 0 0;padding:22px 28px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:4px;">${_esc(label||'SociaDesk')}</div>
+    <div style="font-size:20px;font-weight:700;color:#fff;line-height:1.25;">${_esc(title)}</div>
   </div>
   <!-- Body card -->
   <div style="background:#fff;border:1px solid #E5E7EB;border-top:none;border-radius:0 0 8px 8px;padding:24px 28px;">
@@ -8302,6 +8364,57 @@ function sendStepAssignedEmail(toName, flowTitle, stepName) {
     ctaHref: 'https://sociadesk.oneinsure.com',
     ctaText: 'Open SociaDesk →',
     note: `You received this because <strong>${_esc(assigner)}</strong> handed off this step to you in the <strong>${_esc(flowTitle)}</strong> flow.`,
+  });
+  sendEmailNotification(toEmail, toName, subject, htmlBody);
+}
+
+// ── Approval result emails ─────────────────────────────
+function sendApprovedEmail(toName, approverName, flowTitle, stepName, approvalNote = '') {
+  const toEmail = getMemberEmail(toName);
+  if (!toEmail) return;
+  const isConditional = !!approvalNote;
+  const subject = isConditional
+    ? `[SociaDesk] Approved with conditions: ${stepName} — ${flowTitle}`
+    : `[SociaDesk] Approved: ${stepName} — ${flowTitle}`;
+  const rows = [
+    ['Flow',        flowTitle],
+    ['Approved by', approverName],
+  ];
+  if (isConditional) rows.push(['Conditions', approvalNote]);
+  rows.push(['Status', isConditional ? 'Approved — please review the conditions above before proceeding.' : 'Your step has been approved and the flow has moved forward.']);
+  const htmlBody = _emailCard({
+    icon: isConditional ? '✅⚠️' : '✅',
+    iconBg: 'rgba(255,255,255,0.2)',
+    accentColor: isConditional ? '#F59E0B' : '#10B981',
+    label: isConditional ? 'Conditionally Approved' : 'Content Approved',
+    title: stepName,
+    rows,
+    ctaHref: 'https://sociadesk.oneinsure.com',
+    ctaText: 'Open SociaDesk →',
+    note: isConditional
+      ? `<strong>${_esc(approverName)}</strong> approved your content with conditions. Please ensure you address them before proceeding.`
+      : `<strong>${_esc(approverName)}</strong> approved your content for the <strong>${_esc(flowTitle)}</strong> flow.`,
+  });
+  sendEmailNotification(toEmail, toName, subject, htmlBody);
+}
+
+function sendRejectedEmail(toName, approverName, flowTitle, stepName, reason) {
+  const toEmail = getMemberEmail(toName);
+  if (!toEmail) return;
+  const subject = `[SociaDesk] Revision needed: ${stepName} — ${flowTitle}`;
+  const htmlBody = _emailCard({
+    icon: '↩', iconBg: 'rgba(255,255,255,0.2)', accentColor: '#DC2626',
+    label: 'Content Needs Revision',
+    title: stepName,
+    rows: [
+      ['Flow',       flowTitle],
+      ['Rejected by', approverName],
+      ['Reason',     reason || 'No reason provided'],
+      ['Action',     'Please revise and resubmit the content.'],
+    ],
+    ctaHref: 'https://sociadesk.oneinsure.com',
+    ctaText: 'Open SociaDesk →',
+    note: `<strong>${_esc(approverName)}</strong> rejected your content for the <strong>${_esc(flowTitle)}</strong> flow and sent it back for revisions.`,
   });
   sendEmailNotification(toEmail, toName, subject, htmlBody);
 }
@@ -9395,8 +9508,8 @@ function renderDeviationReport() {
 
   updateDeviationBadge();
 
-  const fmtDate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
-  const fmtTs = ts => ts ? new Date(ts).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
+  const fmtDate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', timeZone:IST_TZ }) : '—';
+  const fmtTs = ts => ts ? new Date(ts).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', timeZone:IST_TZ }) : '—';
 
   panel.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
@@ -9524,8 +9637,8 @@ function renderAudit() {
   // Group by date
   let lastDate = '';
   document.getElementById('audit-list').innerHTML = list.map(e => {
-    const dateStr = e.ts ? new Date(e.ts).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'}) : 'Unknown date';
-    const timeStr = e.ts ? new Date(e.ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '';
+    const dateStr = e.ts ? new Date(e.ts).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',timeZone:IST_TZ}) : 'Unknown date';
+    const timeStr = e.ts ? new Date(e.ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ}) : '';
     const ic = AUDIT_ICONS[e.type] || { icon:'●', bg:'#F1F3F5' };
     const dateSep = dateStr !== lastDate ? `<div class="audit-date-sep">${dateStr}</div>` : '';
     lastDate = dateStr;
@@ -9540,9 +9653,10 @@ function renderAudit() {
     let approvalExtra = '';
     if (e.type === 'approval_routed') {
       const approvers = (e.meta?.approvers || '').split(',').map(s => s.trim()).filter(Boolean);
+      const sentBy = e.meta?.sentBy || e.actor;
       if (approvers.length) {
         approvalExtra = `<div class="audit-approver-chips">
-          <span style="font-size:11px;color:var(--ink3);white-space:nowrap;">Sent to:</span>
+          <span style="font-size:11px;color:var(--ink3);white-space:nowrap;">Sent by <strong>${sentBy}</strong> to:</span>
           ${approvers.map(name => `<span class="audit-approver-chip">
             <div class="av" style="width:16px;height:16px;font-size:8px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--purple,#7C3AED);color:white;">${ini(name)}</div>
             ${name}
@@ -9552,15 +9666,26 @@ function renderAudit() {
     }
     if (e.type === 'approved') {
       const submittedBy = e.meta?.submittedBy;
-      if (submittedBy) {
-        approvalExtra = `<div style="margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span class="audit-submitted-by">
+      const approvedBy = e.meta?.approvedBy || e.actor;
+      const approvalNote = e.meta?.comment;
+      approvalExtra = `<div style="margin-top:5px;display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          ${submittedBy ? `<span class="audit-submitted-by">
             <div class="av" style="width:14px;height:14px;font-size:7px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--navy);color:white;">${ini(submittedBy)}</div>
-            Submitted by: ${submittedBy}
-          </span>
-          <span style="font-size:10px;color:var(--ink3);">→ approved by <strong>${e.actor}</strong></span>
-        </div>`;
-      }
+            Submitted by: <strong>${submittedBy}</strong>
+          </span>` : ''}
+          <span style="font-size:10px;color:var(--ink3);">${approvalNote ? '✅⚠️' : '✅'} Approved by <strong style="color:var(--green);">${approvedBy}</strong></span>
+        </div>
+        ${approvalNote ? `<div style="font-size:10px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:4px 8px;color:#b45309;"><strong>Conditions:</strong> ${_esc(approvalNote)}</div>` : ''}
+      </div>`;
+    }
+    if (e.type === 'step_rejected') {
+      const approvedBy = e.meta?.approvedBy || e.actor;
+      const reason = e.meta?.reason;
+      approvalExtra = `<div style="margin-top:5px;display:flex;flex-direction:column;gap:3px;">
+        <span style="font-size:10px;color:var(--ink3);">↩ Rejected by <strong style="color:var(--red);">${approvedBy}</strong></span>
+        ${reason ? `<span style="font-size:10px;color:var(--ink3);">Reason: <em>${reason}</em></span>` : ''}
+      </div>`;
     }
 
     return `${dateSep}<div class="audit-entry">
@@ -9587,12 +9712,12 @@ function renderAudit() {
 function fmtDT(ts) {
   if (!ts) return '';
   const d = new Date(ts);
-  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })
-    + ' ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric', timeZone:IST_TZ })
+    + ' ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', timeZone:IST_TZ });
 }
 function fmtDate(ts) {
   if (!ts) return '';
-  return new Date(ts).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  return new Date(ts).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric', timeZone:IST_TZ });
 }
 
 function xlsxDownload(workbook, filename) {
@@ -9790,7 +9915,7 @@ async function subAssignStep(flowId, stepIdx, assignee) {
 // ═══════════════════════════════════════════
 // APPROVAL / REJECTION
 // ═══════════════════════════════════════════
-async function approveStep(flowId) {
+async function approveStep(flowId, approvalComment = '') {
   const f = TODAY_FLOWS.find(x => x.id === flowId);
   if (!f) return;
   const tmplSteps = getTemplateSteps(f.templateId);
@@ -9806,6 +9931,8 @@ async function approveStep(flowId) {
   if (!f.stepTimings) f.stepTimings = tmplSteps.map(() => ({ startedAt: null, completedAt: null }));
   f.stepTimings[f.currentStep].completedAt = Date.now();
   f.stepStatuses[f.currentStep] = 'done';
+  // Capture submitter BEFORE incrementing currentStep
+  const stepOwner = (f.stepOwners && f.stepOwners[f.currentStep]) || curStep.owner || null;
   if (f.currentStep < tmplSteps.length - 1) {
     f.currentStep++;
     f.stepStatuses[f.currentStep] = 'active';
@@ -9813,8 +9940,6 @@ async function approveStep(flowId) {
   } else {
     f.completedAt = Date.now();
   }
-  // Capture who submitted this step before clearing routees
-  const stepOwner = (f.stepOwners && f.stepOwners[f.currentStep]) || curStep.owner || null;
   // Store approval record on the flow for history
   if (!Array.isArray(f.approvalHistory)) f.approvalHistory = [];
   f.approvalHistory.push({
@@ -9823,16 +9948,44 @@ async function approveStep(flowId) {
     submittedBy: stepOwner,
     approvedBy: loggedInMember?.name || 'Unknown',
     at: Date.now(),
+    comment: approvalComment || '',
   });
   // Clear routees for this step after approval
   delete f.approvalRoutees;
   await fbSaveFlows();
   renderToday();
+  const _approverName = loggedInMember?.name || 'Unknown';
   auditLog('approved',
-    `${loggedInMember?.name} approved "${stepName}" on "${f.title}"${stepOwner ? ` — content submitted by ${stepOwner}` : ''}`,
-    { flow: f.title, step: stepName, approvedBy: loggedInMember?.name || 'Unknown', submittedBy: stepOwner || 'Unknown' }
+    `${_approverName} approved "${stepName}" on "${f.title}"${stepOwner ? ` — submitted by ${stepOwner}` : ''}${approvalComment ? ` — Note: ${approvalComment}` : ''}`,
+    { flow: f.title, step: stepName, approvedBy: _approverName, submittedBy: stepOwner || 'Unknown', comment: approvalComment || '' }
   );
-  toast('Step approved and pushed forward!', 'ok');
+  if (stepOwner) sendApprovedEmail(stepOwner, _approverName, f.title, stepName, approvalComment);
+  toast(approvalComment ? 'Approved with conditions noted!' : 'Step approved and pushed forward!', 'ok');
+}
+
+let _approveTarget = null;
+function openApproveModal(flowId) {
+  const f = TODAY_FLOWS.find(x => x.id === flowId);
+  if (!f) return;
+  _approveTarget = flowId;
+  const tmplSteps = getTemplateSteps(f.templateId);
+  const stepName = tmplSteps[f.currentStep]?.name || 'this step';
+  document.getElementById('approve-flow-title').innerHTML =
+    `Flow: <strong>${f.title}</strong> &nbsp;·&nbsp; Approving: <strong>${stepName}</strong>`;
+  document.getElementById('approve-comment').value = '';
+  document.getElementById('approve-modal').classList.add('open');
+  setTimeout(() => document.getElementById('approve-comment').focus(), 80);
+}
+function closeApproveModal() {
+  document.getElementById('approve-modal').classList.remove('open');
+  _approveTarget = null;
+}
+async function confirmApprove() {
+  if (!_approveTarget) return;
+  const comment = document.getElementById('approve-comment').value.trim();
+  const fid = _approveTarget;
+  closeApproveModal();
+  await approveStep(fid, comment);
 }
 
 let _rejectTarget = null;
@@ -9890,7 +10043,10 @@ async function confirmReject() {
   await fbSaveFlows();
   closeRejectModal();
   renderToday();
-  auditLog('step_rejected', `Rejected "${fromStepName}" on "${f.title}" — sent back to "${toStepName}": ${comment}`, { flow: f.title, from: fromStepName, to: toStepName, reason: comment });
+  auditLog('step_rejected', `Rejected "${fromStepName}" on "${f.title}" — sent back to "${toStepName}": ${comment}`, { flow: f.title, from: fromStepName, to: toStepName, reason: comment, approvedBy: loggedInMember?.name || 'Unknown' });
+  // Email the person whose content was rejected (owner of the step being rejected)
+  const rejectedSubmitter = (f.stepOwners && f.stepOwners[stepIdx]) || tmplSteps[stepIdx]?.owner || null;
+  if (rejectedSubmitter) sendRejectedEmail(rejectedSubmitter, loggedInMember?.name || 'Approver', f.title, fromStepName, comment);
   toast(`Sent back to "${toStepName}" — ${tmplSteps[targetIdx]?.owner || 'owner'} notified`, 'ok');
   pushNotif({
     title: `↩ Flow sent back — ${toStepName}`,
@@ -9905,10 +10061,12 @@ async function confirmReject() {
 // ═══════════════════════════════════════════
 const APPROVERS = [
   { name:'Akshay',   av:'av-c', email:'akshay.raje@oneinsure.com' },
+  { name:'Anamika',  av:'av-b', email:'anamika.patil@oneinsure.com' },
   { name:'Rochelle', av:'av-f', email:'rochelle.mascarenhas@oneinsure.com' },
   { name:'Anirudh',  av:'av-g', email:'anirudh.baardwaj@oneinsure.com' },
   { name:'Susant',   av:'av-h', email:'susant.padhi@oneinsure.com' },
   { name:'Nasita',   av:'av-i', email:'nasita.londhe@oneinsure.com' },
+  { name:'Sejal',    av:'av-e', email:'sejal.sharma@oneinsure.money' },
 ];
 
 let _approvalRoutingTarget = null; // { flowId }
@@ -10146,12 +10304,12 @@ let DM_LAST = {}; // roomId → { sender, text, loggedAt } — last message prev
 
 function fmtChatTime(ts) {
   if (!ts) return '';
-  const d = new Date(ts), now = new Date();
-  const diffDays = Math.floor((now - d) / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const d = new Date(ts);
+  const diffDays = -_istDayDiff(d); // negative because we want "days ago"
+  if (diffDays === 0) return d.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', timeZone: IST_TZ});
   if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return d.toLocaleDateString([], {weekday:'short'});
-  return d.toLocaleDateString([], {day:'numeric', month:'short'});
+  if (diffDays < 7)  return d.toLocaleDateString('en-IN', {weekday:'short', timeZone: IST_TZ});
+  return d.toLocaleDateString('en-IN', {day:'numeric', month:'short', timeZone: IST_TZ});
 }
 
 // Relative timestamp for message bubbles (short form with full tooltip)
@@ -10164,14 +10322,14 @@ function relChatTime(msg) {
   if (diff < 60000) return 'just now';
   if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
   const t = msg.sentAt?.toDate ? msg.sentAt.toDate() : new Date(ts);
-  return t.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+  return t.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', timeZone:IST_TZ});
 }
 function fullChatDateTime(msg) {
   if (msg.sentAt?.toDate) {
     const d = msg.sentAt.toDate();
-    return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:IST_TZ}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ});
   }
-  if (msg.loggedAt) return new Date(msg.loggedAt).toLocaleString('en-IN');
+  if (msg.loggedAt) return new Date(msg.loggedAt).toLocaleString('en-IN',{timeZone:IST_TZ});
   return '';
 }
 
@@ -10339,7 +10497,7 @@ async function _doForward(msgId, destType, destId) {
     forwardedFrom: msg.sender,
     ...(msg.fileUrl ? { fileUrl: msg.fileUrl, fileName: msg.fileName, fileType: msg.fileType, fileSize: msg.fileSize } : {}),
     reactions: {},
-    time: new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }),
+    time: new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', timeZone:IST_TZ }),
     loggedAt: Date.now(),
     sentAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
@@ -11023,8 +11181,11 @@ function initChat() {
     .orderBy('loggedAt', 'desc')
     .limit(100)
     .onSnapshot(snap => {
-      // desc gives newest-first; reverse so oldest is at top, newest at bottom
-      CHAT_MESSAGES = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
+      // desc gives newest-first from Firestore; reverse then re-sort client-side
+      // so clock skew between devices doesn't leave messages out of order.
+      CHAT_MESSAGES = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .reverse()
+        .sort((a, b) => (a.loggedAt || 0) - (b.loggedAt || 0));
       renderChatMessages();
       // Mark current room as read and update last-message preview
       if (CHAT_MESSAGES.length) {
@@ -11389,7 +11550,7 @@ function renderChatMessages() {
   let unreadInserted = false;
   el.innerHTML = CHAT_MESSAGES.map((msg, idx) => {
     const isMine = msg.sender === loggedInMember?.name;
-    const msgDate = msg.sentAt?.toDate ? msg.sentAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : 'Today';
+    const msgDate = msg.sentAt?.toDate ? msg.sentAt.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short',timeZone:IST_TZ}) : 'Today';
     let dateSep = '';
     if (msgDate !== lastDate) { dateSep = `<div class="chat-date-sep"><span>${msgDate}</span></div>`; lastDate = msgDate; lastSender = ''; }
     const timeStr = relChatTime(msg);
@@ -11500,8 +11661,13 @@ function renderChatMessages() {
   const isFirstRender = el.dataset.initRoom !== roomKey;
   const wasNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 200;
   if (isFirstRender || wasNearBottom) {
-    el.scrollTop = el.scrollHeight;
     el.dataset.initRoom = roomKey;
+    // Defer scroll so browser finishes layout (images/embeds) before measuring scrollHeight
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+      // Second frame handles slow-loading images that expand after first paint
+      requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+    });
   }
   initChatScrollBtn();
 }
@@ -11716,7 +11882,7 @@ async function sendChatMessage() {
     fileUrl, fileName,
     mentions: extractMentions(text),
     reactions: {},
-    time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+    time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ}),
     loggedAt: Date.now(),
     sentAt: firebase.firestore.FieldValue.serverTimestamp(),
     ...(_chatReplyTo ? { replyTo: _chatReplyTo } : {}),
@@ -11810,7 +11976,7 @@ async function sendPoll() {
     pollOptions: opts,
     pollVotes: {},   // option → [voterNames]
     reactions: {},
-    time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+    time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ}),
     loggedAt: Date.now(),
     sentAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
@@ -12029,7 +12195,7 @@ async function scratchUpload(event) {
       mimeType: file.type,
       dataUrl,
       addedBy: loggedInMember?.name||'Unknown',
-      addedAt: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+      addedAt: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ}),
       addedDate: todayKey(),
     });
   }
@@ -12112,7 +12278,7 @@ async function sendDailyDigest() {
   const approvals = TODAY_FLOWS.filter(f=>getFlowStatus(f)==='approval');
   const ideas     = CONTENT_IDEAS.filter(i=>i.date===todayKey());
 
-  const dateStr = new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+  const dateStr = new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',timeZone:IST_TZ});
   const pendingRowsHtml = pending.map(f => {
     const steps = getTemplateSteps(f.templateId);
     const step  = steps[f.currentStep];
@@ -12173,7 +12339,7 @@ async function sendDailyDigest() {
   for (const m of managers) {
     const email = getMemberEmail(m.name);
     if (email) await sendEmailNotification(email, m.name,
-      `[SociaDesk] Morning Digest — ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'})}`,
+      `[SociaDesk] Morning Digest — ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',timeZone:IST_TZ})}`,
       digestHtmlBody);
   }
 }
@@ -12280,6 +12446,12 @@ async function showApproverDeepLinkModal(flowId, approverEmail) {
         <div class="dl-files-title">📁 Attached Files</div>
         ${filesHtml}
       </div>
+      <div id="dl-approve-panel" class="dl-approve-panel">
+        <div style="font-size:14px;font-weight:600;color:#4ade80;margin-bottom:4px;">✅ Confirm Approval</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:2px;">Optionally add a note or condition. Leave blank for unconditional approval.</div>
+        <textarea id="dl-approve-note" placeholder="e.g. Approved subject to adding disclaimer in caption…"></textarea>
+        <button class="dl-btn-submit-approve" onclick="_dlApprove('${flowId}','${approverEmail}','${approverName}')">✅ Confirm Approval</button>
+      </div>
       <div id="dl-reject-panel" class="dl-reject-panel">
         <div style="font-size:14px;font-weight:600;color:#ef4444;margin-bottom:4px;">❌ Reason for Rejection</div>
         <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:8px;">Please explain what needs to be changed (minimum 10 characters).</div>
@@ -12290,7 +12462,7 @@ async function showApproverDeepLinkModal(flowId, approverEmail) {
         </button>
       </div>
       <div class="dl-actions" id="dl-action-btns">
-        <button class="dl-btn-approve" onclick="_dlApprove('${flowId}','${approverEmail}','${approverName}')">✅ Approve</button>
+        <button class="dl-btn-approve" onclick="_dlShowApprovePanel()">✅ Approve</button>
         <button class="dl-btn-reject" onclick="_dlShowRejectPanel()">❌ Reject</button>
       </div>
       <a class="dl-open-full" onclick="_dlOpenFullApp()">Open full app →</a>`;
@@ -12307,6 +12479,11 @@ function _dlShowError(content, msg) {
     <a class="dl-open-full" style="margin-top:24px;" onclick="_dlOpenFullApp()">Open full app →</a>`;
 }
 
+function _dlShowApprovePanel() {
+  document.getElementById('dl-approve-panel').style.display = 'block';
+  document.getElementById('dl-action-btns').style.display = 'none';
+  document.getElementById('dl-approve-note').focus();
+}
 function _dlShowRejectPanel() {
   document.getElementById('dl-reject-panel').style.display = 'block';
   document.getElementById('dl-action-btns').style.display = 'none';
@@ -12323,7 +12500,8 @@ function _dlRejectInput() {
 }
 
 async function _dlApprove(flowId, approverEmail, approverName) {
-  const btn = document.querySelector('.dl-btn-approve');
+  const approvalNote = (document.getElementById('dl-approve-note')?.value || '').trim();
+  const btn = document.querySelector('.dl-btn-submit-approve');
   if (btn) { btn.disabled = true; btn.textContent = 'Approving…'; }
   try {
     const snap  = await db.collection('flows').doc('active').get();
@@ -12334,8 +12512,12 @@ async function _dlApprove(flowId, approverEmail, approverName) {
     if (!(f.approvalRoutees || []).includes(approverName)) throw new Error('Not the routed approver');
     if (!f.stepTimings) f.stepTimings = (f.stepStatuses || []).map(() => ({ startedAt: null, completedAt: null }));
     const cs = parseInt(f.currentStep) || 0;
+    const dlStepName = (f.stepNames || [])[cs] || `Step ${cs + 1}`;
+    const dlSubmitter = (f.stepOwners || [])[cs] || null;
     f.stepTimings[cs] = { ...(f.stepTimings[cs] || {}), completedAt: Date.now() };
     f.stepStatuses[cs] = 'done';
+    if (!Array.isArray(f.approvalHistory)) f.approvalHistory = [];
+    f.approvalHistory.push({ stepIdx: cs, stepName: dlStepName, submittedBy: dlSubmitter, approvedBy: approverName, at: Date.now(), comment: approvalNote });
     if (cs < (f.stepStatuses.length - 1)) {
       f.currentStep = cs + 1;
       f.stepStatuses[cs + 1] = 'active';
@@ -12346,11 +12528,19 @@ async function _dlApprove(flowId, approverEmail, approverName) {
     delete f.approvalRoutees;
     flows[idx] = serializeFlowForFirestore(f);
     await db.collection('flows').doc('active').update({ flows });
+    auditLog('approved',
+      `${approverName} approved "${dlStepName}" on "${f.title}" via email link${dlSubmitter ? ` — submitted by ${dlSubmitter}` : ''}${approvalNote ? ` — Note: ${approvalNote}` : ''}`,
+      { flow: f.title, step: dlStepName, approvedBy: approverName, submittedBy: dlSubmitter || 'Unknown', via: 'email-link', comment: approvalNote }
+    );
+    if (dlSubmitter) sendApprovedEmail(dlSubmitter, approverName, f.title, dlStepName, approvalNote);
+    const confirmMsg = approvalNote
+      ? `You approved <strong style="color:#fff;">${f.title || 'this flow'}</strong> with a note: <em style="color:rgba(255,255,255,0.7);">"${approvalNote}"</em>`
+      : `You approved <strong style="color:#fff;">${f.title || 'this flow'}</strong>. The next step has been notified.`;
     document.getElementById('dl-approver-content').innerHTML =
-      _dlConfirmHTML('✅', 'Approved!', `You approved <strong style="color:#fff;">${f.title || 'this flow'}</strong>. The next step has been notified.`, '', approverEmail);
+      _dlConfirmHTML('✅', 'Approved!', confirmMsg, '', approverEmail);
   } catch(err) {
     console.error(err);
-    if (btn) { btn.disabled = false; btn.textContent = '✅ Approve'; }
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Confirm Approval'; }
     alert('Failed to approve. Please try again or open the full app.');
   }
 }
@@ -12383,9 +12573,16 @@ async function _dlSubmitReject(flowId, approverEmail, approverName) {
       by:       approverName,
       at:       new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     };
+    const dlRejStepName = stepNames[cs] || `Step ${cs + 1}`;
+    const dlRejSubmitter = (f.stepOwners || [])[cs] || null;
     delete f.approvalRoutees;
     flows[idx] = serializeFlowForFirestore(f);
     await db.collection('flows').doc('active').update({ flows });
+    auditLog('step_rejected',
+      `${approverName} rejected "${dlRejStepName}" on "${f.title}" via email link — sent back: ${reason}`,
+      { flow: f.title, from: dlRejStepName, to: stepNames[targetIdx] || `Step ${targetIdx + 1}`, reason, approvedBy: approverName, via: 'email-link' }
+    );
+    if (dlRejSubmitter) sendRejectedEmail(dlRejSubmitter, approverName, f.title, dlRejStepName, reason);
     document.getElementById('dl-approver-content').innerHTML =
       _dlConfirmHTML('❌', 'Rejected', `You rejected <strong style="color:#fff;">${f.title || 'this flow'}</strong> and it has been sent back for revisions.`, `Your reason: <em>${reason}</em>`, approverEmail);
   } catch(err) {
@@ -12727,7 +12924,7 @@ function _tickerClick(e) {
 // ── Core notify function ───────────────────
 function pushNotif({ title, body, icon='📋', type='info', tag=null, silent=false, chatDest=null }) {
   // Add to in-app history
-  const entry = { id: Date.now(), title, body, icon, type, time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}), read: false };
+  const entry = { id: Date.now(), title, body, icon, type, time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ}), read: false };
   NOTIF_HISTORY.unshift(entry);
   if (NOTIF_HISTORY.length > 50) NOTIF_HISTORY = NOTIF_HISTORY.slice(0, 50);
   localStorage.setItem(_notifKey(), JSON.stringify(NOTIF_HISTORY));
@@ -12946,7 +13143,7 @@ async function addTaskComment(id) {
   const comment = {
     by: loggedInMember?.name || 'Unknown',
     text,
-    at: new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+    at: new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', timeZone:IST_TZ })
   };
   if (!Array.isArray(t.comments)) t.comments = [];
   t.comments.push(comment);
@@ -12981,7 +13178,7 @@ async function logTaskActivity(id) {
   t.comments.push({
     by: loggedInMember?.name || 'Unknown',
     text: `⏱ Logged ${hours}h — ${note}`,
-    at: new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+    at: new Date().toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', timeZone:IST_TZ })
   });
   await fbSaveTask(t);
   auditLog('task_log', `${loggedInMember?.name} logged ${hours}h on "${t.title}": ${note}`, { task: t.title, hours, note });
@@ -13062,7 +13259,7 @@ function patchListenersForNotifs() {
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
-document.getElementById('page-date').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('page-date').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:IST_TZ});
 document.getElementById('lf-type').addEventListener('change',populateLogItems);
 loadNotifData();
 load();
@@ -13481,7 +13678,7 @@ async function syncFacebookPageVideos() {
       thumbnail:  '',
       permalink:  v.permalink_url || '',
       timestamp:  v.created_time || '',
-      posted:     v.created_time ? new Date(v.created_time).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—',
+      posted:     v.created_time ? new Date(v.created_time).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', timeZone:IST_TZ }) : '—',
       views:      fbV,  // for sort compat
       igViews:    0,
       fbViews:    fbV,
@@ -13619,7 +13816,7 @@ async function syncMetaAll() {
       const engRate    = reach > 0 ? (total / reach * 100) : 0;
       const caption    = (item.caption || '').split('\n')[0].slice(0, 80) || 'Untitled';
       const posted     = item.timestamp
-        ? new Date(item.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
+        ? new Date(item.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', timeZone:IST_TZ })
         : '—';
       return {
         id: item.id, caption,
@@ -13650,7 +13847,7 @@ async function syncMetaAll() {
 
     localStorage.setItem('sd_ig_all_data',  JSON.stringify(IG_ALL_DATA));
     localStorage.setItem('sd_reels_data',   JSON.stringify(REELS_DATA));
-    const syncedAt = new Date().toLocaleString('en-IN');
+    const syncedAt = new Date().toLocaleString('en-IN', {timeZone:IST_TZ});
     localStorage.setItem('sd_reels_synced', syncedAt);
     if (statusEl) statusEl.textContent = `Last synced: ${syncedAt}` + (acct ? ` · @${acct.username}` : '');
     if (btn) btn.disabled = false;

@@ -1497,10 +1497,12 @@ const EMAIL_TO_MEMBER={'akshay.raje@oneinsure.com':{name:'Akshay',role:'head',av
 const CHAT_ROOMS=[{id:'general',label:'General',icon:'🌐',desc:'Team announcements & chat'},{id:'editing',label:'Editing',icon:'✂️',desc:'Video & image editing'},{id:'ideas',label:'Ideas',icon:'💡',desc:'Brainstorming & concepts'},{id:'compliance',label:'Compliance',icon:'⚖️',desc:'Approvals & compliance'},{id:'tasks',label:'Tasks',icon:'✅',desc:'Task coordination'},{id:'leads',label:'Leads',icon:'🎯',desc:'Leads & pipeline'}];
 const APPROVERS=[
   {name:'Akshay',  av:'av-c',email:'akshay.raje@oneinsure.com'},
+  {name:'Anamika', av:'av-b',email:'anamika.patil@oneinsure.com'},
   {name:'Rochelle',av:'av-f',email:'rochelle.mascarenhas@oneinsure.com'},
   {name:'Anirudh', av:'av-g',email:'anirudh.baardwaj@oneinsure.com'},
   {name:'Susant',  av:'av-h',email:'susant.padhi@oneinsure.com'},
   {name:'Nasita',  av:'av-i',email:'nasita.londhe@oneinsure.com'},
+  {name:'Sejal',   av:'av-e',email:'sejal.sharma@oneinsure.money'},
 ];
 const FLOW_CARD_COLORS = [
   '#6366f1','#0ea5e9','#10b981','#f59e0b',
@@ -1762,10 +1764,18 @@ function escHtml(str) {
 
 function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 
+const IST_TZ = 'Asia/Kolkata';
+function _istDayDiff(date) {
+  const IST_OFFSET_MS = 19800000;
+  const dDay = Math.floor((date.valueOf()   + IST_OFFSET_MS) / 86400000);
+  const nDay = Math.floor((Date.now()       + IST_OFFSET_MS) / 86400000);
+  return dDay - nDay;
+}
+
 function formatDate(str) {
   if (!str) return '';
   const d = new Date(str + 'T00:00:00');
-  return d.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
+  return d.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric', timeZone: IST_TZ});
 }
 
 function formatChatDate(d) {
@@ -1774,7 +1784,7 @@ function formatChatDate(d) {
   const msg   = new Date(d);    msg.setHours(0,0,0,0);
   if (+msg === +today) return 'Today';
   if (+msg === +yd)    return 'Yesterday';
-  return d.toLocaleDateString('en-IN', {day:'numeric', month:'short'});
+  return d.toLocaleDateString('en-IN', {day:'numeric', month:'short', timeZone: IST_TZ});
 }
 
 function platClass(p) {
@@ -1808,14 +1818,22 @@ function showToast(msg, type) {
 /* ════════════════════════════════
    AUTH
 ════════════════════════════════ */
+const _APPROVER_EMAILS_SET = new Set([
+  'akshay.raje@oneinsure.com',
+  'anamika.patil@oneinsure.com',
+  'rochelle.mascarenhas@oneinsure.com',
+  'anirudh.baardwaj@oneinsure.com',
+  'susant.padhi@oneinsure.com',
+  'nasita.londhe@oneinsure.com',
+  'sejal.sharma@oneinsure.money',
+]);
 const _dlParams = (() => {
   try {
     const p = new URLSearchParams(window.location.search);
     const flow     = p.get('flow');
     const approver = decodeURIComponent(p.get('approver') || '').toLowerCase();
     if (flow && approver && EMAIL_TO_MEMBER[approver]) {
-      const m = EMAIL_TO_MEMBER[approver];
-      if (m.role === 'approver' || m.role === 'head') return { flow, approver };
+      if (_APPROVER_EMAILS_SET.has(approver)) return { flow, approver };
     }
   } catch(e) {}
   return null;
@@ -1991,7 +2009,7 @@ function setupGreeting() {
   const name = currentMember ? currentMember.name : '';
   document.getElementById('today-greeting').textContent = `${g}, ${name}!`;
   document.getElementById('today-date-lbl').textContent =
-    new Date().toLocaleDateString('en-IN', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+    new Date().toLocaleDateString('en-IN', {weekday:'long', month:'long', day:'numeric', year:'numeric', timeZone: IST_TZ});
 }
 
 function updateTodayStats() {
@@ -2311,7 +2329,7 @@ function buildFlowCard(f, cardIdx) {
   const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
   const isRoutedApproverTurn = currentMember && (isApprStep || isApprovalPending) && (f.approvalRoutees || []).includes(currentMember.name);
   // Step owner (reviewer) or manager can send for approval — NOT the previous step owner
-  const canRoute = isApprStep && !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHead && statuses[cs] === 'active'));
+  const canRoute = !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHead && statuses[cs] === 'active'));
 
   // Footer
   let footHtml = '';
@@ -2595,7 +2613,7 @@ function openFlowDetail(flowId) {
   const isManagerOrHeadDet = currentMember && (currentMember.role === 'manager' || currentMember.role === 'head');
   const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
   const isRoutedApproverTurn = currentMember && (isApprStep || isApprovalPendingDet) && (f.approvalRoutees || []).includes(currentMember.name);
-  const canRouteDetail = isApprStep && !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHeadDet && statuses[cs] === 'active'));
+  const canRouteDetail = !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHeadDet && statuses[cs] === 'active'));
 
   const pushArea = document.getElementById('fd-push-area');
   if (allDone) {
@@ -3205,7 +3223,7 @@ function _fmtMobChatTime(ts) {
   const ms = typeof ts === 'object' && ts.toMillis ? ts.toMillis() : (ts < 1e12 ? ts * 1000 : ts);
   const d = new Date(ms), now = new Date();
   if (d.toDateString() === now.toDateString())
-    return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+    return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone: IST_TZ});
   const dayDiff = Math.floor((now - d) / 86400000);
   if (dayDiff < 7) return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
   return d.toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit'});
@@ -3325,10 +3343,13 @@ function openChatRoom(roomId, title, type, subtitle) {
 
   chatUnsub = db.collection('chat')
     .where('room','==',roomId)
-    .orderBy('loggedAt','asc')
+    .orderBy('loggedAt','desc')
     .limit(100)
     .onSnapshot(snap => {
-      renderMessages(snap.docs.map(d => ({id: d.id, ...d.data()})));
+      const msgs = snap.docs.map(d => ({id: d.id, ...d.data()}))
+        .reverse()
+        .sort((a,b) => (a.loggedAt||0) - (b.loggedAt||0));
+      renderMessages(msgs);
     }, () => {
       db.collection('chat').where('room','==',roomId).limit(100)
         .onSnapshot(snap => {
@@ -3397,7 +3418,7 @@ function renderMessages(msgs) {
     const isMine  = m.sender === (currentMember ? currentMember.name : '');
     const member  = MEMBERS.find(x => x.name === m.sender) || {av:'av-a'};
     const initial = (m.sender || '?').charAt(0).toUpperCase();
-    const time    = ts.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true});
+    const time    = ts.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true, timeZone: IST_TZ});
     const canDelete = isMine || (currentMember && (currentMember.role==='head'||currentMember.role==='manager'));
     const actionBtns = (isMine || canDelete) ? `<div class="msg-actions">
       ${isMine && m.text ? `<button class="msg-action-btn" onclick="startMobileEditMsg('${m.id}')">✏️ Edit</button>` : ''}
@@ -3414,7 +3435,10 @@ function renderMessages(msgs) {
     </div>`;
   });
   el.innerHTML = html;
-  requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+  requestAnimationFrame(() => {
+    el.scrollTop = el.scrollHeight;
+    requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+  });
 }
 
 let _mobAttachPending = null;
@@ -3457,7 +3481,7 @@ async function sendMessage() {
       room: chatRoomId, sender: currentMember.name,
       text: text || (fileName ? `Shared a file: ${fileName}` : ''),
       fileUrl, fileName,
-      time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+      time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone: IST_TZ}),
       loggedAt: Date.now(),
     };
     await db.collection('chat').add(msg);
