@@ -6912,7 +6912,7 @@ async function mvAddComment() {
             ctaText: 'View in SociaDesk',
           });
           sendEmailNotification(ownerEmail, stepOwner,
-            `💬 ${comment.by} commented on "${file.name}" — ${f.title}`, html);
+            `[SociaDesk] ${comment.by} commented on "${file.name}" — ${f.title}`, html);
         }
       }
       // Also notify approvers if any
@@ -8278,7 +8278,7 @@ async function sendEmailNotification(toEmail, toName, subject, htmlBody) {
     TemplateId:         0,
     EmailType:          1,
     PurposeId:          0,
-    IsHeaderFooter:     1,
+    IsHeaderFooter:     0,
     UserId:             null,
   });
   try {
@@ -8311,7 +8311,7 @@ async function sendTestEmail(btn) {
     icon: '✅', iconBg: 'rgba(255,255,255,0.2)', accentColor: '#10B981',
     label: 'Email Test', title: 'SociaDesk email is working!',
     rows: [['Sent to', toEmail], ['Sent by', toName], ['Time', new Date().toLocaleTimeString()]],
-    ctaHref: 'https://sociadesk.oneinsure.com', ctaText: 'Open SociaDesk →',
+    ctaHref: 'https://sociadesk.oneinsure.com', ctaText: 'Open SociaDesk',
     note: 'This is a test email sent from SociaDesk notification settings.',
   });
   await sendEmailNotification(toEmail, toName, '[SociaDesk] Test email — notifications are active', html);
@@ -8339,7 +8339,7 @@ function _emailCard({ icon, iconBg, accentColor, label, title, rows, ctaHref, ct
   <div style="background:#fff;border:1px solid #E5E7EB;border-top:none;border-radius:0 0 8px 8px;padding:24px 28px;">
     ${rowsHtml ? `<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">${rowsHtml}</table>` : ''}
     ${ctaHref ? `<div style="margin:4px 0 20px;">
-      <a href="${ctaHref}" style="display:inline-block;padding:12px 28px;background:${accentColor||'#E55934'};color:#fff;border-radius:6px;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.02em;">${_esc(ctaText||'Open SociaDesk →')}</a>
+      <a href="${ctaHref}" style="display:inline-block;padding:12px 28px;background:${accentColor||'#E55934'};color:#fff;border-radius:6px;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.02em;">${_esc(ctaText||'Open SociaDesk')}</a>
     </div>` : ''}
     ${note ? `<p style="font-size:12px;color:#9CA3AF;margin:0;line-height:1.6;">${note}</p>` : ''}
   </div>
@@ -8366,7 +8366,7 @@ function sendStepAssignedEmail(toName, flowTitle, stepName) {
       ['Action',      'Your step is now active — please complete it and hand off to the next person.'],
     ],
     ctaHref: 'https://sociadesk.oneinsure.com',
-    ctaText: 'Open SociaDesk →',
+    ctaText: 'Open SociaDesk',
     note: `You received this because <strong>${_esc(assigner)}</strong> handed off this step to you in the <strong>${_esc(flowTitle)}</strong> flow.`,
   });
   sendEmailNotification(toEmail, toName, subject, htmlBody);
@@ -8394,7 +8394,7 @@ function sendApprovedEmail(toName, approverName, flowTitle, stepName, approvalNo
     title: stepName,
     rows,
     ctaHref: 'https://sociadesk.oneinsure.com',
-    ctaText: 'Open SociaDesk →',
+    ctaText: 'Open SociaDesk',
     note: isConditional
       ? `<strong>${_esc(approverName)}</strong> approved your content with conditions. Please ensure you address them before proceeding.`
       : `<strong>${_esc(approverName)}</strong> approved your content for the <strong>${_esc(flowTitle)}</strong> flow.`,
@@ -8417,7 +8417,7 @@ function sendRejectedEmail(toName, approverName, flowTitle, stepName, reason) {
       ['Action',     'Please revise and resubmit the content.'],
     ],
     ctaHref: 'https://sociadesk.oneinsure.com',
-    ctaText: 'Open SociaDesk →',
+    ctaText: 'Open SociaDesk',
     note: `<strong>${_esc(approverName)}</strong> rejected your content for the <strong>${_esc(flowTitle)}</strong> flow and sent it back for revisions.`,
   });
   sendEmailNotification(toEmail, toName, subject, htmlBody);
@@ -8441,7 +8441,7 @@ function sendTaskAssignedEmail(toName, taskTitle, dueDate, priority) {
       ['Status',      'To Do'],
     ],
     ctaHref: 'https://sociadesk.oneinsure.com',
-    ctaText: 'View Task →',
+    ctaText: 'View Task',
     note: `You received this because <strong>${_esc(assigner)}</strong> assigned this task to you in SociaDesk.`,
   });
   sendEmailNotification(toEmail, toName, subject, htmlBody);
@@ -10150,12 +10150,13 @@ async function confirmApprovalRouting() {
     { flow: f.title, step: stepName, approvers: selected.join(', '), sentBy: loggedInMember?.name || 'Unknown', submittedBy: stepOwnerForRouting }
   );
 
-  // Notify each chosen approver
-  selected.forEach(name => notifyMyTurn(stepName, f.title, name));
+  // In-app notification only — email is sent via sendApproverOneClickEmail below
+  const _routeNotif = { title: `Approval needed — ${stepName}`, body: `"${f.title}" is waiting for your review.`, icon: 'approval', type: 'turn', tag: 'turn-' + f.title };
+  selected.forEach(name => { if (name !== loggedInMember?.name) sendFirestoreNotif(name, _routeNotif); });
 
   toast(`Sent to ${selected.join(', ')} for approval!`, 'ok');
   renderToday();
-  // Send one-click approval emails to each chosen approver
+  // Send one-click approval emails to each chosen approver (no duplicate generic email above)
   setTimeout(async () => {
     for (const name of selected) {
       await sendApproverOneClickEmail(flowId, f.currentStep, name);
@@ -11958,7 +11959,7 @@ function notifyMention(name, from, text) {
       title: `${from} mentioned you`,
       rows: [],
       ctaHref: 'https://sociadesk.oneinsure.com',
-      ctaText: 'Reply in SociaDesk →',
+      ctaText: 'Reply in SociaDesk',
       note: `<strong>${_esc(from)}</strong> said: <em style="color:#374151;">&ldquo;${_esc(text)}&rdquo;</em>`,
     }));
 }
@@ -12348,7 +12349,7 @@ async function sendDailyDigest() {
     title: 'Good morning! Here\'s your daily overview.',
     rows: [],
     ctaHref: 'https://sociadesk.oneinsure.com',
-    ctaText: 'Open SociaDesk →',
+    ctaText: 'Open SociaDesk',
     note: 'This digest is sent automatically every morning to managers and heads.',
   }).replace('</table>', `</table>${statsHtml}`);
 
@@ -12390,7 +12391,7 @@ async function sendApproverOneClickEmail(flowId, stepIdx, approverName) {
       ['Action',     'Please review the content and click the button below to approve or open SociaDesk to reject with feedback.'],
     ],
     ctaHref: deepLink,
-    ctaText: 'Review & Approve →',
+    ctaText: 'Review and Approve',
     note: `You received this because <strong>${_esc(requester)}</strong> routed this content approval to you. You can also log in to SociaDesk to reject and provide feedback.`,
   });
   await sendEmailNotification(email, approverName,
