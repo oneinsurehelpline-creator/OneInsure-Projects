@@ -2029,6 +2029,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                 <div id="chat-attach-preview" style="display:none;" class="chat-attach-preview">
                   <span>📎</span>
                   <span class="chat-attach-preview-name" id="chat-attach-name">file.jpg</span>
+                  <span id="chat-attach-count" style="font-size:11px;color:#128C7E;background:rgba(18,140,126,0.12);border-radius:10px;padding:1px 7px;display:none;"></span>
                   <button class="chat-attach-remove" onclick="clearChatAttach()" title="Remove">✕</button>
                 </div>
                 <div class="chat-toolbar">
@@ -2045,7 +2046,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
                     onkeydown="chatKeyHandler(event)"></textarea>
                   <label class="chat-attach-btn" title="Attach file">
                     📎
-                    <input type="file" style="display:none;" onchange="chatAttachFile(event)"/>
+                    <input type="file" multiple style="display:none;" onchange="chatAttachFile(event)"/>
                   </label>
                   <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">➤</button>
                 </div>
@@ -10168,6 +10169,7 @@ async function confirmApprovalRouting() {
 let CHAT_MESSAGES = [];
 let currentRoom = 'general';
 let chatUnsubscribe = null;
+let _chatNeedsScrollToBottom = false; // set true on room switch; cleared after first scroll
 let CHANNEL_MEMBERS = {}; // roomId → [name, name, …]  (loaded from Firestore)
 let chatChannelUnsub = null;
 let CHANNEL_UNREAD = {};  // roomId → unread count
@@ -10544,7 +10546,7 @@ function initChatExtras() {
       e.preventDefault();
       const file = imageItem.getAsFile();
       if (!file) return;
-      _chatAttachPending = file;
+      _chatAttachPending = [file];
       const nameEl = document.getElementById('chat-attach-name');
       const prevEl = document.getElementById('chat-attach-preview');
       if (nameEl) nameEl.textContent = 'pasted-image.png';
@@ -10563,12 +10565,14 @@ function initChatExtras() {
     main.addEventListener('drop', e => {
       e.preventDefault();
       overlay.classList.remove('show');
-      const file = e.dataTransfer.files[0];
-      if (!file) return;
-      _chatAttachPending = file;
+      const droppedFiles = Array.from(e.dataTransfer.files || []);
+      if (!droppedFiles.length) return;
+      _chatAttachPending = droppedFiles;
       const nameEl = document.getElementById('chat-attach-name');
+      const countEl = document.getElementById('chat-attach-count');
       const prevEl = document.getElementById('chat-attach-preview');
-      if (nameEl) nameEl.textContent = file.name;
+      if (nameEl) nameEl.textContent = droppedFiles[0].name + (droppedFiles.length > 1 ? ` +${droppedFiles.length - 1} more` : '');
+      if (countEl) { countEl.textContent = droppedFiles.length + ' files'; countEl.style.display = droppedFiles.length > 1 ? 'inline' : 'none'; }
       if (prevEl) prevEl.style.display = 'flex';
       _updateSendBtn();
     });
@@ -10995,7 +10999,7 @@ function canAccessChannel(roomId) {
 // ═══════════════════════════════════════════
 let _mentionSearch = null; // active @mention query
 let _mentionStart = -1;
-let _chatAttachPending = null;
+let _chatAttachPending = []; // array of File objects
 let _chatReplyTo = null; // { id, sender, text, fileUrl, fileName }
 
 function startChatReply(msgId) {
@@ -11123,22 +11127,28 @@ function renderMessageText(text) {
 }
 
 function clearChatAttach() {
-  _chatAttachPending = null;
+  _chatAttachPending = [];
   const preview = document.getElementById('chat-attach-preview');
   if (preview) preview.style.display = 'none';
   _updateSendBtn();
 }
 
 function chatAttachFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
   event.target.value = '';
-  _chatAttachPending = file;
-  // Show preview bar
-  const preview = document.getElementById('chat-attach-preview');
-  const nameEl = document.getElementById('chat-attach-name');
+  _chatAttachPending = files;
+  const preview  = document.getElementById('chat-attach-preview');
+  const nameEl   = document.getElementById('chat-attach-name');
+  const countEl  = document.getElementById('chat-attach-count');
   if (preview) preview.style.display = 'flex';
-  if (nameEl) nameEl.textContent = file.name;
+  if (files.length === 1) {
+    if (nameEl)  nameEl.textContent  = files[0].name;
+    if (countEl) countEl.style.display = 'none';
+  } else {
+    if (nameEl)  nameEl.textContent  = files[0].name + (files.length > 1 ? ` +${files.length - 1} more` : '');
+    if (countEl) { countEl.textContent = files.length + ' files'; countEl.style.display = 'inline'; }
+  }
   _updateSendBtn();
 }
 
@@ -11174,6 +11184,7 @@ async function preloadDMPreviews() {
 function initChat() {
   if (!fbReady || !db) { renderChatMessages(); return; }
   if (chatUnsubscribe) chatUnsubscribe();
+  _chatNeedsScrollToBottom = true; // always jump to bottom when entering a room
   // Start background unread trackers for all channels + DMs (idempotent)
   initAllChannelTrackers();
   listenForDMInbox();
@@ -11671,16 +11682,14 @@ function renderChatMessages() {
       </div>
     </div>`;
   }).join('');
-  // First open of this room → always scroll to bottom; subsequent re-renders → only if already near bottom
-  const roomKey = currentRoom || currentDM?.roomId || '';
-  const isFirstRender = el.dataset.initRoom !== roomKey;
+  // On room switch, always scroll to bottom once messages arrive.
+  // On live updates (new message), scroll only if already near bottom.
   const wasNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 200;
-  if (isFirstRender || wasNearBottom) {
-    el.dataset.initRoom = roomKey;
-    // Defer scroll so browser finishes layout (images/embeds) before measuring scrollHeight
+  const shouldScroll = _chatNeedsScrollToBottom || wasNearBottom;
+  if (shouldScroll) {
+    _chatNeedsScrollToBottom = false;
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
-      // Second frame handles slow-loading images that expand after first paint
       requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
     });
   }
@@ -11807,135 +11816,119 @@ async function clearChannelMessages() {
 async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const text = (input?.value || '').trim();
-  if (!text && !_chatAttachPending) return;
+  if (!text && !_chatAttachPending.length) return;
   hideMentionDropdown();
   const tagRef = document.getElementById('chat-tag-ref')?.value || '';
   let tagLabel = '';
   if (tagRef.startsWith('flow:')) { const f = TODAY_FLOWS.find(x=>x.id===tagRef.replace('flow:','')); tagLabel = f?`Flow: ${f.title}`:''; }
   else if (tagRef.startsWith('task:')) { const t = TASKS.find(x=>String(x.id)===tagRef.replace('task:','')); tagLabel = t?`Task: ${t.title}`:''; }
 
-  // Handle file attachment — upload to Firebase Storage
-  let fileUrl = '', fileName = '';
-  if (_chatAttachPending) {
-    const uploadIndicator = document.getElementById('chat-uploading');
-    const progressBar = document.getElementById('chat-upload-progress');
-    const progressFill = document.getElementById('chat-upload-fill');
-    const progressPct = document.getElementById('chat-upload-pct');
-    const sendBtn = document.getElementById('chat-send-btn');
-    const fileToUpload = _chatAttachPending;
-    _chatAttachPending = null;
-    clearChatAttach();
+  // Snapshot and clear pending files immediately so UI unfreezes
+  const filesToSend = _chatAttachPending.slice();
+  const replyTo = _chatReplyTo;
+  if (input) { input.value = ''; input.style.height = '44px'; }
+  if (document.getElementById('chat-tag-ref')) document.getElementById('chat-tag-ref').value = '';
+  clearChatAttach();
+  cancelChatReply();
+  _clearTyping();
+  const _draftKey = currentDM?.roomId || currentRoom || '';
+  if (_draftKey) delete _chatDrafts[_draftKey];
+  _updateSendBtn();
 
+  // Helper: upload one file and return { fileUrl, fileName }
+  async function _uploadOneFile(fileToUpload, idx, total) {
+    const uploadIndicator = document.getElementById('chat-uploading');
+    const progressBar     = document.getElementById('chat-upload-progress');
+    const progressFill    = document.getElementById('chat-upload-fill');
+    const sendBtn         = document.getElementById('chat-send-btn');
     try {
-      if (uploadIndicator) { uploadIndicator.style.display = 'flex'; uploadIndicator.querySelector('span').textContent = 'Preparing…'; }
+      const label = total > 1 ? `Uploading ${idx+1}/${total}…` : 'Uploading…';
+      if (uploadIndicator) { uploadIndicator.style.display = 'flex'; uploadIndicator.querySelector('span').textContent = label; }
       if (progressBar) progressBar.style.display = 'block';
       if (sendBtn) sendBtn.disabled = true;
-      fileName = fileToUpload.name;
-
-      // Validate Firebase Storage is available
       if (!firebase.storage) throw new Error('Firebase Storage SDK not loaded');
-      const storage = firebase.storage();
-      const timestamp = Date.now();
-      const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storage   = firebase.storage();
+      const safeName  = fileToUpload.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const uploadRoom = currentDM ? currentDM.roomId : (currentRoom || 'general');
-      const storageRef = storage.ref(`chat-files/${uploadRoom}/${timestamp}_${safeName}`);
-
-      // Compress images before upload (reduces 4MB phone photo → ~200KB)
-      const ext = fileName.split('.').pop().toLowerCase();
-      const isCompressible = ['jpg','jpeg','png','webp','gif'].includes(ext);
-      const fileForUpload = isCompressible ? await compressChatImage(fileToUpload) : fileToUpload;
-      if (uploadIndicator) uploadIndicator.querySelector('span').textContent = 'Uploading…';
-
-      // Upload with progress tracking
-      fileUrl = await new Promise((resolve, reject) => {
-        const uploadTask = storageRef.put(fileForUpload);
-        const timeout = setTimeout(() => {
-          uploadTask.cancel();
-          reject(new Error('Upload timed out after 60 seconds'));
-        }, 60000);
-
-        uploadTask.on('state_changed',
-          (snapshot) => {
-            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+      const storageRef = storage.ref(`chat-files/${uploadRoom}/${Date.now()}_${safeName}`);
+      const ext = fileToUpload.name.split('.').pop().toLowerCase();
+      const fileForUpload = ['jpg','jpeg','png','webp','gif'].includes(ext) ? await compressChatImage(fileToUpload) : fileToUpload;
+      const url = await new Promise((resolve, reject) => {
+        const task = storageRef.put(fileForUpload);
+        const timeout = setTimeout(() => { task.cancel(); reject(new Error('Upload timed out')); }, 60000);
+        task.on('state_changed',
+          snap => {
+            const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
             if (progressFill) progressFill.style.width = pct + '%';
-            if (progressPct) progressPct.textContent = pct + '%';
-            if (uploadIndicator) uploadIndicator.querySelector('span').textContent = `Uploading… ${pct}%`;
+            if (uploadIndicator) uploadIndicator.querySelector('span').textContent = (total > 1 ? `Uploading ${idx+1}/${total}` : 'Uploading') + ` ${pct}%`;
           },
-          (err) => { clearTimeout(timeout); reject(err); },
-          async () => {
-            clearTimeout(timeout);
-            try { resolve(await uploadTask.snapshot.ref.getDownloadURL()); }
-            catch(e) { reject(e); }
-          }
+          err => { clearTimeout(timeout); reject(err); },
+          async () => { clearTimeout(timeout); try { resolve(await task.snapshot.ref.getDownloadURL()); } catch(e){ reject(e); } }
         );
       });
-
+      return { fileUrl: url, fileName: fileToUpload.name };
     } catch(e) {
       console.error('File upload error:', e);
-      let msg = 'File upload failed.';
-      if (e.code === 'storage/unauthorized')  msg = 'Upload blocked — Firebase Storage rules need updating. See console for details.';
-      else if (e.code === 'storage/canceled')  msg = 'Upload cancelled.';
-      else if (e.message?.includes('timed out')) msg = 'Upload timed out — file may be too large or connection is slow.';
-      else if (e.code === 'storage/unknown')   msg = 'Storage error — check Firebase Storage is enabled in your Firebase console.';
-      toast(msg, 'warn');
-      fileName = ''; // don't send a broken message
+      let errMsg = 'File upload failed.';
+      if (e.code === 'storage/unauthorized')        errMsg = 'Upload blocked — check Firebase Storage rules.';
+      else if (e.code === 'storage/canceled')       errMsg = 'Upload cancelled.';
+      else if (e.message?.includes('timed out'))    errMsg = 'Upload timed out — file may be too large.';
+      else if (e.code === 'storage/unknown')        errMsg = 'Storage error — check Firebase console.';
+      toast(errMsg, 'warn');
+      return null;
     } finally {
       if (uploadIndicator) uploadIndicator.style.display = 'none';
       if (progressBar) progressBar.style.display = 'none';
       if (progressFill) progressFill.style.width = '0%';
       if (sendBtn) sendBtn.disabled = false;
     }
-
-    if (!fileUrl) return; // abort send if upload failed
   }
 
-  const msg = {
-    room: currentDM ? currentDM.roomId : currentRoom,
-    sender: loggedInMember?.name || 'Unknown',
-    text: text || (fileName ? `Shared a file: ${fileName}` : ''),
-    tagRef, tagLabel,
-    fileUrl, fileName,
-    mentions: extractMentions(text),
-    reactions: {},
-    time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ}),
-    loggedAt: Date.now(),
-    sentAt: firebase.firestore.FieldValue.serverTimestamp(),
-    ...(_chatReplyTo ? { replyTo: _chatReplyTo } : {}),
-  };
-  if (input) { input.value = ''; input.style.height = '44px'; }
-  if (document.getElementById('chat-tag-ref')) document.getElementById('chat-tag-ref').value = '';
-  clearChatAttach();
-  cancelChatReply();
-  _clearTyping();
-  // Clear draft for this room now that message is sent
-  const _draftKey = currentDM?.roomId || currentRoom || '';
-  if (_draftKey) delete _chatDrafts[_draftKey];
-  _updateSendBtn();
-
-  // Notify @mentioned members
-  msg.mentions.forEach(name => {
-    notifyMention(name, msg.sender, text);
-  });
-
-  try {
-    await db.collection('chat').add(msg);
-    // Write DM inbox notification so recipient sees unread dot immediately (skip for self-notes)
-    if (currentDM && currentDM.otherUser !== '__self__') {
-      const inboxId = currentDM.roomId + '__' + currentDM.otherUser;
-      const preview = (msg.text || (msg.fileName ? `Shared a file: ${msg.fileName}` : '')).substring(0, 80);
-      db.collection('dm_inbox').doc(inboxId).set({
-        to: currentDM.otherUser,
-        from: loggedInMember.name,
-        roomId: currentDM.roomId,
-        text: preview,
-        count: firebase.firestore.FieldValue.increment(1),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).catch(e => console.error('[dm_inbox write failed]', e.code, e.message));
+  // Helper: save one message to Firestore
+  async function _sendOneMsg(fileUrl, fileName, msgText) {
+    const room = currentDM ? currentDM.roomId : currentRoom;
+    const msg = {
+      room,
+      sender: loggedInMember?.name || 'Unknown',
+      text: msgText || (fileName ? `Shared a file: ${fileName}` : ''),
+      tagRef, tagLabel,
+      fileUrl: fileUrl || '', fileName: fileName || '',
+      mentions: extractMentions(msgText || ''),
+      reactions: {},
+      time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:IST_TZ}),
+      loggedAt: Date.now(),
+      sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+      ...(replyTo ? { replyTo } : {}),
+    };
+    msg.mentions.forEach(n => notifyMention(n, msg.sender, msgText || ''));
+    try {
+      await db.collection('chat').add(msg);
+      if (currentDM && currentDM.otherUser !== '__self__') {
+        const inboxId = room + '__' + currentDM.otherUser;
+        const preview = (msg.text || (msg.fileName ? `Shared a file: ${msg.fileName}` : '')).substring(0, 80);
+        db.collection('dm_inbox').doc(inboxId).set({
+          to: currentDM.otherUser, from: loggedInMember.name, roomId: room,
+          text: preview, count: firebase.firestore.FieldValue.increment(1),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(e => console.error('[dm_inbox write failed]', e.code, e.message));
+      }
+    } catch(e) {
+      CHAT_MESSAGES.push({ ...msg, id: Date.now() });
+      renderChatMessages();
+      toast('Message saved locally — will sync when reconnected', 'warn');
     }
-  } catch(e) {
-    CHAT_MESSAGES.push({ ...msg, id: Date.now() });
-    renderChatMessages();
-    toast('Message saved locally — will sync when reconnected', 'warn');
+  }
+
+  if (filesToSend.length) {
+    // Upload and send each file as its own message; text goes with the first file only
+    for (let i = 0; i < filesToSend.length; i++) {
+      const result = await _uploadOneFile(filesToSend[i], i, filesToSend.length);
+      if (!result) continue; // skip failed uploads
+      await _sendOneMsg(result.fileUrl, result.fileName, i === 0 ? text : '');
+    }
+  } else {
+    // Text-only message
+    await _sendOneMsg('', '', text);
   }
 }
 

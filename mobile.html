@@ -1084,6 +1084,15 @@ a{text-decoration:none;color:inherit;}
 
     <!-- ── CHAT ── -->
     <div class="panel" id="panel-chat">
+      <!-- WhatsApp-style search bar -->
+      <div style="padding:10px 12px 6px;background:#fff;border-bottom:1px solid #e9edef;position:sticky;top:0;z-index:10;">
+        <div style="display:flex;align-items:center;gap:8px;background:#f0f2f5;border-radius:22px;padding:8px 14px;">
+          <span style="font-size:14px;color:#aaa;">🔍</span>
+          <input id="mob-chat-search" type="text" placeholder="Search chats…"
+            style="flex:1;border:none;background:transparent;font-size:14px;color:#111;outline:none;"
+            oninput="filterMobChatList(this.value)"/>
+        </div>
+      </div>
       <div class="chat-list-body">
         <div class="chat-sec-divider">Groups &amp; Channels</div>
         <div id="channel-list-items"></div>
@@ -3218,6 +3227,15 @@ async function saveNewTask() {
 /* ════════════════════════════════
    CHAT TAB
 ════════════════════════════════ */
+function filterMobChatList(q) {
+  const query = (q || '').toLowerCase().trim();
+  document.querySelectorAll('#channel-list-items .chat-list-row, #dm-list-items .chat-list-row').forEach(row => {
+    const name = (row.querySelector('.ch-name')?.textContent || '').toLowerCase();
+    const preview = (row.querySelector('.ch-preview')?.textContent || '').toLowerCase();
+    row.style.display = (!query || name.includes(query) || preview.includes(query)) ? '' : 'none';
+  });
+}
+
 function _fmtMobChatTime(ts) {
   if (!ts) return '';
   const ms = typeof ts === 'object' && ts.toMillis ? ts.toMillis() : (ts < 1e12 ? ts * 1000 : ts);
@@ -3765,6 +3783,11 @@ function switchTab(tab) {
   if (tabEl) tabEl.classList.add('active');
 
   buildTopbar(tab);
+  if (tab === 'chat') {
+    renderChatList();
+    const srch = document.getElementById('mob-chat-search');
+    if (srch) { srch.value = ''; filterMobChatList(''); }
+  }
 
   const fab = document.getElementById('main-fab');
   const isViewer = currentMember && currentMember.role === 'viewer';
