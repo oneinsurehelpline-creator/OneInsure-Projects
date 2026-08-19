@@ -12981,24 +12981,26 @@ function pushNotif({ title, body, icon='📋', type='info', tag=null, silent=fal
 
 // ── Specific notification triggers ─────────
 function notifyMyTurn(stepName, flowTitle, owner) {
-  if (!NOTIF_PREFS.turn) return;
-  const notif = { title: `📲 Your turn — ${stepName}`, body: `"${flowTitle}" is now waiting on you.`, icon: '📲', type: 'turn', tag: 'turn-' + flowTitle };
+  const notif = { title: `Your turn — ${stepName}`, body: `"${flowTitle}" is now waiting on you.`, icon: 'turn', type: 'turn', tag: 'turn-' + flowTitle };
   if (owner && owner !== loggedInMember?.name) {
+    // Always notify the recipient regardless of the sender's local prefs
     sendFirestoreNotif(owner, notif);
     sendStepAssignedEmail(owner, flowTitle, stepName);
-  } else {
-    pushNotif(notif);
+  } else if (NOTIF_PREFS.turn) {
+    // Self-notification — respect local preference
+    pushNotif({ ...notif, title: `📲 Your turn — ${stepName}` });
   }
 }
 
 function notifyBlocked(taskTitle, assignee) {
-  if (!NOTIF_PREFS.blocked) return;
-  const notif = { title: `🔴 Task Blocked`, body: `"${taskTitle}" — ${assignee} is blocked and needs help.`, icon: '🔴', type: 'blocked', tag: 'blocked-' + taskTitle };
-  pushNotif(notif);
-  // Also cross-notify the assignee's manager so they see it on their device
+  const notif = { title: `Task Blocked`, body: `"${taskTitle}" — ${assignee} is blocked and needs help.`, icon: 'blocked', type: 'blocked', tag: 'blocked-' + taskTitle };
+  // Always notify the manager cross-device regardless of sender's prefs
   const assigneeMember = MEMBERS.find(m => m.name === assignee);
   if (assigneeMember?.reportsTo && assigneeMember.reportsTo !== loggedInMember?.name) {
     sendFirestoreNotif(assigneeMember.reportsTo, notif);
+  }
+  if (NOTIF_PREFS.blocked) {
+    pushNotif({ ...notif, title: `🔴 Task Blocked` });
   }
 }
 
@@ -13012,13 +13014,14 @@ function notifyFlowPushed(stepName, flowTitle, pushedBy) {
 }
 
 function notifyTaskAssigned(taskTitle, assignee, dueDate, priority) {
-  if (!NOTIF_PREFS.assigned) return;
-  const notif = { title: `📋 New task assigned to you`, body: taskTitle, icon: '📋', type: 'assigned' };
+  const notif = { title: `New task assigned to you`, body: taskTitle, icon: 'assigned', type: 'assigned' };
   if (assignee && assignee !== loggedInMember?.name) {
+    // Always notify the recipient regardless of the sender's local prefs
     sendFirestoreNotif(assignee, notif);
     sendTaskAssignedEmail(assignee, taskTitle, dueDate, priority);
-  } else {
-    pushNotif(notif);
+  } else if (NOTIF_PREFS.assigned) {
+    // Self-notification — respect local preference
+    pushNotif({ ...notif, title: `📋 New task assigned to you` });
   }
 }
 
