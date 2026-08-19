@@ -1942,7 +1942,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
           <div style="display:flex;gap:8px;margin-bottom:14px;">
             <select id="rf-member" onchange="renderRegular()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
               <option value="">All Members</option>
-              <option>Akshay</option><option>Chirag</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
+              <option>Akshay</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
             </select>
             <select id="rf-freq" onchange="renderRegular()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--rad);background:var(--white);color:var(--ink);font-family:var(--ff-body);">
               <option value="">All Frequencies</option>
@@ -2461,13 +2461,13 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         <div class="fg">
           <label>Absent Member</label>
           <select id="ab-member">
-            <option>Akshay</option><option>Chirag</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
+            <option>Akshay</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
           </select>
         </div>
         <div class="fg">
           <label>Covering Member</label>
           <select id="ab-cover">
-            <option>Akshay</option><option>Chirag</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
+            <option>Akshay</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
           </select>
         </div>
         <div class="fg">
@@ -2510,7 +2510,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
         <div class="fg">
           <label>Assigned To</label>
           <select id="rt-member">
-            <option>Akshay</option><option>Chirag</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
+            <option>Akshay</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
           </select>
         </div>
         <div class="fg">
@@ -2562,7 +2562,7 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
       <div class="fg" style="margin-bottom:12px;">
         <label>Confirming as</label>
         <select id="wp-member">
-          <option>Akshay</option><option>Chirag</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
+          <option>Akshay</option><option>Anamika</option><option>Shivam</option><option>Sandip</option><option>Deepanshu</option><option>Harsh</option><option>Pawan</option><option>Ria</option><option>Isha</option><option>Tamanna</option><option>Shantanu</option>
         </select>
       </div>
       <div id="wp-items-list"></div>
@@ -3255,14 +3255,13 @@ body{font-family:var(--ff-body);font-size:15px;color:var(--ink);background:var(-
 
 const MEMBERS = [
   {name:'Akshay',    role:'head',        av:'av-c', status:'online', reportsTo:null},
-  {name:'Chirag',    role:'manager',     av:'av-a', status:'online', reportsTo:'Akshay'},
   {name:'Anamika',   role:'manager',     av:'av-b', status:'online', reportsTo:'Akshay'},
-  {name:'Shivam',    role:'member', av:'av-d', status:'online', reportsTo:'Akshay'},
+  {name:'Shivam',    role:'manager',     av:'av-d', status:'online', reportsTo:'Akshay'},
   {name:'Sandip',   role:'member', av:'av-e', status:'online', reportsTo:'Akshay'},
   {name:'Shantanu',  role:'member', av:'av-a', status:'online', reportsTo:'Akshay'},
-  {name:'Deepanshu', role:'member', av:'av-c', status:'online', reportsTo:'Chirag'},
-  {name:'Harsh',     role:'member', av:'av-d', status:'online', reportsTo:'Chirag'},
-  {name:'Pawan',     role:'member', av:'av-b', status:'online', reportsTo:'Chirag'},
+  {name:'Deepanshu', role:'member', av:'av-c', status:'online', reportsTo:'Shivam'},
+  {name:'Harsh',     role:'member', av:'av-d', status:'online', reportsTo:'Shivam'},
+  {name:'Pawan',     role:'member', av:'av-b', status:'online', reportsTo:'Shivam'},
   {name:'Ria',       role:'member', av:'av-b', status:'online', reportsTo:'Anamika'},
   {name:'Isha',      role:'member', av:'av-e', status:'online', reportsTo:'Anamika'},
   {name:'Tamanna',   role:'member', av:'av-a', status:'online', reportsTo:'Anamika'},
@@ -3276,7 +3275,7 @@ const MEMBERS = [
 ];
 
 const AV = {
-  'Akshay':'av-c','Chirag':'av-a','Anamika':'av-b',
+  'Akshay':'av-c','Anamika':'av-b',
   'Shivam':'av-d','Sandip':'av-e','Shantanu':'av-a',
   'Deepanshu':'av-c','Harsh':'av-d','Pawan':'av-b',
   'Ria':'av-b','Isha':'av-e','Tamanna':'av-a',
@@ -3396,9 +3395,8 @@ function todayKey() {
 // ── Email → Member mapping (update with your real emails) ──
 const EMAIL_TO_MEMBER = {
   'akshay.raje@oneinsure.com':      { name:'Akshay',    role:'head',    av:'av-c' },
-  'chirag.bhoir@oneinsure.com':     { name:'Chirag',    role:'manager', av:'av-a' },
   'anamika.patil@oneinsure.com':    { name:'Anamika',   role:'manager', av:'av-b' },
-  'shivam.kumar@oneinsure.com':     { name:'Shivam',    role:'member',  av:'av-d' },
+  'shivam.kumar@oneinsure.com':     { name:'Shivam',    role:'manager', av:'av-d' },
   'sandip.gawde@oneinsure.com':     { name:'Sandip',   role:'member',  av:'av-e' },
   'shantanu.tiwari@oneinsure.com':  { name:'Shantanu',  role:'member',  av:'av-a' },
   'deepanshu.sharma@oneinsure.com': { name:'Deepanshu', role:'member',  av:'av-c' },
@@ -3516,7 +3514,7 @@ function applyLoggedInUser() {
   });
   // Deviation Report: only for specific people
   const devNav = document.getElementById('nav-deviation');
-  if (devNav) devNav.style.display = (['Akshay','Anamika','Chirag'].includes(loggedInMember.name) || loggedInMember.role === 'viewer') ? '' : 'none';
+  if (devNav) devNav.style.display = (['Akshay','Anamika','Shivam'].includes(loggedInMember.name) || loggedInMember.role === 'viewer') ? '' : 'none';
 }
 
 // ── Login ──────────────────────────────────
@@ -4482,7 +4480,7 @@ function renderHome() {
 }
 
 // Who can spawn flows and edit flow templates
-const FLOW_MANAGERS = ['Anamika', 'Chirag', 'Shivam'];
+const FLOW_MANAGERS = ['Anamika', 'Shivam'];
 function canManageFlows() {
   if (!loggedInMember) return false;
   if (loggedInMember.role === 'manager' || loggedInMember.role === 'head') return true;
@@ -9465,9 +9463,9 @@ function renderDeviationReport() {
   const panel = document.getElementById('panel-deviation');
   if (!panel) return;
 
-  const _devAllowed = ['Akshay', 'Anamika', 'Chirag'];
+  const _devAllowed = ['Akshay', 'Anamika', 'Shivam'];
   if (!loggedInMember || (!_devAllowed.includes(loggedInMember.name) && loggedInMember.role !== 'viewer')) {
-    panel.innerHTML = `<div class="dev-empty">📊 Deviation Report is only available to Akshay, Anamika, and Chirag.</div>`;
+    panel.innerHTML = `<div class="dev-empty">📊 Deviation Report is only available to Akshay, Anamika, and Shivam.</div>`;
     return;
   }
 
