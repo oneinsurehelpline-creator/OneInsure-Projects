@@ -2179,14 +2179,32 @@ async function mobDlApprove(flowId) {
     const idx = flows.findIndex(f => f.id === flowId);
     if (idx === -1) throw new Error('Flow not found');
     const f = { ...flows[idx] };
+    const approverName = currentMember?.name || '';
+    if (!(f.approvalRoutees || []).includes(approverName)) throw new Error('Not the routed approver');
     const statuses = [...(f.stepStatuses || [])];
     const cs = parseInt(f.currentStep) || 0;
+    const stepName = (f.stepNames || [])[cs] || `Step ${cs + 1}`;
+    const submitter = (f.stepOwners || [])[cs] || null;
     statuses[cs] = 'done';
-    if (cs < statuses.length - 1) { statuses[cs + 1] = 'active'; f.currentStep = cs + 1; }
+    const isLast = cs >= statuses.length - 1;
+    if (!isLast) { statuses[cs + 1] = 'active'; f.currentStep = cs + 1; }
     f.stepStatuses = statuses;
+    const approvalHistory = [...(f.approvalHistory || [])];
+    approvalHistory.push({ stepIdx: cs, stepName, submittedBy: submitter, approvedBy: approverName, at: Date.now(), comment: '' });
+    f.approvalHistory = approvalHistory;
     f.approvalRoutees = [];
     flows[idx] = f;
     await db.collection('flows').doc('active').update({ flows });
+    auditLog('approved',
+      `${approverName} approved "${stepName}" on "${f.title}" via email link${submitter ? ` — submitted by ${submitter}` : ''}`,
+      { flow: f.title, step: stepName, approvedBy: approverName, submittedBy: submitter || 'Unknown', via: 'email-link' }
+    );
+    if (submitter) mobSendApprovedEmail(submitter, approverName, f.title || 'Flow', stepName);
+    if (!isLast) {
+      const nextStepName = (f.stepNames || [])[cs + 1] || `Step ${cs + 2}`;
+      const nextOwner = (f.stepOwners || [])[cs + 1] || '';
+      if (nextOwner) mobSendStepEmail(nextOwner, f.title || 'Flow', nextStepName);
+    }
     _mobDlShowConfirm('approved', null);
   } catch(err) {
     console.error(err);
@@ -2206,7 +2224,10 @@ async function mobDlConfirmReject(flowId) {
     const idx = flows.findIndex(f => f.id === flowId);
     if (idx === -1) throw new Error('Flow not found');
     const f = { ...flows[idx] };
+    const approverName = currentMember?.name || '';
+    if (!(f.approvalRoutees || []).includes(approverName)) throw new Error('Not the routed approver');
     const cs = parseInt(f.currentStep) || 0;
+    const stepName = (f.stepNames || [])[cs] || `Step ${cs + 1}`;
     const statuses = [...(f.stepStatuses || [])];
     statuses[cs] = 'active';
     f.stepStatuses = statuses;
@@ -2216,6 +2237,10 @@ async function mobDlConfirmReject(flowId) {
     f.rejectionNotes = JSON.stringify(notes);
     flows[idx] = f;
     await db.collection('flows').doc('active').update({ flows });
+    auditLog('step_rejected',
+      `${approverName} rejected "${stepName}" on "${f.title}" via email link: ${reason}`,
+      { flow: f.title, step: stepName, reason, approvedBy: approverName, via: 'email-link' }
+    );
     _mobDlShowConfirm('rejected', reason);
   } catch(err) {
     console.error(err);
@@ -2339,8 +2364,8 @@ function buildFlowCard(f, cardIdx) {
   const isManagerOrHead = currentMember && (currentMember.role === 'manager' || currentMember.role === 'head');
   const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
   const isRoutedApproverTurn = currentMember && (isApprStep || isApprovalPending) && (f.approvalRoutees || []).includes(currentMember.name);
-  // Step owner (reviewer) or manager can send for approval — NOT the previous step owner
-  const canRoute = !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHead && statuses[cs] === 'active'));
+  // Step owner (reviewer) or manager can send for approval — NOT the previous step owner, and only on the dedicated approval step
+  const canRoute = isApprStep && !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHead && statuses[cs] === 'active'));
 
   // Footer
   let footHtml = '';
@@ -2414,6 +2439,10 @@ function buildFlowCard(f, cardIdx) {
         </div>
       </div>
       <div class="steps-track">${dotsHtml}</div>
+      ${(f.approvalHistory && f.approvalHistory.length) ? (() => {
+        const _lastApproval = f.approvalHistory[f.approvalHistory.length - 1];
+        return `<div style="font-size:12px;color:var(--ink3);margin-top:6px;">✅ <strong>${escHtml(_lastApproval.stepName)}</strong> approved by <strong style="color:var(--green);">${escHtml(_lastApproval.approvedBy)}</strong></div>`;
+      })() : ''}
     </div>
     ${footHtml}
   </div></div>`;
@@ -2624,7 +2653,7 @@ function openFlowDetail(flowId) {
   const isManagerOrHeadDet = currentMember && (currentMember.role === 'manager' || currentMember.role === 'head');
   const isStepOwnerTurn = currentMember && statuses[cs] === 'active' && getStepOwner(f, cs) === currentMember.name;
   const isRoutedApproverTurn = currentMember && (isApprStep || isApprovalPendingDet) && (f.approvalRoutees || []).includes(currentMember.name);
-  const canRouteDetail = !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHeadDet && statuses[cs] === 'active'));
+  const canRouteDetail = isApprStep && !isRoutedApproverTurn && (isStepOwnerTurn || (isManagerOrHeadDet && statuses[cs] === 'active'));
 
   const pushArea = document.getElementById('fd-push-area');
   if (allDone) {
@@ -2842,6 +2871,11 @@ async function confirmMobApprovalRouting() {
       const email = mobGetMemberEmail(name);
       if (email) mobSendApprovalEmail(name, fData.title || 'Flow', stepName, deepLink + encodeURIComponent(email));
     });
+    const stepOwnerForRouting = (fData.stepOwners || [])[cs] || currentMember?.name || 'Unknown';
+    auditLog('approval_routed',
+      `"${stepName}" on "${fData.title}" sent for approval by ${currentMember?.name} → ${selected.join(', ')}`,
+      { flow: fData.title, step: stepName, approvers: selected.join(', '), sentBy: currentMember?.name || 'Unknown', submittedBy: stepOwnerForRouting }
+    );
     showToast(`Sent to ${selected.join(', ')} for approval!`, 'ok');
     closeSheet();
   } catch(err) {
@@ -2917,6 +2951,22 @@ async function setMobTargetDate(flowId, triggerEl) {
   inp.addEventListener('blur', () => setTimeout(() => inp.remove(), 200));
 }
 
+// Mirrors index.html's auditLog — writes to the same shared `audit` collection
+// so actions taken from mobile show up in the desktop Activity Log too.
+async function auditLog(type, description, meta = {}) {
+  if (!db) return;
+  try {
+    await db.collection('audit').add({
+      type,
+      actor: currentMember?.name || 'System',
+      description,
+      meta,
+      ts: Date.now(),
+      sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch(e) { console.warn('Audit log failed:', e); }
+}
+
 async function doMobApprove(flowId, e) {
   if (e) e.stopPropagation();
   if (!currentMember) return;
@@ -2932,13 +2982,32 @@ async function doMobApprove(flowId, e) {
     }
     const statuses = [...(f.stepStatuses || [])];
     const cs = parseInt(f.currentStep) || 0;
+    const stepName = (f.stepNames || [])[cs] || `Step ${cs + 1}`;
+    const submitter = (f.stepOwners || [])[cs] || null;
     statuses[cs] = 'done';
     const isLast = cs >= statuses.length - 1;
     if (!isLast) { statuses[cs + 1] = 'active'; f.currentStep = cs + 1; }
     f.stepStatuses = statuses;
+    const approvalHistory = [...(f.approvalHistory || [])];
+    approvalHistory.push({ stepIdx: cs, stepName, submittedBy: submitter, approvedBy: currentMember.name, at: Date.now(), comment: '' });
+    f.approvalHistory = approvalHistory;
     delete f.approvalRoutees;
     flows[idx] = f;
     await db.collection('flows').doc('active').update({ flows });
+    auditLog('approved',
+      `${currentMember.name} approved "${stepName}" on "${f.title}"${submitter ? ` — submitted by ${submitter}` : ''}`,
+      { flow: f.title, step: stepName, approvedBy: currentMember.name, submittedBy: submitter || 'Unknown' }
+    );
+    if (submitter) mobSendApprovedEmail(submitter, currentMember.name, f.title || 'Flow', stepName);
+    // Hand off to the next step's owner now that this step is approved
+    if (!isLast) {
+      const nextStepName = (f.stepNames || [])[cs + 1] || `Step ${cs + 2}`;
+      const nextOwner = (f.stepOwners || [])[cs + 1] || '';
+      if (nextOwner) {
+        sendMobFirestoreNotif(nextOwner, { title: `Your turn — ${nextStepName}`, body: `"${f.title}" is now waiting on you.`, icon: '📲', type: 'turn', tag: 'turn-' + f.title });
+        mobSendStepEmail(nextOwner, f.title || 'Flow', nextStepName);
+      }
+    }
     showToast('Step approved and pushed forward!', 'ok');
     closeSheet();
   } catch(err) {
@@ -2998,6 +3067,10 @@ async function doMobReject(flowId, e) {
         tag: `rej-${flowId}-${cs}`,
       });
     }
+    auditLog('step_rejected',
+      `${currentMember.name} rejected "${fromStepName}" on "${f.title}" — sent back to "${toStepName}": ${reason.trim()}`,
+      { flow: f.title, from: fromStepName, to: toStepName, reason: reason.trim(), approvedBy: currentMember.name }
+    );
     showToast('Step rejected — sent back to previous step.', 'ok');
     closeSheet();
   } catch(err) {
@@ -3075,6 +3148,19 @@ function mobSendStepEmail(toName, flowTitle, stepName) {
       rows: [['Flow', flowTitle], ['Assigned by', assigner], ['Action', 'Your step is now active — complete it and hand off.']],
       ctaHref: 'https://sociadesk.oneinsure.com', ctaText: 'Open SociaDesk →',
       note: `You received this because <strong>${_mobEsc(assigner)}</strong> handed off this step to you.`,
+    }));
+}
+
+function mobSendApprovedEmail(toName, approverName, flowTitle, stepName) {
+  const toEmail = mobGetMemberEmail(toName);
+  if (!toEmail) return;
+  mobSendEmail(toEmail, toName,
+    `[SociaDesk] Approved: ${stepName} — ${flowTitle}`,
+    _mobEmailCard({
+      icon: '✅', accentColor: '#10B981', label: 'Content Approved', title: stepName,
+      rows: [['Flow', flowTitle], ['Approved by', approverName], ['Status', 'Your step has been approved and the flow has moved forward.']],
+      ctaHref: 'https://sociadesk.oneinsure.com', ctaText: 'Open SociaDesk →',
+      note: `<strong>${_mobEsc(approverName)}</strong> approved your content for the <strong>${_mobEsc(flowTitle)}</strong> flow.`,
     }));
 }
 

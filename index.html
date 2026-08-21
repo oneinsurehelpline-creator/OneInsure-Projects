@@ -5228,9 +5228,9 @@ function flowCardHTML(f) {
   const isRoutedApprover = loggedInMember &&
     (isApprovalStep || isApprovalPending) && (f.approvalRoutees || []).includes(loggedInMember.name);
   const canApprove = isRoutedApprover;
-  // Who can "Send for Approval": only the approval step's designated owner (the reviewer), or any manager/head.
-  // The previous step's owner (content creator) should not route — they don't decide which approver is relevant.
-  const canRoute = !canApprove && (isStepOwner || isManager);
+  // Who can "Send for Approval": only the current step's owner when it IS the dedicated approval step, or any manager/head.
+  // A regular (non-approval) step's owner can never route to an approver — they hand off normally instead.
+  const canRoute = !canApprove && isApprovalStep && (isStepOwner || isManager);
   // Handoff: step owner can hand off to the next step's assignee before completing current step
   const canHandoff = isStepOwner && !isApprovalStep && !isApprovalPending && status !== 'done';
   const subtasksDone = areSubtasksDone(f, curStepIdx);
@@ -5456,14 +5456,6 @@ function flowCardHTML(f) {
         <button class="btn-reject" onclick="openRejectModal('${f.id}',${curStepIdx})">✗ Reject</button>` : (!canRoute ? `<span style="font-size:11px;color:var(--ink3);">Awaiting decision from approver</span>` : '')}
       </div>
     </div>` : ''}
-    ${!isApprovalStep && canRoute && status !== 'done' ? `
-    <div class="approval-actions" style="border-color:rgba(124,58,237,0.2);">
-      <div class="approval-title" style="color:var(--purple);">📋 Request Approval for this Step</div>
-      <div style="font-size:11px;color:var(--ink3);margin-bottom:8px;">${(f.approvalRoutees && f.approvalRoutees.length) ? `Currently pending approval from: ${f.approvalRoutees.join(', ')}` : 'Optionally get this step approved before completing.'}</div>
-      <div class="approval-btns">
-        <button class="btn btn-sm" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);" onclick="openApprovalRoutingModal('${f.id}')">📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Request Approval'}</button>
-      </div>
-    </div>` : ''}
     <div class="flow-footer">
       <div class="current-step-info">
         ${status!=='done'
@@ -5473,6 +5465,10 @@ function flowCardHTML(f) {
             (_stepDeadlineChip(f, curStepIdx) ? ' ' + _stepDeadlineChip(f, curStepIdx) : '')
           : '<span style="color:var(--green);font-weight:600;">✓ All steps complete!</span>'}
       </div>
+      ${(f.approvalHistory && f.approvalHistory.length) ? (() => {
+        const _lastApproval = f.approvalHistory[f.approvalHistory.length - 1];
+        return `<div style="font-size:11px;color:var(--ink3);margin-top:2px;">✅ <strong>${_lastApproval.stepName}</strong> approved by <strong style="color:var(--green);">${_lastApproval.approvedBy}</strong></div>`;
+      })() : ''}
       ${status !== 'done' && isApprovalPending ? `
         <div class="approval-pending-banner">⏳ Awaiting approval from <strong>${(f.approvalRoutees||[]).join(', ')}</strong></div>
         ${canApprove ? `
@@ -5489,7 +5485,6 @@ function flowCardHTML(f) {
           ✓ Complete &amp; Hand Off
         </button>` : `<span style="font-size:11px;color:var(--ink3);">⏳ Waiting for <strong>${subAssignee||curStep.owner||'owner'}</strong></span>`}
         ${isManager && (subAssignee||curStep.owner) ? `<button class="btn btn-sm btn-ghost" style="border-color:var(--amber);color:#b45309;" onclick="openNudgeModal('${f.id}',${curStepIdx})">📨 Nudge</button>` : ''}
-        ${canRoute ? `<button class="btn btn-sm btn-ghost" style="border-color:#7C3AED;color:#7C3AED;" onclick="openApprovalRoutingModal('${f.id}')">📋 Req. Approval</button>` : ''}
         <button class="btn btn-sm btn-ghost" onclick="openFlowStep('${f.id}',${curStepIdx})">View Steps</button>
       ` : status !== 'done' && isApprovalStep ? `
         ${canRoute ? `<button class="btn btn-sm btn-ghost" style="border-color:#7C3AED;color:#7C3AED;" onclick="openApprovalRoutingModal('${f.id}')">↗ Send for Approval</button>` : ''}
@@ -5707,7 +5702,8 @@ function openFlowStep(flowId, stepIdx) {
     step.name?.toLowerCase().includes('approve');
   // Approval step owner can route; routed approvers can approve/reject
   const _isRoutedApprover = loggedInMember && _isApprovalStep && (f.approvalRoutees || []).includes(loggedInMember.name);
-  const _canRouteThis = !_isRoutedApprover && (isThisStepMine || isManagerOrHead) && canEdit;
+  // Only the dedicated approval step's owner (or a manager) may route to an approver — a regular step's owner cannot
+  const _canRouteThis = _isApprovalStep && !_isRoutedApprover && (isThisStepMine || isManagerOrHead) && canEdit;
   const _canApproveThis = _isRoutedApprover;
   // Mark as Done only for non-approval active steps
   const canMarkThisStepDone = isThisStepMine && canEdit && !_isApprovalStep;
@@ -5881,7 +5877,7 @@ function openFlowStep(flowId, stepIdx) {
       ${_canRouteThis ? `
         <button class="btn" style="background:var(--purple-light);color:var(--purple);border-color:rgba(145,19,175,0.25);font-weight:600;"
           onclick="openApprovalRoutingModal('${f.id}');closeSide();">
-          📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : (_isApprovalStep ? 'Send for Approval' : 'Request Approval')}
+          📋 ${(f.approvalRoutees && f.approvalRoutees.length) ? 'Change Approvers' : 'Send for Approval'}
         </button>` : ''}
       ${_canApproveThis ? `
         <button class="btn-approve" onclick="openApproveModal('${f.id}');closeSide();">✓ Approve</button>
@@ -9935,19 +9931,21 @@ async function approveStep(flowId, approvalComment = '') {
   if (!f.stepTimings) f.stepTimings = tmplSteps.map(() => ({ startedAt: null, completedAt: null }));
   f.stepTimings[f.currentStep].completedAt = Date.now();
   f.stepStatuses[f.currentStep] = 'done';
-  // Capture submitter BEFORE incrementing currentStep
+  // Capture submitter and this step's index BEFORE incrementing currentStep
   const stepOwner = (f.stepOwners && f.stepOwners[f.currentStep]) || curStep.owner || null;
-  if (f.currentStep < tmplSteps.length - 1) {
+  const approvedStepIdx = f.currentStep;
+  const isLast = f.currentStep >= tmplSteps.length - 1;
+  if (!isLast) {
     f.currentStep++;
     f.stepStatuses[f.currentStep] = 'active';
     f.stepTimings[f.currentStep] = { startedAt: Date.now(), completedAt: null };
   } else {
     f.completedAt = Date.now();
   }
-  // Store approval record on the flow for history
+  // Store approval record on the flow for history — keyed to the step that was actually approved
   if (!Array.isArray(f.approvalHistory)) f.approvalHistory = [];
   f.approvalHistory.push({
-    stepIdx: f.currentStep,
+    stepIdx: approvedStepIdx,
     stepName,
     submittedBy: stepOwner,
     approvedBy: loggedInMember?.name || 'Unknown',
@@ -9964,6 +9962,12 @@ async function approveStep(flowId, approvalComment = '') {
     { flow: f.title, step: stepName, approvedBy: _approverName, submittedBy: stepOwner || 'Unknown', comment: approvalComment || '' }
   );
   if (stepOwner) sendApprovedEmail(stepOwner, _approverName, f.title, stepName, approvalComment);
+  // Hand off to the next step's owner now that this step is approved
+  if (!isLast) {
+    const nextStep = tmplSteps[f.currentStep];
+    const nextOwner = (f.stepOwners && f.stepOwners[f.currentStep]) || nextStep?.owner || '';
+    notifyMyTurn(nextStep?.name || `Step ${f.currentStep + 1}`, f.title, nextOwner);
+  }
   toast(approvalComment ? 'Approved with conditions noted!' : 'Step approved and pushed forward!', 'ok');
 }
 
@@ -12528,7 +12532,8 @@ async function _dlApprove(flowId, approverEmail, approverName) {
     f.stepStatuses[cs] = 'done';
     if (!Array.isArray(f.approvalHistory)) f.approvalHistory = [];
     f.approvalHistory.push({ stepIdx: cs, stepName: dlStepName, submittedBy: dlSubmitter, approvedBy: approverName, at: Date.now(), comment: approvalNote });
-    if (cs < (f.stepStatuses.length - 1)) {
+    const dlIsLast = cs >= (f.stepStatuses.length - 1);
+    if (!dlIsLast) {
       f.currentStep = cs + 1;
       f.stepStatuses[cs + 1] = 'active';
       f.stepTimings[cs + 1] = { startedAt: Date.now(), completedAt: null };
@@ -12543,6 +12548,13 @@ async function _dlApprove(flowId, approverEmail, approverName) {
       { flow: f.title, step: dlStepName, approvedBy: approverName, submittedBy: dlSubmitter || 'Unknown', via: 'email-link', comment: approvalNote }
     );
     if (dlSubmitter) sendApprovedEmail(dlSubmitter, approverName, f.title, dlStepName, approvalNote);
+    // Hand off to the next step's owner now that this step is approved
+    if (!dlIsLast) {
+      const dlTmplSteps = getTemplateSteps(f.templateId);
+      const dlNextStep = dlTmplSteps[cs + 1];
+      const dlNextOwner = (f.stepOwners || [])[cs + 1] || dlNextStep?.owner || '';
+      notifyMyTurn(dlNextStep?.name || `Step ${cs + 2}`, f.title, dlNextOwner);
+    }
     const confirmMsg = approvalNote
       ? `You approved <strong style="color:#fff;">${f.title || 'this flow'}</strong> with a note: <em style="color:rgba(255,255,255,0.7);">"${approvalNote}"</em>`
       : `You approved <strong style="color:#fff;">${f.title || 'this flow'}</strong>. The next step has been notified.`;
