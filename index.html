@@ -6181,6 +6181,7 @@ async function setTaskStatus(id, newStatus) {
   if (newStatus === 'review' && t.progress < 90) t.progress = 90;
   if (newStatus === 'done') t.progress = 100;
   await fbSaveTask(t);
+  sendTaskStatusEmail(t, prevStatus, newStatus);
   auditLog('task_status', `Task "${t.title}" moved to ${PIPELINE_NAMES[newStatus]}`, { task: t.title, from: prevStatus, to: newStatus, assignee: t.assignee });
   toast(`Status updated to "${PIPELINE_NAMES[newStatus]}"`, 'ok');
   renderTasks();
@@ -6191,8 +6192,10 @@ async function pushTask(id){
   const t=TASKS.find(x=>x.id===id); if(!t) return;
   const idx=PIPELINE_STAGES.indexOf(t.status);
   if(idx<PIPELINE_STAGES.length-1){
+    const prevStatus=t.status;
     t.status=PIPELINE_STAGES[idx+1];
     await fbSaveTask(t);
+    sendTaskStatusEmail(t, prevStatus, t.status);
     auditLog('task_pushed', `Pushed task "${t.title}" to ${PIPELINE_NAMES[t.status]}`, { task: t.title, to: PIPELINE_NAMES[t.status], assignee: t.assignee });
     toast(`Pushed to "${PIPELINE_NAMES[t.status]}"!`,'ok');
     refresh(); if(selectedId===id) openTask(id);
@@ -7460,7 +7463,8 @@ async function saveTaskModal(){
     // ── Edit mode ──
     const t = TASKS.find(x => x.id === _editingTaskId);
     if (!t) return;
-    const prevStatus = t.status;
+    const prevStatus   = t.status;
+    const prevAssignee = t.assignee;
     t.title    = title;
     t.assignee = document.getElementById('nt-assignee').value;
     t.priority = document.getElementById('nt-priority').value;
@@ -7476,6 +7480,9 @@ async function saveTaskModal(){
       t.statusHistory.push({ from: prevStatus, to: t.status, by: loggedInMember?.name || 'Unknown', at: Date.now() });
     }
     await fbSaveTask(t);
+    // Email on reassignment and on status change (order: who-owns-it first).
+    if (t.assignee !== prevAssignee) sendTaskReassignedEmail(t, prevAssignee);
+    if (t.status   !== prevStatus)   sendTaskStatusEmail(t, prevStatus, t.status);
     closeTaskModal();
     renderTasks();
     if (selectedId === _editingTaskId) openTask(_editingTaskId);
@@ -7495,6 +7502,7 @@ async function saveTaskModal(){
       timeLogged: 0,
       notes: document.getElementById('nt-notes').value.trim(),
       progress: 0, comments: [], attachments,
+      createdBy: loggedInMember?.name || null,
     };
     TASKS.unshift(t);
     await fbSaveTask(t);
@@ -8441,6 +8449,100 @@ function sendTaskAssignedEmail(toName, taskTitle, dueDate, priority) {
     note: `You received this because <strong>${_esc(assigner)}</strong> assigned this task to you in SociaDesk.`,
   });
   sendEmailNotification(toEmail, toName, subject, htmlBody);
+}
+
+// ── Task status labels (PIPELINE_NAMES has no 'blocked' entry) ──
+function _taskStatusLabel(s) {
+  return { todo:'To Do', inprogress:'In Progress', review:'In Review', done:'Done', blocked:'Blocked' }[s]
+      || PIPELINE_NAMES[s] || (s ? s.charAt(0).toUpperCase()+s.slice(1) : '—');
+}
+
+// ── Task status-change email ───────────────────────────
+// Notifies the assignee and the task creator (skipping whoever made the
+// change, blanks, and duplicates). No-ops if status didn't actually move.
+function sendTaskStatusEmail(t, fromStatus, toStatus) {
+  if (!t || fromStatus === toStatus) return;
+  const by   = loggedInMember?.name || 'A team member';
+  const from = _taskStatusLabel(fromStatus);
+  const to   = _taskStatusLabel(toStatus);
+  const isBlocked = toStatus === 'blocked';
+  const isDone    = toStatus === 'done';
+  const accent = isBlocked ? '#DC2626' : isDone ? '#10B981' : '#1B2B4B';
+  const seen = new Set();
+  for (const name of [t.assignee, t.createdBy]) {
+    if (!name || name === by || seen.has(name)) continue;
+    seen.add(name);
+    const toEmail = getMemberEmail(name);
+    if (!toEmail) continue;
+    const htmlBody = _emailCard({
+      icon: isBlocked ? '🔴' : isDone ? '✅' : '🔄',
+      iconBg: 'rgba(255,255,255,0.2)', accentColor: accent,
+      label: 'Task Status Updated',
+      title: t.title,
+      rows: [
+        ['Status',   `${from} → ${to}`],
+        ['Updated by', by],
+        ['Assignee', t.assignee || 'Unassigned'],
+        ['Priority', t.priority ? `${t.priority.charAt(0).toUpperCase()+t.priority.slice(1)} priority` : ''],
+        ['Due date', t.due || ''],
+      ],
+      ctaHref: 'https://sociadesk.oneinsure.com',
+      ctaText: 'View Task →',
+      note: isBlocked
+        ? `<strong>${_esc(t.title)}</strong> is now <strong>blocked</strong> and needs attention.`
+        : `You received this because you're involved with <strong>${_esc(t.title)}</strong> in SociaDesk.`,
+    });
+    sendEmailNotification(toEmail, name, `[SociaDesk] ${t.title} — ${from} → ${to}`, htmlBody);
+  }
+}
+
+// ── Task reassignment email ────────────────────────────
+// Emails the new owner ("assigned to you") and the previous owner
+// ("reassigned away"), skipping the actor and blanks.
+function sendTaskReassignedEmail(t, prevAssignee) {
+  if (!t || t.assignee === prevAssignee) return;
+  const by = loggedInMember?.name || 'A team member';
+  // New owner
+  if (t.assignee && t.assignee !== by) {
+    const toEmail = getMemberEmail(t.assignee);
+    if (toEmail) {
+      const htmlBody = _emailCard({
+        icon: '📋', iconBg: 'rgba(255,255,255,0.2)', accentColor: '#1B2B4B',
+        label: 'Task Assigned to You',
+        title: t.title,
+        rows: [
+          ['Assigned by', by],
+          ['Previously',  prevAssignee || 'Unassigned'],
+          ['Status',      _taskStatusLabel(t.status)],
+          ['Priority',    t.priority ? `${t.priority.charAt(0).toUpperCase()+t.priority.slice(1)} priority` : ''],
+          ['Due date',    t.due || ''],
+        ],
+        ctaHref: 'https://sociadesk.oneinsure.com',
+        ctaText: 'View Task →',
+        note: `<strong>${_esc(by)}</strong> reassigned this task to you in SociaDesk.`,
+      });
+      sendEmailNotification(toEmail, t.assignee, `[SociaDesk] Task assigned to you: ${t.title}`, htmlBody);
+    }
+  }
+  // Previous owner
+  if (prevAssignee && prevAssignee !== by && prevAssignee !== t.assignee) {
+    const prevEmail = getMemberEmail(prevAssignee);
+    if (prevEmail) {
+      const htmlBody = _emailCard({
+        icon: '↪️', iconBg: 'rgba(255,255,255,0.2)', accentColor: '#6B7280',
+        label: 'Task Reassigned',
+        title: t.title,
+        rows: [
+          ['Reassigned by', by],
+          ['Now with',      t.assignee || 'Unassigned'],
+        ],
+        ctaHref: 'https://sociadesk.oneinsure.com',
+        ctaText: 'Open SociaDesk →',
+        note: `<strong>${_esc(t.title)}</strong> was reassigned to <strong>${_esc(t.assignee||'someone else')}</strong> — no further action needed from you.`,
+      });
+      sendEmailNotification(prevEmail, prevAssignee, `[SociaDesk] Task reassigned: ${t.title}`, htmlBody);
+    }
+  }
 }
 
 // ═══════════════════════════════════════════
